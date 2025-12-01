@@ -1,7 +1,7 @@
 package com.javaexam.security;
 
 import com.javaexam.entity.User;
-import com.javaexam.repository.UserRepository;
+import com.javaexam.repository.UserJdbcRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,11 +15,11 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
     
-    private final UserRepository userRepository;
-    
+    private final UserJdbcRepository userJdbcRepository;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+        User user = userJdbcRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
         
         return new org.springframework.security.core.userdetails.User(

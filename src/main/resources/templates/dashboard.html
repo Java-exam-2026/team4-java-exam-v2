@@ -26,17 +26,17 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <h5 class="card-title" th:text="${chapter.title}">Chapter Title</h5>
-                        <p class="card-text" th:text="${chapter.description}">Description</p>
+                        <p class="card-text text-muted">Chapter overview coming soon.</p>
 
-                        <div th:if="${progressMap != null and progressMap.containsKey(chapter.code)}" class="mb-2">
-                            <span th:if="${progressMap.get(chapter.code).passed}" class="badge bg-success">Passed</span>
-                            <span th:unless="${progressMap.get(chapter.code).passed}"
+                        <div th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode)}" class="mb-2">
+                            <span th:if="${progressMap.get(chapter.chapterCode).passed}" class="badge bg-success">Passed</span>
+                            <span th:unless="${progressMap.get(chapter.chapterCode).passed}"
                                 class="badge bg-warning text-dark">
-                                Score: <span th:text="${progressMap.get(chapter.code).score}">0</span>%
+                                Score: <span th:text="${progressMap.get(chapter.chapterCode).score}">0</span>%
                             </span>
                         </div>
 
-                        <a th:href="@{/quiz/{code}(code=${chapter.code})}" class="btn btn-primary">Start Quiz</a>
+                        <a th:href="@{/quiz/{code}(code=${chapter.chapterCode})}" class="btn btn-primary">Start Quiz</a>
                     </div>
                 </div>
             </div>

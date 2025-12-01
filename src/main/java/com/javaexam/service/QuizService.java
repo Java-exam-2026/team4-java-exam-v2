@@ -2,7 +2,10 @@ package com.javaexam.service;
 
 import com.javaexam.dto.*;
 import com.javaexam.entity.*;
-import com.javaexam.repository.*;
+import com.javaexam.repository.ChapterJdbcRepository;
+import com.javaexam.repository.QuestionJdbcRepository;
+import com.javaexam.repository.UserJdbcRepository;
+import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,23 +17,23 @@ import java.util.stream.Collectors;
 public class QuizService {
 
   @Autowired
-  private QuestionRepository questionRepository;
+  private QuestionJdbcRepository questionJdbcRepository;
 
   @Autowired
-  private ChapterRepository chapterRepository;
+  private ChapterJdbcRepository chapterJdbcRepository;
 
   @Autowired
-  private UserProgressRepository userProgressRepository;
+  private UserProgressJdbcRepository userProgressJdbcRepository;
 
   @Autowired
-  private UserRepository userRepository;
+  private UserJdbcRepository userJdbcRepository;
 
   @Transactional(readOnly = true)
   public Map<String, Object> getQuizForChapter(String chapterCode) {
-    Chapter chapter = chapterRepository.findByChapterCode(chapterCode)
+    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
         .orElseThrow(() -> new RuntimeException("Chapter not found"));
 
-    List<Question> questions = questionRepository.findRandomByChapterId(chapter.getId(), 20);
+    List<Question> questions = questionJdbcRepository.findRandomByChapterId(chapter.getId(), 20);
 
     List<QuestionDto> questionDtos = questions.stream()
         .map(this::convertToDto)
@@ -45,17 +48,17 @@ public class QuizService {
 
   @Transactional
   public SubmissionResultDto submitQuiz(String username, String chapterCode, SubmissionRequestDto submission) {
-    User user = userRepository.findByUsername(username)
+    User user = userJdbcRepository.findByUsername(username)
         .orElseThrow(() -> new RuntimeException("User not found"));
 
-    Chapter chapter = chapterRepository.findByChapterCode(chapterCode)
+    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
         .orElseThrow(() -> new RuntimeException("Chapter not found"));
 
     int totalQuestions = submission.getAnswers().size();
     int correctCount = 0;
 
     for (AnswerSubmissionDto answerDto : submission.getAnswers()) {
-      Question question = questionRepository.findById(answerDto.getQuestionId().toString())
+      Question question = questionJdbcRepository.findById(answerDto.getQuestionId().toString())
           .orElse(null);
 
       if (question != null) {
@@ -69,7 +72,7 @@ public class QuizService {
     boolean passed = score >= 80; // Assuming 80% pass rate
 
     // Update progress
-    UserProgress progress = userProgressRepository.findByUserAndChapter(user, chapter)
+    UserProgress progress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
         .orElse(new UserProgress());
 
     if (progress.getId() == null) {
@@ -88,7 +91,7 @@ public class QuizService {
     }
     progress.setLastAttemptedAt(java.time.LocalDateTime.now());
 
-    userProgressRepository.save(progress);
+    userProgressJdbcRepository.save(progress);
 
     return new SubmissionResultDto(chapterCode, score, passed, correctCount, totalQuestions);
   }

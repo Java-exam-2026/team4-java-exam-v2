@@ -1,4 +1,10 @@
 -- users テーブル
+DROP TABLE IF EXISTS user_progress;
+DROP TABLE IF EXISTS questions;
+DROP TABLE IF EXISTS chapters;
+DROP TABLE IF EXISTS users;
+
+-- users テーブル
 CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -23,7 +29,8 @@ CREATE TABLE IF NOT EXISTS questions (
     chapter_id VARCHAR(36) NOT NULL,
     question_text TEXT NOT NULL,
     options TEXT NOT NULL,
-    correct_answer VARCHAR(1) NOT NULL CHECK (correct_answer IN ('A', 'B', 'C', 'D')),
+    question_type VARCHAR(20) NOT NULL DEFAULT 'SINGLE_CHOICE',
+    correct_answer TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
@@ -45,10 +52,3 @@ CREATE TABLE IF NOT EXISTS user_progress (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
-
--- Migration for Question Type
-ALTER TABLE questions ADD COLUMN IF NOT EXISTS question_type VARCHAR(20) DEFAULT 'SINGLE_CHOICE' NOT NULL;
-
-ALTER TABLE questions ALTER COLUMN correct_answer TYPE TEXT;
-ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_correct_answer_check;
-

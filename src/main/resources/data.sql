@@ -1,10 +1,10 @@
 -- 初期ユーザーデータ
 -- パスワード: admin123 ($2a$10$ZVp3xzVThoTkrKsPUEe.V.A7HPduCd9Y9laAkxNpnHKJ91dPJ/daK)
 -- パスワード: user123 ($2a$10$cP7gGuoXml/EyL6mdEaBou92Hz2ScD32YVXdH/A41EZPfKqLqH9Mi)
-INSERT INTO users (id, username, password, display_name, role) VALUES 
-('550e8400-e29b-41d4-a716-446655440001', 'admin', '$2a$10$ZVp3xzVThoTkrKsPUEe.V.A7HPduCd9Y9laAkxNpnHKJ91dPJ/daK', '管理者', 'ROLE_ADMIN'),
-('550e8400-e29b-41d4-a716-446655440002', 'testuser', '$2a$10$cP7gGuoXml/EyL6mdEaBou92Hz2ScD32YVXdH/A41EZPfKqLqH9Mi', 'テストユーザー', 'ROLE_USER')
-ON CONFLICT (id) DO UPDATE SET 
+INSERT INTO users (id, username, password, display_name, role, created_at, updated_at) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'admin', '$2a$10$ZVp3xzVThoTkrKsPUEe.V.A7HPduCd9Y9laAkxNpnHKJ91dPJ/daK', '管理者', 'ROLE_ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('550e8400-e29b-41d4-a716-446655440002', 'testuser', '$2a$10$cP7gGuoXml/EyL6mdEaBou92Hz2ScD32YVXdH/A41EZPfKqLqH9Mi', 'テストユーザー', 'ROLE_USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (id) DO UPDATE SET
     password = EXCLUDED.password,
     display_name = EXCLUDED.display_name,
     role = EXCLUDED.role;
