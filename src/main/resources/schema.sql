@@ -1,0 +1,54 @@
+-- users テーブル
+CREATE TABLE IF NOT EXISTS users (
+    id VARCHAR(36) PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('ROLE_USER', 'ROLE_ADMIN')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- chapters テーブル
+CREATE TABLE IF NOT EXISTS chapters (
+    id VARCHAR(36) PRIMARY KEY,
+    chapter_code VARCHAR(20) UNIQUE NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    sort_order INTEGER NOT NULL
+);
+
+-- questions テーブル
+CREATE TABLE IF NOT EXISTS questions (
+    id VARCHAR(36) PRIMARY KEY,
+    chapter_id VARCHAR(36) NOT NULL,
+    question_text TEXT NOT NULL,
+    options TEXT NOT NULL,
+    correct_answer VARCHAR(1) NOT NULL CHECK (correct_answer IN ('A', 'B', 'C', 'D')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_questions_chapter_id ON questions(chapter_id);
+
+-- user_progress テーブル
+CREATE TABLE IF NOT EXISTS user_progress (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    chapter_id VARCHAR(36) NOT NULL,
+    score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),
+    passed BOOLEAN NOT NULL,
+    last_attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
+    UNIQUE(user_id, chapter_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_progress_user_id ON user_progress(user_id);
+
+-- Migration for Question Type
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS question_type VARCHAR(20) DEFAULT 'SINGLE_CHOICE' NOT NULL;
+
+ALTER TABLE questions ALTER COLUMN correct_answer TYPE TEXT;
+ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_correct_answer_check;
+
