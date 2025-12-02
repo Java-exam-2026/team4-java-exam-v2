@@ -15,19 +15,18 @@ This project is a recreation of the Java Exam System using Thymeleaf for the fro
 
 ## How to Run
 
-1. Build the project:
-   ```bash
-   ./mvnw clean install
-   ```
-
-2. Run the application:
+Run the application:
    ```bash
    ./mvnw spring-boot:run
+   mvnw.cmd spring-boot:run
    ```
 
 3. Access the application at `http://localhost:8080`.
 
 ## Database
+
+install app from 
+https://sqlitebrowser.org/ 
 
 The application uses a local SQLite database `java-exam.db`.
 The database is initialized with data from `src/main/resources/data.sql` on the first run.
