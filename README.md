@@ -17,7 +17,10 @@ This project is a recreation of the Java Exam System using Thymeleaf for the fro
 
 Run the application:
    ```bash
+   # linux or mac
    ./mvnw spring-boot:run
+
+   # windows
    mvnw.cmd spring-boot:run
    ```
 
