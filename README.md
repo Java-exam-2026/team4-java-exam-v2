@@ -1,41 +1,41 @@
-# Java Exam System V2
+# Java試験システム V2
 
-This project is a recreation of the Java Exam System using Thymeleaf for the frontend and SQLite for the database.
+このプロジェクトは、フロントエンドにThymeleaf、データベースにSQLiteを使用したJava試験システムの再構築版です。
 
-## Features
+## 機能
 
-- **Frontend**: Thymeleaf + Bootstrap 5
-- **Database**: SQLite
-- **Security**: Spring Security (Form Login)
-- **Features**:
-  - Login (User: testuser / user123, Admin: admin / admin123)
-  - Dashboard with Chapter list and Progress
-  - Quiz taking interface
-  - Result display
+- **フロントエンド**: Thymeleaf + Bootstrap 5
+- **データベース**: SQLite
+- **セキュリティ**: Spring Security (フォームログイン)
+- **機能**:
+  - ログイン (ユーザー: testuser / user123, 管理者: admin / admin123)
+  - チャプター一覧と進捗状況のダッシュボード
+  - クイズ受験インターフェース
+  - 結果表示
 
-## How to Run
+## 実行方法
 
-Run the application:
+アプリケーションを実行する:
    ```bash
-   # linux or mac
+   # linux または mac
    ./mvnw spring-boot:run
 
    # windows
    mvnw.cmd spring-boot:run
    ```
 
-3. Access the application at `http://localhost:8080`.
+3. `http://localhost:8080` でアプリケーションにアクセスします。
 
-## Database
+## データベース
 
-install app from 
+以下からアプリをインストール: 
 https://sqlitebrowser.org/ 
 
-The application uses a local SQLite database `java-exam.db`.
-The database is initialized with data from `src/main/resources/data.sql` on the first run.
+このアプリケーションは、ローカルのSQLiteデータベース `java-exam.db` を使用します。
+データベースは初回実行時に `src/main/resources/data.sql` のデータで初期化されます。
 
-## Project Structure
+## プロジェクト構造
 
-- `src/main/java/com/javaexam`: Backend logic (Controllers, Services, Repositories, Entities)
-- `src/main/resources/templates`: Thymeleaf templates (login, dashboard, quiz, result)
-- `src/main/resources/application.properties`: Configuration
+- `src/main/java/com/javaexam`: バックエンドロジック (Controllers, Services, Repositories, Entities)
+- `src/main/resources/templates`: Thymeleafテンプレート (login, dashboard, quiz, result)
+- `src/main/resources/application.properties`: 設定ファイル
