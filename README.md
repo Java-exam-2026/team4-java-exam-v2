@@ -23,6 +23,7 @@
    # windows
    mvnw.cmd spring-boot:run
    ```
+- Windowsでコマンドがエラーになる場合、「# linux または mac」の方のコマンドを試してみてください。
 
 3. `http://localhost:8080` でアプリケーションにアクセスします。
 
