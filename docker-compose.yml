@@ -1,0 +1,31 @@
+version: '3'
+services:
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - '80:80'
+      - '443:443'
+    links:
+      - nginx
+    restart: always
+    environment:
+      DOMAINS: 'java-exam.34.134.61.64.sslip.io -> http://nginx:8081'
+      # STAGE: 'production'
+      STAGE: 'local'
+      # FORCE_RENEW: 'true'
+    volumes:
+      - https-portal-data:/var/lib/https-portal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  nginx:
+    image: nginx:latest
+    container_name: 'nginx'
+    volumes:
+      - ./conf.d/server.conf:/etc/nginx/conf.d/server.conf
+      - ./conf.d/.htpasswd:/etc/nginx/.htpasswd
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # ports:
+    #   - "80:80"
+volumes:
+  https-portal-data:
