@@ -14,12 +14,12 @@ INSERT INTO chapters (id, chapter_code, title, sort_order) VALUES
 ('660e8400-e29b-41d4-a716-446655440013', 'chap3', '3章:値と計算', 3),
 ('660e8400-e29b-41d4-a716-446655440014', 'chap4', '4章:変数と型', 4),
 ('660e8400-e29b-41d4-a716-446655440015', 'chap5', '5章:標準API', 5),
-('660e8400-e29b-41d4-a716-446655440017', 'chap7', '7章:クラスとオブジェクト', 7),
-('660e8400-e29b-41d4-a716-446655440018', 'chap8', '8章:継承と多態性', 8),
-('660e8400-e29b-41d4-a716-446655440019', 'chap9', '9章:抽象化', 9),
-('660e8400-e29b-41d4-a716-446655440020', 'chap10', '10章:例外処理', 10),
-('660e8400-e29b-41d4-a716-446655440021', 'chap11', '11章:コレクション', 11),
-('660e8400-e29b-41d4-a716-446655440022', 'chap12', '12章:高度なトピック', 12)
+('660e8400-e29b-41d4-a716-446655440016', 'chap7', '7章:条件分岐', 7),
+('660e8400-e29b-41d4-a716-446655440017', 'etc', '章以外(Linuxコマンド/システム開発プロセステスト)', 8),
+('660e8400-e29b-41d4-a716-446655440018', 'chap8', '8章:データ構造', 9),
+('660e8400-e29b-41d4-a716-446655440019', 'chap9', '9章:繰り返し', 10),
+('660e8400-e29b-41d4-a716-446655440020', 'chap10', '10章:データ構造の処理', 11),
+('660e8400-e29b-41d4-a716-446655440021', 'chap11', '11章:メソッド', 12)
 ON CONFLICT (id) DO NOTHING;
 
 
@@ -77,86 +77,111 @@ ON CONFLICT (id) DO UPDATE SET
     correct_answer = EXCLUDED.correct_answer,
     question_type = EXCLUDED.question_type;
 
--- Chapter 7: Classes and Objects
+-- Chapter 7: Conditional Branching
 INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, question_type) VALUES
-('5bc0953b-411d-4cef-b75e-2779e0db8d6a', '660e8400-e29b-41d4-a716-446655440017', 'Javaにおけるクラスの説明として最も適切なものはどれですか？', '{"A": "オブジェクトの設計図", "B": "メモリ上の実体", "C": "基本データ型の一つ", "D": "メソッドの集合体"}', 'A', 'SINGLE_CHOICE'),
-('3d928fa3-cf7a-46bb-9241-af1adcb23237', '660e8400-e29b-41d4-a716-446655440017', '新しいオブジェクトを生成するために使用するキーワードはどれですか？', '{"A": "create", "B": "make", "C": "new", "D": "instance"}', 'C', 'SINGLE_CHOICE'),
-('ffe6befd-80ee-468f-b0a9-f746bab159ca', '660e8400-e29b-41d4-a716-446655440017', 'コンストラクタの特徴として正しいものはどれですか？', '{"A": "戻り値の型はvoidである", "B": "クラス名と同じ名前を持つ", "C": "必ず引数が必要である", "D": "static修飾子が必須である"}', 'B', 'SINGLE_CHOICE'),
-('78bc1d45-1c5c-4ef3-a53d-0ab3bdac33d5', '660e8400-e29b-41d4-a716-446655440017', 'キーワード `this` は何を参照しますか？', '{"A": "親クラスのインスタンス", "B": "現在のクラスの静的メンバ", "C": "現在のオブジェクト自身", "D": "メインメソッド"}', 'C', 'SINGLE_CHOICE'),
-('79f8ecb1-e8bb-410d-be75-f2aaf9db58a8', '660e8400-e29b-41d4-a716-446655440017', 'int型のインスタンス変数のデフォルト値はどれですか？', '{"A": "null", "B": "0", "C": "1", "D": "undefined"}', 'B', 'SINGLE_CHOICE'),
-('d797ba89-67bb-40ed-9c92-22436ac6c38b', '660e8400-e29b-41d4-a716-446655440017', '1つのクラスに複数のコンストラクタを定義することを何と呼びますか？', '{"A": "オーバーライド", "B": "オーバーロード", "C": "カプセル化", "D": "継承"}', 'B', 'SINGLE_CHOICE'),
-('2afe315e-e1df-4233-b82e-3f8a0a896153', '660e8400-e29b-41d4-a716-446655440017', 'インスタンス変数の説明として正しいものはどれですか？', '{"A": "メソッド内で宣言される変数", "B": "クラス全体で共有される変数", "C": "オブジェクトごとに独立した値を持つ変数", "D": "定数として扱われる変数"}', 'C', 'SINGLE_CHOICE'),
-('3432bc6e-98cc-40a5-970f-247802699cb4', '660e8400-e29b-41d4-a716-446655440017', 'コンストラクタに戻り値の型を指定した場合どうなりますか？', '{"A": "コンパイルエラーになる", "B": "通常のメソッドとして扱われる", "C": "警告が出るが動作する", "D": "実行時エラーになる"}', 'B', 'SINGLE_CHOICE'),
-('534c3980-6022-4667-b5b1-e1ca080693ee', '660e8400-e29b-41d4-a716-446655440017', 'staticメソッドからインスタンス変数に直接アクセスできますか？', '{"A": "できる", "B": "できない", "C": "publicならできる", "D": "privateならできる"}', 'B', 'SINGLE_CHOICE'),
-('0bf0fa1a-4cbd-4952-83e5-68df719250f8', '660e8400-e29b-41d4-a716-446655440017', '不要になったオブジェクトのメモリを解放する仕組みはどれですか？', '{"A": "デストラクタ", "B": "ガベージコレクション", "C": "メモリクリーナー", "D": "ヒープクリア"}', 'B', 'SINGLE_CHOICE')
-ON CONFLICT (id) DO NOTHING;
+('a1b2c3d4-0000-4000-8000-000000000701', '660e8400-e29b-41d4-a716-446655440016', 'if文の条件式に指定できる型は？', '{"A": "int", "B": "boolean", "C": "String", "D": "double"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000702', '660e8400-e29b-41d4-a716-446655440016', '次のうち短絡評価（ショートサーキット）を行う演算子は？', '{"A": "&", "B": "|", "C": "&&", "D": "^"}', 'C', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000703', '660e8400-e29b-41d4-a716-446655440016', 'switch文で使用できない型は？（一般的な範囲）', '{"A": "int", "B": "String", "C": "enum", "D": "double"}', 'D', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000704', '660e8400-e29b-41d4-a716-446655440016', 'switch文でcaseを抜けずに次のcaseへ処理が進むことを何と呼ぶ？', '{"A": "fall-through", "B": "break-out", "C": "short-circuit", "D": "override"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000705', '660e8400-e29b-41d4-a716-446655440016', '三項演算子の形式として正しいものは？', '{"A": "cond ? a : b", "B": "cond : a ? b", "C": "cond ?? a : b", "D": "cond -> a : b"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000706', '660e8400-e29b-41d4-a716-446655440016', '次の比較で、数値として等しいことを判定する演算子は？', '{"A": "=", "B": "==", "C": "!=", "D": "equals"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000707', '660e8400-e29b-41d4-a716-446655440016', 'if (a > 0) { ... } else { ... } の else ブロックが実行される条件は？', '{"A": "a > 0", "B": "a == 0", "C": "a <= 0", "D": "a < 0"}', 'C', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000708', '660e8400-e29b-41d4-a716-446655440016', '次のうち論理否定演算子は？', '{"A": "!", "B": "~", "C": "^", "D": "?"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000709', '660e8400-e29b-41d4-a716-446655440016', 'if文のネストを浅くするために使われることが多い制御文は？', '{"A": "continue", "B": "break", "C": "return", "D": "goto"}', 'C', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000710', '660e8400-e29b-41d4-a716-446655440016', 'switch文でどのcaseにも一致しない場合に実行されるラベルは？', '{"A": "default", "B": "else", "C": "otherwise", "D": "none"}', 'A', 'SINGLE_CHOICE')
+ON CONFLICT (id) DO UPDATE SET 
+    question_text = EXCLUDED.question_text,
+    options = EXCLUDED.options,
+    correct_answer = EXCLUDED.correct_answer,
+    question_type = EXCLUDED.question_type;
 
--- Chapter 8: Inheritance and Polymorphism
+-- etc: Linux Commands / Process Basics
 INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, question_type) VALUES
-('fb94055b-09e4-440e-90d5-1213829b8561', '660e8400-e29b-41d4-a716-446655440018', 'クラスを継承する際に使用するキーワードはどれですか？', '{"A": "implements", "B": "inherits", "C": "extends", "D": "super"}', 'C', 'SINGLE_CHOICE'),
-('db39b77f-ddfb-428a-8c94-dbd70115dafa', '660e8400-e29b-41d4-a716-446655440018', '親クラスのメソッドをサブクラスで再定義することを何と呼びますか？', '{"A": "オーバーロード", "B": "オーバーライド", "C": "抽象化", "D": "カプセル化"}', 'B', 'SINGLE_CHOICE'),
-('09ba0d13-4f64-41a9-8066-532a54ef3867', '660e8400-e29b-41d4-a716-446655440018', 'キーワード `super` の用途として正しいものはどれですか？', '{"A": "現在のオブジェクトを参照する", "B": "親クラスのコンストラクタやメンバを呼び出す", "C": "静的メソッドを呼び出す", "D": "定数を定義する"}', 'B', 'SINGLE_CHOICE'),
-('53362c8d-0a05-4373-a306-45d929235538', '660e8400-e29b-41d4-a716-446655440018', 'Javaにおいて、1つのクラスが継承できるクラスの数は？', '{"A": "1つのみ", "B": "2つまで", "C": "無制限", "D": "継承はできない"}', 'A', 'SINGLE_CHOICE'),
-('5ed10860-b157-4f57-92b6-70c02984c560', '660e8400-e29b-41d4-a716-446655440018', '全てのJavaクラスの親となるルートクラスはどれですか？', '{"A": "Main", "B": "System", "C": "Class", "D": "Object"}', 'D', 'SINGLE_CHOICE'),
-('772b59aa-4754-4f3b-bbbf-3308326495d1', '660e8400-e29b-41d4-a716-446655440018', 'ポリモーフィズム（多態性）の説明として最も適切なものはどれですか？', '{"A": "データを隠蔽すること", "B": "同じ操作で異なる振る舞いをすること", "C": "コードを再利用すること", "D": "複数のクラスを継承すること"}', 'B', 'SINGLE_CHOICE'),
-('cad39775-db7d-46df-8d4a-67ca5d528bab', '660e8400-e29b-41d4-a716-446655440018', 'どこからでもアクセス可能なアクセス修飾子はどれですか？', '{"A": "private", "B": "protected", "C": "public", "D": "default"}', 'C', 'SINGLE_CHOICE'),
-('4c549c36-c468-4c74-a411-e7c6f7ba4007', '660e8400-e29b-41d4-a716-446655440018', '同じパッケージ内およびサブクラスからアクセス可能な修飾子はどれですか？', '{"A": "private", "B": "protected", "C": "public", "D": "なし（package-private）"}', 'B', 'SINGLE_CHOICE'),
-('74b3767c-7982-42ca-99ed-a34e2c8fcdfd', '660e8400-e29b-41d4-a716-446655440018', 'final修飾子がついたメソッドの特徴はどれですか？', '{"A": "オーバーライドできない", "B": "呼び出すことができない", "C": "戻り値がない", "D": "必ずオーバーライドしなければならない"}', 'A', 'SINGLE_CHOICE'),
-('eb5739ff-080a-4e41-b612-94f7195a5b02', '660e8400-e29b-41d4-a716-446655440018', '実行時にオブジェクトの型に基づいてメソッドが選択される仕組みを何と呼びますか？', '{"A": "静的バインディング", "B": "動的バインディング", "C": "キャスト", "D": "コンパイル"}', 'B', 'SINGLE_CHOICE')
-ON CONFLICT (id) DO NOTHING;
+('a1b2c3d4-0000-4000-8000-000000000801', '660e8400-e29b-41d4-a716-446655440017', '現在の作業ディレクトリを表示するLinuxコマンドは？', '{"A": "pwd", "B": "cd", "C": "ls", "D": "who"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000802', '660e8400-e29b-41d4-a716-446655440017', 'ファイル一覧を表示するLinuxコマンドは？', '{"A": "cat", "B": "ls", "C": "rm", "D": "mv"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000803', '660e8400-e29b-41d4-a716-446655440017', 'ディレクトリを作成するLinuxコマンドは？', '{"A": "mkdir", "B": "rmdir -p", "C": "touch", "D": "cp"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000804', '660e8400-e29b-41d4-a716-446655440017', 'ファイルの中身を表示するコマンドとして最も基本的なのは？', '{"A": "cat", "B": "grep", "C": "chmod", "D": "kill"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000805', '660e8400-e29b-41d4-a716-446655440017', '文字列を検索するLinuxコマンドは？', '{"A": "find", "B": "grep", "C": "ps", "D": "top"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000806', '660e8400-e29b-41d4-a716-446655440017', '実行権限を変更するコマンドは？', '{"A": "chmod", "B": "chown", "C": "umask", "D": "sudo"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000807', '660e8400-e29b-41d4-a716-446655440017', 'プロセス一覧を表示するコマンドは？', '{"A": "ps", "B": "ssh", "C": "tar", "D": "ping"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000808', '660e8400-e29b-41d4-a716-446655440017', 'ファイルをコピーするコマンドは？', '{"A": "cp", "B": "mv", "C": "rm", "D": "ln"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000809', '660e8400-e29b-41d4-a716-446655440017', 'システム開発プロセスで「要件定義」の次に来ることが多い工程は？（一般的なウォーターフォール）', '{"A": "テスト", "B": "設計", "C": "運用", "D": "保守"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000810', '660e8400-e29b-41d4-a716-446655440017', 'バージョン管理システムの例として適切なのは？', '{"A": "Git", "B": "HTTP", "C": "SQL", "D": "DNS"}', 'A', 'SINGLE_CHOICE')
+ON CONFLICT (id) DO UPDATE SET 
+    question_text = EXCLUDED.question_text,
+    options = EXCLUDED.options,
+    correct_answer = EXCLUDED.correct_answer,
+    question_type = EXCLUDED.question_type;
 
--- Chapter 9: Abstraction
+-- Chapter 8: Data Structures
 INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, question_type) VALUES
-('697e0a6e-9027-425b-9d44-d4c6b3f5ba73', '660e8400-e29b-41d4-a716-446655440019', '抽象クラスを定義するためのキーワードはどれですか？', '{"A": "virtual", "B": "interface", "C": "abstract", "D": "static"}', 'C', 'SINGLE_CHOICE'),
-('fc5bcee7-3fdd-4976-b68d-f68a00da2ebe', '660e8400-e29b-41d4-a716-446655440019', '抽象クラスについて正しい説明はどれですか？', '{"A": "newキーワードでインスタンス化できる", "B": "抽象メソッドを持つことができない", "C": "インスタンス化できない", "D": "全てのメソッドが抽象メソッドでなければならない"}', 'C', 'SINGLE_CHOICE'),
-('b090837b-ae86-4599-9e76-aa7bc0810fbf', '660e8400-e29b-41d4-a716-446655440019', 'インターフェースを定義するためのキーワードはどれですか？', '{"A": "class", "B": "interface", "C": "implements", "D": "abstract"}', 'B', 'SINGLE_CHOICE'),
-('988e8d04-e0c7-47ed-9315-f427c1266455', '660e8400-e29b-41d4-a716-446655440019', 'クラスがインターフェースを実装する際に使用するキーワードはどれですか？', '{"A": "extends", "B": "uses", "C": "implements", "D": "imports"}', 'C', 'SINGLE_CHOICE'),
-('7735eaa8-e76d-435d-a3da-f464b3d7366f', '660e8400-e29b-41d4-a716-446655440019', 'インターフェース内で宣言されたフィールドのデフォルトの修飾子はどれですか？', '{"A": "private", "B": "protected", "C": "public static final", "D": "public abstract"}', 'C', 'SINGLE_CHOICE'),
-('2c55d5c7-80dd-4473-bff8-9e46f1489b63', '660e8400-e29b-41d4-a716-446655440019', '抽象メソッドの特徴として正しいものはどれですか？', '{"A": "処理内容（ボディ）を持たない", "B": "必ずprivateである", "C": "staticメソッドにできる", "D": "final修飾子をつけられる"}', 'A', 'SINGLE_CHOICE'),
-('417153b9-23ed-461c-a552-5a03255dee30', '660e8400-e29b-41d4-a716-446655440019', 'Javaで多重継承のような機能を実現するために使用されるものはどれですか？', '{"A": "抽象クラス", "B": "インターフェース", "C": "内部クラス", "D": "パッケージ"}', 'B', 'SINGLE_CHOICE'),
-('b29535e4-7da3-4678-a589-e2e8ef7882f4', '660e8400-e29b-41d4-a716-446655440019', 'Java 8以降でインターフェースに実装を持たせることができるメソッドはどれですか？', '{"A": "abstractメソッド", "B": "defaultメソッド", "C": "nativeメソッド", "D": "finalメソッド"}', 'B', 'SINGLE_CHOICE'),
-('52a95f7f-babb-415e-be12-21e18d3c89ad', '660e8400-e29b-41d4-a716-446655440019', '抽象クラスはコンストラクタを持つことができますか？', '{"A": "はい", "B": "いいえ", "C": "引数なしのみ可", "D": "privateのみ可"}', 'A', 'SINGLE_CHOICE'),
-('e2abfe1d-98d4-4dd2-9b5e-b3444676dfae', '660e8400-e29b-41d4-a716-446655440019', 'インターフェースと抽象クラスの主な違いとして正しいものはどれですか？', '{"A": "インターフェースは多重実装が可能だが、抽象クラスは単一継承のみ", "B": "抽象クラスはメソッドを持てない", "C": "インターフェースはインスタンス化できる", "D": "違いはない"}', 'A', 'SINGLE_CHOICE')
-ON CONFLICT (id) DO NOTHING;
+('a1b2c3d4-0000-4000-8000-000000000901', '660e8400-e29b-41d4-a716-446655440018', '配列の要素数を取得するプロパティは？', '{"A": "length", "B": "size()", "C": "count()", "D": "len"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000902', '660e8400-e29b-41d4-a716-446655440018', 'ArrayListの要素数を取得するメソッドは？', '{"A": "length", "B": "size()", "C": "capacity()", "D": "count()"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000903', '660e8400-e29b-41d4-a716-446655440018', 'Listに要素を末尾追加するメソッドは？', '{"A": "put()", "B": "add()", "C": "append()", "D": "push()"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000904', '660e8400-e29b-41d4-a716-446655440018', 'Mapにキーと値を格納するメソッドは？', '{"A": "add()", "B": "put()", "C": "set()", "D": "insert()"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000905', '660e8400-e29b-41d4-a716-446655440018', '配列のインデックスは通常いくつから始まる？', '{"A": "0", "B": "1", "C": "-1", "D": "環境依存"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000906', '660e8400-e29b-41d4-a716-446655440018', 'HashMapがキーの順序を保持するか？', '{"A": "常に保持する", "B": "保持しない", "C": "昇順で保持する", "D": "降順で保持する"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000907', '660e8400-e29b-41d4-a716-446655440018', 'Listの先頭要素を取り出す（取得する）メソッドとして正しいものは？', '{"A": "get(0)", "B": "first()", "C": "head()", "D": "peekFirst()"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000908', '660e8400-e29b-41d4-a716-446655440018', 'Mapから値を取得するメソッドは？', '{"A": "fetch(key)", "B": "get(key)", "C": "read(key)", "D": "value(key)"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000909', '660e8400-e29b-41d4-a716-446655440018', '配列アクセスで範囲外を参照した場合に発生しやすい例外は？', '{"A": "NullPointerException", "B": "ArrayIndexOutOfBoundsException", "C": "IOException", "D": "NumberFormatException"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000910', '660e8400-e29b-41d4-a716-446655440018', 'Listは重複要素を持てるか？', '{"A": "持てない", "B": "持てる", "C": "型による", "D": "実装による"}', 'B', 'SINGLE_CHOICE')
+ON CONFLICT (id) DO UPDATE SET 
+    question_text = EXCLUDED.question_text,
+    options = EXCLUDED.options,
+    correct_answer = EXCLUDED.correct_answer,
+    question_type = EXCLUDED.question_type;
 
--- Chapter 10: Exceptions
+-- Chapter 9: Loops
 INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, question_type) VALUES
-('f4bec053-93e2-4a2d-b909-f1169f01343d', '660e8400-e29b-41d4-a716-446655440020', '例外処理において、例外の発生有無に関わらず必ず実行されるブロックはどれですか？', '{"A": "try", "B": "catch", "C": "finally", "D": "throw"}', 'C', 'SINGLE_CHOICE'),
-('3c968c53-3d07-4f18-bb75-02f29442ca3a', '660e8400-e29b-41d4-a716-446655440020', 'メソッドが例外を投げる可能性があることを宣言するために使用するキーワードはどれですか？', '{"A": "throw", "B": "throws", "C": "try", "D": "catch"}', 'B', 'SINGLE_CHOICE'),
-('da282152-2b2d-49ef-9680-cbd63970231b', '660e8400-e29b-41d4-a716-446655440020', 'プログラム内で意図的に例外を発生させるために使用するキーワードはどれですか？', '{"A": "throws", "B": "throw", "C": "new", "D": "raise"}', 'B', 'SINGLE_CHOICE'),
-('bd8e6f54-115d-4f6d-9eb9-b4f9999c5bf0', '660e8400-e29b-41d4-a716-446655440020', '次のうち、非チェック例外（Unchecked Exception）はどれですか？', '{"A": "IOException", "B": "SQLException", "C": "NullPointerException", "D": "ClassNotFoundException"}', 'C', 'SINGLE_CHOICE'),
-('007a2e66-9100-482d-b350-0613d0c64db1', '660e8400-e29b-41d4-a716-446655440020', 'try-with-resources文を使用するために、リソースクラスが実装する必要があるインターフェースはどれですか？', '{"A": "Closeable", "B": "AutoCloseable", "C": "Disposable", "D": "Readable"}', 'B', 'SINGLE_CHOICE'),
-('cabe8751-64e4-4fec-b3b9-439c096425ea', '660e8400-e29b-41d4-a716-446655440020', '複数のcatchブロックを記述する場合の正しい順序はどれですか？', '{"A": "スーパークラスからサブクラスへ", "B": "サブクラスからスーパークラスへ", "C": "順序は関係ない", "D": "ランダム"}', 'B', 'SINGLE_CHOICE'),
-('686fdab2-a3a4-4272-bcfb-98246f719886', '660e8400-e29b-41d4-a716-446655440020', 'すべての例外とエラーの親クラスはどれですか？', '{"A": "Exception", "B": "Error", "C": "Throwable", "D": "Object"}', 'C', 'SINGLE_CHOICE'),
-('4edb2834-5d1c-46ec-a24f-51c29676cbf8', '660e8400-e29b-41d4-a716-446655440020', '独自の例外クラスを作成する場合、通常継承するクラスはどれですか？', '{"A": "String", "B": "System", "C": "Exception", "D": "Error"}', 'C', 'SINGLE_CHOICE'),
-('80e21d8c-3e94-42ee-b8c0-3796f3885f7c', '660e8400-e29b-41d4-a716-446655440020', '例外のエラーメッセージを取得するメソッドはどれですか？', '{"A": "toString()", "B": "getMessage()", "C": "printStackTrace()", "D": "getError()"}', 'B', 'SINGLE_CHOICE'),
-('724b46cb-ab0a-4705-bd28-4b490eca84ba', '660e8400-e29b-41d4-a716-446655440020', '次のコードでコンパイルエラーになる原因は？ try { ... } catch (Exception e) { ... } catch (IOException e) { ... }', '{"A": "tryブロックが空だから", "B": "IOExceptionはExceptionのサブクラスであり、到達不能コードになるから", "C": "catchブロックが多すぎるから", "D": "finallyブロックがないから"}', 'B', 'SINGLE_CHOICE')
-ON CONFLICT (id) DO NOTHING;
+('a1b2c3d4-0000-4000-8000-000000001001', '660e8400-e29b-41d4-a716-446655440019', 'for文の基本構文として正しいものは？', '{"A": "for (init; cond; update)", "B": "for (cond; init; update)", "C": "for (init; update; cond)", "D": "for (cond)"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001002', '660e8400-e29b-41d4-a716-446655440019', 'while文は条件がfalseの場合でも最低1回実行されるか？', '{"A": "される", "B": "されない", "C": "Javaのバージョンによる", "D": "JVMによる"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001003', '660e8400-e29b-41d4-a716-446655440019', 'do-while文の特徴として正しいものは？', '{"A": "条件がfalseでも最低1回実行される", "B": "必ず無限ループになる", "C": "breakが使えない", "D": "continueが使えない"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001004', '660e8400-e29b-41d4-a716-446655440019', 'ループを強制終了するキーワードは？', '{"A": "stop", "B": "break", "C": "exit", "D": "end"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001005', '660e8400-e29b-41d4-a716-446655440019', '次のループで次の繰り返しへスキップするキーワードは？', '{"A": "skip", "B": "continue", "C": "next", "D": "pass"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001006', '660e8400-e29b-41d4-a716-446655440019', '拡張for文（for-each）の構文として正しいものは？', '{"A": "for (T x : collection)", "B": "for (collection : T x)", "C": "foreach (T x in collection)", "D": "for (T x <- collection)"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001007', '660e8400-e29b-41d4-a716-446655440019', '無限ループになりやすい記述は？', '{"A": "for(;;)", "B": "for(i=0;i<10;i++)", "C": "while(i<10)", "D": "do{...}while(false)"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001008', '660e8400-e29b-41d4-a716-446655440019', 'ループ変数iが0から4までの合計回数として正しいのは？（i=0; i<5; i++）', '{"A": "4回", "B": "5回", "C": "6回", "D": "0回"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001009', '660e8400-e29b-41d4-a716-446655440019', 'breakはどこで使える？', '{"A": "ifのみ", "B": "ループやswitch", "C": "クラス定義のみ", "D": "importのみ"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001010', '660e8400-e29b-41d4-a716-446655440019', 'continueの効果として正しいものは？', '{"A": "ループを終了する", "B": "現在の反復を終了して次へ進む", "C": "メソッドを終了する", "D": "例外を投げる"}', 'B', 'SINGLE_CHOICE')
+ON CONFLICT (id) DO UPDATE SET 
+    question_text = EXCLUDED.question_text,
+    options = EXCLUDED.options,
+    correct_answer = EXCLUDED.correct_answer,
+    question_type = EXCLUDED.question_type;
 
--- Chapter 11: Collections
+-- Chapter 10: Processing Data Structures
 INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, question_type) VALUES
-('cd851b03-a832-4a41-a50e-2124b0138739', '660e8400-e29b-41d4-a716-446655440021', '重複する要素を許可しないコレクションインターフェースはどれですか？', '{"A": "List", "B": "Set", "C": "Map", "D": "Queue"}', 'B', 'SINGLE_CHOICE'),
-('c301d02f-1799-48b4-adc1-56f6d0754d42', '660e8400-e29b-41d4-a716-446655440021', 'キーと値のペアを管理するインターフェースはどれですか？', '{"A": "Collection", "B": "List", "C": "Set", "D": "Map"}', 'D', 'SINGLE_CHOICE'),
-('c249175c-438e-4c6a-a325-8fc4d5a19b1a', '660e8400-e29b-41d4-a716-446655440021', '要素の挿入順序を保持し、重複を許可するコレクションはどれですか？', '{"A": "HashSet", "B": "TreeSet", "C": "ArrayList", "D": "HashMap"}', 'C', 'SINGLE_CHOICE'),
-('fd090047-2391-45c4-942f-9a2dbc666c60', '660e8400-e29b-41d4-a716-446655440021', 'LIFO（後入れ先出し）のデータ構造を表すクラスはどれですか？', '{"A": "Queue", "B": "Stack", "C": "List", "D": "Vector"}', 'B', 'SINGLE_CHOICE'),
-('a74dd47f-952f-4158-9d68-6d40f52adb2f', '660e8400-e29b-41d4-a716-446655440021', 'ジェネリクスを使用してString型のリストを作成する正しい記述はどれですか？', '{"A": "List list = new List();", "B": "List<String> list = new ArrayList<>();", "C": "ArrayList<String> list = new List<>();", "D": "List(String) list = new ArrayList();"}', 'B', 'SINGLE_CHOICE'),
-('cb8bcfac-e328-4c7c-a589-fa0c9279728b', '660e8400-e29b-41d4-a716-446655440021', 'Mapに含まれるすべてのキーを取得するメソッドはどれですか？', '{"A": "getValues()", "B": "entrySet()", "C": "keySet()", "D": "keyList()"}', 'C', 'SINGLE_CHOICE'),
-('8b38cd3e-15c0-4531-9505-3cf6556a4b48', '660e8400-e29b-41d4-a716-446655440021', 'コレクション内の要素を順番に走査するためのインターフェースはどれですか？', '{"A": "Scanner", "B": "Iterator", "C": "Enumerator", "D": "Traverser"}', 'B', 'SINGLE_CHOICE'),
-('b0415933-b635-4a09-9086-145ec934b312', '660e8400-e29b-41d4-a716-446655440021', 'ArrayListとLinkedListの違いについて正しい記述はどれですか？', '{"A": "LinkedListはランダムアクセスが高速", "B": "ArrayListは要素の挿入・削除が高速", "C": "ArrayListはランダムアクセスが高速", "D": "両者に性能差はない"}', 'C', 'SINGLE_CHOICE'),
-('d7745712-94e8-4a2b-92f7-8ebced991430', '660e8400-e29b-41d4-a716-446655440021', 'Collections.sort()でリストをソートするために、要素が実装すべきインターフェースはどれですか？', '{"A": "Cloneable", "B": "Serializable", "C": "Comparable", "D": "Runnable"}', 'C', 'SINGLE_CHOICE'),
-('d3db2a42-9d2c-4d71-92de-bbc5831f0bd6', '660e8400-e29b-41d4-a716-446655440021', 'Java 7以降で導入された、ジェネリクスの型推論を行う演算子 <> の名称は？', '{"A": "アロー演算子", "B": "ダイヤモンド演算子", "C": "ドット演算子", "D": "エルビス演算子"}', 'B', 'SINGLE_CHOICE')
-ON CONFLICT (id) DO NOTHING;
+('a1b2c3d4-0000-4000-8000-000000001101', '660e8400-e29b-41d4-a716-446655440020', 'Listを昇順ソートする代表的なメソッドは？', '{"A": "Collections.sort(list)", "B": "Arrays.sort(list)", "C": "list.order()", "D": "list.sortAsc()"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001102', '660e8400-e29b-41d4-a716-446655440020', 'Mapのキーと値の組を走査するのに便利なメソッドは？', '{"A": "values()", "B": "entrySet()", "C": "keyList()", "D": "pairs()"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001103', '660e8400-e29b-41d4-a716-446655440020', '配列を拡張forで走査する書き方はどれ？', '{"A": "for (int x : arr)", "B": "for (arr : int x)", "C": "foreach (x in arr)", "D": "for (x <- arr)"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001104', '660e8400-e29b-41d4-a716-446655440020', 'Listから特定要素を削除するメソッドは？', '{"A": "delete()", "B": "remove()", "C": "drop()", "D": "erase()"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001105', '660e8400-e29b-41d4-a716-446655440020', 'Iteratorを使う主な利点として適切なのは？', '{"A": "高速化が必ずできる", "B": "走査しながら安全に削除できる", "C": "型が不要になる", "D": "例外が出なくなる"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001106', '660e8400-e29b-41d4-a716-446655440020', 'Listの各要素に同じ処理を適用する典型的な方法は？', '{"A": "ループで回す", "B": "if文で回す", "C": "switch文で回す", "D": "try-catchで回す"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001107', '660e8400-e29b-41d4-a716-446655440020', '配列をコピーする代表的なメソッドは？', '{"A": "System.arraycopy", "B": "System.copy", "C": "Array.copy", "D": "Copy.array"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001108', '660e8400-e29b-41d4-a716-446655440020', 'Listを配列に変換するメソッドは？', '{"A": "toArray()", "B": "asArray()", "C": "array()", "D": "convert()"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001109', '660e8400-e29b-41d4-a716-446655440020', 'Mapにキーが存在するか確認するメソッドは？', '{"A": "hasKey()", "B": "containsKey()", "C": "existsKey()", "D": "inKey()"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001110', '660e8400-e29b-41d4-a716-446655440020', 'Listの指定位置に要素を挿入するメソッド（例: index=0）は？', '{"A": "add(0, x)", "B": "insert(0, x)", "C": "put(0, x)", "D": "set(0, x)"}', 'A', 'SINGLE_CHOICE')
+ON CONFLICT (id) DO UPDATE SET 
+    question_text = EXCLUDED.question_text,
+    options = EXCLUDED.options,
+    correct_answer = EXCLUDED.correct_answer,
+    question_type = EXCLUDED.question_type;
 
--- Chapter 12: Advanced Topics
+-- Chapter 11: Methods
 INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, question_type) VALUES
-('7ab65eff-fbf3-4892-92cb-eeb9dd3de8ca', '660e8400-e29b-41d4-a716-446655440022', 'ラムダ式の基本的な構文として正しいものはどれですか？', '{"A": "(引数) -> { 処理 }", "B": "{ 処理 } -> (引数)", "C": "function(引数) { 処理 }", "D": "[引数] => { 処理 }"}', 'A', 'SINGLE_CHOICE'),
-('c10f9532-90b5-4ecf-a108-d1e70f04a561', '660e8400-e29b-41d4-a716-446655440022', '抽象メソッドを1つだけ持つインターフェースを何と呼びますか？', '{"A": "抽象インターフェース", "B": "関数型インターフェース", "C": "単一インターフェース", "D": "ラムダインターフェース"}', 'B', 'SINGLE_CHOICE'),
-('6dc76b3c-ed24-4e21-a0b9-3cb9fed45256', '660e8400-e29b-41d4-a716-446655440022', 'Stream APIにおいて、条件に一致する要素のみを抽出する中間操作はどれですか？', '{"A": "map", "B": "reduce", "C": "filter", "D": "collect"}', 'C', 'SINGLE_CHOICE'),
-('566b587d-85ae-44ec-a29f-ea94c8b0c60f', '660e8400-e29b-41d4-a716-446655440022', 'Stream APIにおいて、要素を別の形式に変換する中間操作はどれですか？', '{"A": "filter", "B": "map", "C": "forEach", "D": "sorted"}', 'B', 'SINGLE_CHOICE'),
-('b0fd0779-cadb-40aa-96db-e8bf9476096d', '660e8400-e29b-41d4-a716-446655440022', '値が存在しない可能性があることを表現するために使用されるクラスはどれですか？', '{"A": "Nullable", "B": "Optional", "C": "Maybe", "D": "Void"}', 'B', 'SINGLE_CHOICE'),
-('42d27cf1-5956-493e-ae94-a222f51d3681', '660e8400-e29b-41d4-a716-446655440022', 'Streamの処理結果をListやSetにまとめるために使用する終端操作はどれですか？', '{"A": "gather", "B": "group", "C": "collect", "D": "assemble"}', 'C', 'SINGLE_CHOICE'),
-('b5fc7b58-98d1-4b74-9246-263bf80e4ac2', '660e8400-e29b-41d4-a716-446655440022', 'テキストファイルを効率的に読み込むためにバッファリングを行うクラスはどれですか？', '{"A": "FileReader", "B": "BufferedReader", "C": "FileInputStream", "D": "Scanner"}', 'B', 'SINGLE_CHOICE'),
-('9ff4fc3c-88d6-4299-91ea-f11cf4a78712', '660e8400-e29b-41d4-a716-446655440022', 'オブジェクトの状態をバイト列に変換して保存・転送可能にすることを何と呼びますか？', '{"A": "コンパイル", "B": "シリアライズ（直列化）", "C": "暗号化", "D": "パース"}', 'B', 'SINGLE_CHOICE'),
-('10488540-827d-4a11-9dcb-04065f2badfc', '660e8400-e29b-41d4-a716-446655440022', 'ファイルやディレクトリのパス名を抽象的に表現するクラスはどれですか？', '{"A": "File", "B": "PathName", "C": "Directory", "D": "Folder"}', 'A', 'SINGLE_CHOICE'),
-('01852bd0-6f01-4d94-8835-2fae96caa3c4', '660e8400-e29b-41d4-a716-446655440022', 'Consumerインターフェースが持つ抽象メソッドはどれですか？', '{"A": "get", "B": "apply", "C": "test", "D": "accept"}', 'D', 'SINGLE_CHOICE')
-ON CONFLICT (id) DO NOTHING;
+('a1b2c3d4-0000-4000-8000-000000001201', '660e8400-e29b-41d4-a716-446655440021', '戻り値がないメソッドの戻り値型は？', '{"A": "null", "B": "void", "C": "Object", "D": "None"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001202', '660e8400-e29b-41d4-a716-446655440021', '同じメソッド名で引数が異なるメソッドを定義することを何という？', '{"A": "オーバーライド", "B": "オーバーロード", "C": "カプセル化", "D": "抽象化"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001203', '660e8400-e29b-41d4-a716-446655440021', 'staticメソッドは何から直接呼び出せる？', '{"A": "クラス名", "B": "インスタンス変数", "C": "this", "D": "super"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001204', '660e8400-e29b-41d4-a716-446655440021', 'メソッドの引数に値を渡すことを一般に何と呼ぶ？', '{"A": "パラメータ", "B": "引数", "C": "戻り値", "D": "例外"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001205', '660e8400-e29b-41d4-a716-446655440021', 'return文の役割として正しいものは？', '{"A": "ループを終了する", "B": "メソッドを終了し（必要なら）値を返す", "C": "例外を無視する", "D": "クラスを終了する"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001206', '660e8400-e29b-41d4-a716-446655440021', 'メソッドのシグネチャに通常含まれないものは？', '{"A": "メソッド名", "B": "引数の型", "C": "戻り値型", "D": "引数の個数"}', 'C', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001207', '660e8400-e29b-41d4-a716-446655440021', '同じクラス内の別メソッドを呼び出す基本的な書き方は？', '{"A": "methodName()", "B": "call methodName", "C": "invoke(methodName)", "D": "run methodName"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001208', '660e8400-e29b-41d4-a716-446655440021', '引数の値をメソッド内で変更しても呼び出し元の変数が必ず変わる、は正しい？', '{"A": "常に正しい", "B": "常に誤り", "C": "プリミティブは変わらず参照は変わることがある", "D": "Stringだけ変わる"}', 'C', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001209', '660e8400-e29b-41d4-a716-446655440021', 'メソッドが例外を呼び出し元に通知するために使うキーワードは？', '{"A": "throws", "B": "throwing", "C": "catch", "D": "finally"}', 'A', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000001210', '660e8400-e29b-41d4-a716-446655440021', 'mainメソッドのシグネチャとして一般的に正しいものは？', '{"A": "public static void main(String[] args)", "B": "static public int main(String args)", "C": "public void main(String[] args)", "D": "public static main(String[] args)"}', 'A', 'SINGLE_CHOICE')
+ON CONFLICT (id) DO UPDATE SET 
+    question_text = EXCLUDED.question_text,
+    options = EXCLUDED.options,
+    correct_answer = EXCLUDED.correct_answer,
+    question_type = EXCLUDED.question_type;
+
