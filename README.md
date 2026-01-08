@@ -40,3 +40,11 @@ https://sqlitebrowser.org/
 - `src/main/java/com/javaexam`: バックエンドロジック (Controllers, Services, Repositories, Entities)
 - `src/main/resources/templates`: Thymeleafテンプレート (login, dashboard, quiz, result)
 - `src/main/resources/application.properties`: 設定ファイル
+
+# 回答データの消去
+
+```
+sqlite3 java-exam.db
+select * from user_progress;
+delete from user_progress;
+```
