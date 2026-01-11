@@ -9,9 +9,9 @@ services:
       - nginx
     restart: always
     environment:
-      DOMAINS: 'java-exam.34.134.61.64.sslip.io -> http://nginx:8081'
-      # STAGE: 'production'
-      STAGE: 'local'
+      DOMAINS: 'java-exam.com -> http://nginx:8081'
+      STAGE: 'production'
+      # STAGE: 'local'
       # FORCE_RENEW: 'true'
     volumes:
       - https-portal-data:/var/lib/https-portal
