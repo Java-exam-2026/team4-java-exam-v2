@@ -15,11 +15,12 @@ INSERT INTO chapters (id, chapter_code, title, sort_order) VALUES
 ('660e8400-e29b-41d4-a716-446655440014', 'chap4', '4章:変数と型', 4),
 ('660e8400-e29b-41d4-a716-446655440015', 'chap5', '5章:標準API', 5),
 ('660e8400-e29b-41d4-a716-446655440016', 'chap7', '7章:条件分岐', 7),
-('660e8400-e29b-41d4-a716-446655440017', 'etc', '章以外(Linuxコマンド/システム開発プロセステスト)', 8),
-('660e8400-e29b-41d4-a716-446655440018', 'chap8', '8章:データ構造', 9),
-('660e8400-e29b-41d4-a716-446655440019', 'chap9', '9章:繰り返し', 10),
-('660e8400-e29b-41d4-a716-446655440020', 'chap10', '10章:データ構造の処理', 11),
-('660e8400-e29b-41d4-a716-446655440021', 'chap11', '11章:メソッド', 12)
+('660e8400-e29b-41d4-a716-446655440017', 'etc1', '章以外1:Linuxコマンド', 8),
+('660e8400-e29b-41d4-a716-446655440022', 'etc2', '章以外2:システム開発プロセス', 9),
+('660e8400-e29b-41d4-a716-446655440018', 'chap8', '8章:データ構造', 10),
+('660e8400-e29b-41d4-a716-446655440019', 'chap9', '9章:繰り返し', 11),
+('660e8400-e29b-41d4-a716-446655440020', 'chap10', '10章:データ構造の処理', 12),
+('660e8400-e29b-41d4-a716-446655440021', 'chap11', '11章:メソッド', 13)
 ON CONFLICT (id) DO NOTHING;
 
 
@@ -95,7 +96,7 @@ ON CONFLICT (id) DO UPDATE SET
     correct_answer = EXCLUDED.correct_answer,
     question_type = EXCLUDED.question_type;
 
--- etc: Linux Commands / Process Basics
+-- etc1: Linux Commands
 INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, question_type) VALUES
 ('a1b2c3d4-0000-4000-8000-000000000801', '660e8400-e29b-41d4-a716-446655440017', '現在の作業ディレクトリを表示するLinuxコマンドは？', '{"A": "pwd", "B": "cd", "C": "ls", "D": "who"}', 'A', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000000802', '660e8400-e29b-41d4-a716-446655440017', 'ファイル一覧を表示するLinuxコマンドは？', '{"A": "cat", "B": "ls", "C": "rm", "D": "mv"}', 'B', 'SINGLE_CHOICE'),
@@ -104,9 +105,17 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('a1b2c3d4-0000-4000-8000-000000000805', '660e8400-e29b-41d4-a716-446655440017', '文字列を検索するLinuxコマンドは？', '{"A": "find", "B": "grep", "C": "ps", "D": "top"}', 'B', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000000806', '660e8400-e29b-41d4-a716-446655440017', '実行権限を変更するコマンドは？', '{"A": "chmod", "B": "chown", "C": "umask", "D": "sudo"}', 'A', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000000807', '660e8400-e29b-41d4-a716-446655440017', 'プロセス一覧を表示するコマンドは？', '{"A": "ps", "B": "ssh", "C": "tar", "D": "ping"}', 'A', 'SINGLE_CHOICE'),
-('a1b2c3d4-0000-4000-8000-000000000808', '660e8400-e29b-41d4-a716-446655440017', 'ファイルをコピーするコマンドは？', '{"A": "cp", "B": "mv", "C": "rm", "D": "ln"}', 'A', 'SINGLE_CHOICE'),
-('a1b2c3d4-0000-4000-8000-000000000809', '660e8400-e29b-41d4-a716-446655440017', 'システム開発プロセスで「要件定義」の次に来ることが多い工程は？（一般的なウォーターフォール）', '{"A": "テスト", "B": "設計", "C": "運用", "D": "保守"}', 'B', 'SINGLE_CHOICE'),
-('a1b2c3d4-0000-4000-8000-000000000810', '660e8400-e29b-41d4-a716-446655440017', 'バージョン管理システムの例として適切なのは？', '{"A": "Git", "B": "HTTP", "C": "SQL", "D": "DNS"}', 'A', 'SINGLE_CHOICE')
+('a1b2c3d4-0000-4000-8000-000000000808', '660e8400-e29b-41d4-a716-446655440017', 'ファイルをコピーするコマンドは？', '{"A": "cp", "B": "mv", "C": "rm", "D": "ln"}', 'A', 'SINGLE_CHOICE')
+ON CONFLICT (id) DO UPDATE SET 
+    question_text = EXCLUDED.question_text,
+    options = EXCLUDED.options,
+    correct_answer = EXCLUDED.correct_answer,
+    question_type = EXCLUDED.question_type;
+
+-- etc2: Process Basics
+INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, question_type) VALUES
+('a1b2c3d4-0000-4000-8000-000000000809', '660e8400-e29b-41d4-a716-446655440022', 'システム開発プロセスで「要件定義」の次に来ることが多い工程は？（一般的なウォーターフォール）', '{"A": "テスト", "B": "設計", "C": "運用", "D": "保守"}', 'B', 'SINGLE_CHOICE'),
+('a1b2c3d4-0000-4000-8000-000000000810', '660e8400-e29b-41d4-a716-446655440022', 'バージョン管理システムの例として適切なのは？', '{"A": "Git", "B": "HTTP", "C": "SQL", "D": "DNS"}', 'A', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
