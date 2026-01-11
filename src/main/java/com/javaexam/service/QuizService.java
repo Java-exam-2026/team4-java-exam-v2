@@ -103,7 +103,6 @@ public class QuizService {
       progress.setChapter(chapter);
       progress.setPassed(false);
       progress.setScore(0);
-      progress.setHasSubmitted(false);
     }
 
     progress.setScore(score);
@@ -111,7 +110,12 @@ public class QuizService {
     progress.setHasSubmitted(true);
     progress.setLastAttemptedAt(java.time.LocalDateTime.now());
 
-    userProgressJdbcRepository.save(progress);
+    try {
+      userProgressJdbcRepository.save(progress);
+    } catch (org.springframework.dao.DataIntegrityViolationException e) {
+      // Race condition: Another request already submitted for this user/chapter
+      throw new AlreadySubmittedException("You have already submitted answers for this chapter");
+    }
 
     return new SubmissionResultDto(chapterCode, score, passed, correctCount, totalQuestions);
   }
