@@ -2,6 +2,7 @@ package com.javaexam.controller;
 
 import com.javaexam.dto.SubmissionRequestDto;
 import com.javaexam.dto.SubmissionResultDto;
+import com.javaexam.exception.AlreadySubmittedException;
 import com.javaexam.service.QuizService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -49,12 +50,9 @@ public class QuizController {
       SubmissionResultDto result = quizService.submitQuiz(principal.getName(), chapterCode, submission);
       model.addAttribute("result", result);
       return "result";
-    } catch (RuntimeException e) {
-      if (e.getMessage().contains("already submitted")) {
-        model.addAttribute("chapterCode", chapterCode);
-        return "already-submitted";
-      }
-      throw e;
+    } catch (AlreadySubmittedException e) {
+      model.addAttribute("chapterCode", chapterCode);
+      return "already-submitted";
     }
   }
 }

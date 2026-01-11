@@ -2,6 +2,7 @@ package com.javaexam.service;
 
 import com.javaexam.dto.*;
 import com.javaexam.entity.*;
+import com.javaexam.exception.AlreadySubmittedException;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserJdbcRepository;
@@ -57,7 +58,7 @@ public class QuizService {
     UserProgress progress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
         .orElse(null);
 
-    return progress != null && progress.getHasSubmitted() != null && progress.getHasSubmitted();
+    return progress != null && Boolean.TRUE.equals(progress.getHasSubmitted());
   }
 
   @Transactional
@@ -72,8 +73,8 @@ public class QuizService {
     UserProgress existingProgress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
         .orElse(null);
     
-    if (existingProgress != null && existingProgress.getHasSubmitted() != null && existingProgress.getHasSubmitted()) {
-      throw new RuntimeException("You have already submitted answers for this chapter");
+    if (existingProgress != null && Boolean.TRUE.equals(existingProgress.getHasSubmitted())) {
+      throw new AlreadySubmittedException("You have already submitted answers for this chapter");
     }
 
     int totalQuestions = submission.getAnswers().size();
