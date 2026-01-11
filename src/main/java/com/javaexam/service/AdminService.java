@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +24,11 @@ public class AdminService {
         this.questionJdbcRepository = questionJdbcRepository;
     }
 
+    /**
+     * Retrieves all user progress records for admin review.
+     * Note: Currently loads all records without pagination. For production systems with large datasets,
+     * consider implementing pagination or filtering.
+     */
     @Transactional(readOnly = true)
     public List<AllProgressDto> getAllUsersProgress() {
         List<UserProgress> allProgress = userProgressJdbcRepository.findAll();
@@ -41,12 +45,17 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves all questions with their correct answers for admin review.
+     * Note: Currently loads all records without pagination. For production systems with large datasets,
+     * consider implementing pagination or filtering by chapter.
+     */
     @Transactional(readOnly = true)
     public List<AdminQuestionDto> getAllQuestionsWithAnswers() {
         List<Question> allQuestions = questionJdbcRepository.findAll();
         return allQuestions.stream()
                 .map(question -> new AdminQuestionDto(
-                        UUID.fromString(question.getId()),
+                        question.getId(),
                         question.getChapter().getChapterCode(),
                         question.getQuestionText(),
                         question.getOptions(),
