@@ -8,6 +8,7 @@ import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -112,9 +113,15 @@ public class QuizService {
 
     try {
       userProgressJdbcRepository.save(progress);
-    } catch (org.springframework.dao.DataIntegrityViolationException e) {
+    } catch (DataIntegrityViolationException e) {
       // Race condition: Another request already submitted for this user/chapter
-      throw new AlreadySubmittedException("You have already submitted answers for this chapter");
+      // The UNIQUE(user_id, chapter_id) constraint prevents duplicate submissions
+      String message = e.getMessage();
+      if (message != null && (message.contains("user_id") || message.contains("chapter_id") || message.contains("UNIQUE"))) {
+        throw new AlreadySubmittedException("You have already submitted answers for this chapter");
+      }
+      // If it's a different constraint violation, rethrow the original exception
+      throw e;
     }
 
     return new SubmissionResultDto(chapterCode, score, passed, correctCount, totalQuestions);
