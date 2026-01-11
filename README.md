@@ -41,10 +41,19 @@ https://sqlitebrowser.org/
 - `src/main/resources/templates`: Thymeleafテンプレート (login, dashboard, quiz, result)
 - `src/main/resources/application.properties`: 設定ファイル
 
-# 回答データの消去
+## 回答データの消去
 
 ```
 sqlite3 java-exam.db
 select * from user_progress;
 delete from user_progress;
+```
+
+## サーバー再起動
+
+```
+sudo su - shogo_nakao
+cd java-exam-v2/
+lsof -i:8080
+kill -9 <<PID>>
 ```
