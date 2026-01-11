@@ -37,6 +37,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('b2d1e436-320a-4832-9f84-56691cbec6c1', '660e8400-e29b-41d4-a716-446655440013', '!true の結果は？', '{"A": "false", "B": "true", "C": "0", "D": "1"}', 'A', 'SINGLE_CHOICE'),
 ('52084b0e-a244-4980-ba21-d38eb425b5bb', '660e8400-e29b-41d4-a716-446655440013', '等価比較に使用される演算子は？', '{"A": "=", "B": "==", "C": "===", "D": "<>"}', 'B', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -55,6 +56,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('69949542-785a-439f-8db8-5e0da2bc78e4', '660e8400-e29b-41d4-a716-446655440014', 'double型をint型にキャストする方法は？', '{"A": "(int) d", "B": "int(d)", "C": "d.toInt()", "D": "cast(d, int)"}', 'A', 'SINGLE_CHOICE'),
 ('2f57472c-8121-4411-809f-76b027d57684', '660e8400-e29b-41d4-a716-446655440014', 'Stringはプリミティブ型ですか？', '{"A": "はい", "B": "いいえ", "C": "場合による", "D": "JVMによる"}', 'B', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -73,6 +75,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('3106f3ef-ec73-4cb9-8ea9-4a9a55387a46', '660e8400-e29b-41d4-a716-446655440015', '整数を読み取るScannerのメソッドは？', '{"A": "readInt()", "B": "nextInt()", "C": "getInteger()", "D": "inputInt()"}', 'B', 'SINGLE_CHOICE'),
 ('09ae29f7-d05b-453c-9ee5-b51f17e57ab5', '660e8400-e29b-41d4-a716-446655440015', 'Random.nextInt(10) の範囲は？', '{"A": "1 to 10", "B": "0 to 10", "C": "0 to 9", "D": "1 to 9"}', 'C', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -91,6 +94,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('a1b2c3d4-0000-4000-8000-000000000709', '660e8400-e29b-41d4-a716-446655440016', 'if文のネストを浅くするために使われることが多い制御文は？', '{"A": "continue", "B": "break", "C": "return", "D": "goto"}', 'C', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000000710', '660e8400-e29b-41d4-a716-446655440016', 'switch文でどのcaseにも一致しない場合に実行されるラベルは？', '{"A": "default", "B": "else", "C": "otherwise", "D": "none"}', 'A', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -109,6 +113,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('a1b2c3d4-0000-4000-8000-000000000811', '660e8400-e29b-41d4-a716-446655440017', 'ファイルを移動するコマンドは？', '{"A": "mv", "B": "cp", "C": "move", "D": "rename"}', 'A', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000000812', '660e8400-e29b-41d4-a716-446655440017', 'ファイルを削除するコマンドは？', '{"A": "delete", "B": "remove", "C": "rm", "D": "del"}', 'C', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -127,6 +132,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('a1b2c3d4-0000-4000-8000-000000000819', '660e8400-e29b-41d4-a716-446655440022', 'リファクタリングの主な目的は？', '{"A": "新機能の追加", "B": "バグの修正", "C": "コードの可読性向上", "D": "パフォーマンスの劇的な改善"}', 'C', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000000820', '660e8400-e29b-41d4-a716-446655440022', 'コードレビューの利点として正しいものは？', '{"A": "開発速度の大幅な向上", "B": "品質向上と知識共有", "C": "テストの自動化", "D": "デプロイの簡略化"}', 'B', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -145,6 +151,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('a1b2c3d4-0000-4000-8000-000000000909', '660e8400-e29b-41d4-a716-446655440018', '配列アクセスで範囲外を参照した場合に発生しやすい例外は？', '{"A": "NullPointerException", "B": "ArrayIndexOutOfBoundsException", "C": "IOException", "D": "NumberFormatException"}', 'B', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000000910', '660e8400-e29b-41d4-a716-446655440018', 'Listは重複要素を持てるか？', '{"A": "持てない", "B": "持てる", "C": "型による", "D": "実装による"}', 'B', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -163,6 +170,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('a1b2c3d4-0000-4000-8000-000000001009', '660e8400-e29b-41d4-a716-446655440019', 'breakはどこで使える？', '{"A": "ifのみ", "B": "ループやswitch", "C": "クラス定義のみ", "D": "importのみ"}', 'B', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000001010', '660e8400-e29b-41d4-a716-446655440019', 'continueの効果として正しいものは？', '{"A": "ループを終了する", "B": "現在の反復を終了して次へ進む", "C": "メソッドを終了する", "D": "例外を投げる"}', 'B', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -181,6 +189,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('a1b2c3d4-0000-4000-8000-000000001109', '660e8400-e29b-41d4-a716-446655440020', 'Mapにキーが存在するか確認するメソッドは？', '{"A": "hasKey()", "B": "containsKey()", "C": "existsKey()", "D": "inKey()"}', 'B', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000001110', '660e8400-e29b-41d4-a716-446655440020', 'Listの指定位置に要素を挿入するメソッド（例: index=0）は？', '{"A": "add(0, x)", "B": "insert(0, x)", "C": "put(0, x)", "D": "set(0, x)"}', 'A', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
@@ -199,6 +208,7 @@ INSERT INTO questions (id, chapter_id, question_text, options, correct_answer, q
 ('a1b2c3d4-0000-4000-8000-000000001209', '660e8400-e29b-41d4-a716-446655440021', 'メソッドが例外を呼び出し元に通知するために使うキーワードは？', '{"A": "throws", "B": "throwing", "C": "catch", "D": "finally"}', 'A', 'SINGLE_CHOICE'),
 ('a1b2c3d4-0000-4000-8000-000000001210', '660e8400-e29b-41d4-a716-446655440021', 'mainメソッドのシグネチャとして一般的に正しいものは？', '{"A": "public static void main(String[] args)", "B": "static public int main(String args)", "C": "public void main(String[] args)", "D": "public static main(String[] args)"}', 'A', 'SINGLE_CHOICE')
 ON CONFLICT (id) DO UPDATE SET 
+    chapter_id = EXCLUDED.chapter_id,
     question_text = EXCLUDED.question_text,
     options = EXCLUDED.options,
     correct_answer = EXCLUDED.correct_answer,
