@@ -46,6 +46,20 @@ public class QuizService {
     return response;
   }
 
+  @Transactional(readOnly = true)
+  public boolean hasUserSubmitted(String username, String chapterCode) {
+    User user = userJdbcRepository.findByUsername(username)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
+        .orElseThrow(() -> new RuntimeException("Chapter not found"));
+
+    UserProgress progress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
+        .orElse(null);
+
+    return progress != null && progress.getHasSubmitted() != null && progress.getHasSubmitted();
+  }
+
   @Transactional
   public SubmissionResultDto submitQuiz(String username, String chapterCode, SubmissionRequestDto submission) {
     User user = userJdbcRepository.findByUsername(username)
@@ -53,6 +67,14 @@ public class QuizService {
 
     Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
         .orElseThrow(() -> new RuntimeException("Chapter not found"));
+
+    // Check if user has already submitted for this chapter
+    UserProgress existingProgress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
+        .orElse(null);
+    
+    if (existingProgress != null && existingProgress.getHasSubmitted() != null && existingProgress.getHasSubmitted()) {
+      throw new RuntimeException("You have already submitted answers for this chapter");
+    }
 
     int totalQuestions = submission.getAnswers().size();
     int correctCount = 0;
@@ -72,8 +94,7 @@ public class QuizService {
     boolean passed = score >= 80; // Assuming 80% pass rate
 
     // Update progress
-    UserProgress progress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
-        .orElse(new UserProgress());
+    UserProgress progress = existingProgress != null ? existingProgress : new UserProgress();
 
     if (progress.getId() == null) {
       progress.setId(UUID.randomUUID().toString());
@@ -81,14 +102,12 @@ public class QuizService {
       progress.setChapter(chapter);
       progress.setPassed(false);
       progress.setScore(0);
+      progress.setHasSubmitted(false);
     }
 
-    if (progress.getScore() < score) {
-      progress.setScore(score);
-    }
-    if ((progress.getPassed() == null || !progress.getPassed()) && passed) {
-      progress.setPassed(true);
-    }
+    progress.setScore(score);
+    progress.setPassed(passed);
+    progress.setHasSubmitted(true);
     progress.setLastAttemptedAt(java.time.LocalDateTime.now());
 
     userProgressJdbcRepository.save(progress);

@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS user_progress (
     chapter_id VARCHAR(36) NOT NULL,
     score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),
     passed BOOLEAN NOT NULL,
+    has_submitted BOOLEAN DEFAULT FALSE NOT NULL,
     last_attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,

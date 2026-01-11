@@ -21,7 +21,13 @@ public class QuizController {
   }
 
   @GetMapping("/{chapterCode}")
-  public String getQuiz(@PathVariable String chapterCode, Model model) {
+  public String getQuiz(@PathVariable String chapterCode, Principal principal, Model model) {
+    // Check if user has already submitted
+    if (quizService.hasUserSubmitted(principal.getName(), chapterCode)) {
+      model.addAttribute("chapterCode", chapterCode);
+      return "already-submitted";
+    }
+
     Map<String, Object> quizData = quizService.getQuizForChapter(chapterCode);
     model.addAttribute("chapterTitle", quizData.get("chapterTitle"));
     model.addAttribute("questions", quizData.get("questions"));
@@ -39,8 +45,16 @@ public class QuizController {
       @ModelAttribute SubmissionRequestDto submission,
       Principal principal,
       Model model) {
-    SubmissionResultDto result = quizService.submitQuiz(principal.getName(), chapterCode, submission);
-    model.addAttribute("result", result);
-    return "result";
+    try {
+      SubmissionResultDto result = quizService.submitQuiz(principal.getName(), chapterCode, submission);
+      model.addAttribute("result", result);
+      return "result";
+    } catch (RuntimeException e) {
+      if (e.getMessage().contains("already submitted")) {
+        model.addAttribute("chapterCode", chapterCode);
+        return "already-submitted";
+      }
+      throw e;
+    }
   }
 }
