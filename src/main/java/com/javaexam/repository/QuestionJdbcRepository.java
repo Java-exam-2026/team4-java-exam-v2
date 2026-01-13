@@ -74,4 +74,10 @@ public class QuestionJdbcRepository {
                 id);
         return questions.stream().findFirst();
     }
+
+    public List<Question> findAll() {
+        return jdbcTemplate.query(
+                "SELECT * FROM questions ORDER BY chapter_id",
+                questionRowMapper);
+    }
 }

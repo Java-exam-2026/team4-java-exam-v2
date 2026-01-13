@@ -5,14 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Map;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminQuestionDto {
     
-    private UUID id;
+    private String id;
     private String chapterCode;
     private String questionText;
     private Map<String, String> options;

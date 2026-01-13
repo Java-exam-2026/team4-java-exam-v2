@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <title>Dashboard</title>
@@ -20,27 +20,55 @@
     </nav>
 
     <div class="container">
-        <h2 class="mb-4">Available Chapters</h2>
-        <div class="row">
-            <div class="col-md-4 mb-4" th:each="chapter : ${chapters}">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title" th:text="${chapter.title}">Chapter Title</h5>
-                        <p class="card-text text-muted">Chapter overview coming soon.</p>
-
-                        <div th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode)}" class="mb-2">
-                            <span th:if="${progressMap.get(chapter.chapterCode).hasSubmitted}" class="badge bg-secondary">Submitted</span>
-                            <span th:if="${progressMap.get(chapter.chapterCode).passed}" class="badge bg-success">Passed</span>
-                            <span th:unless="${progressMap.get(chapter.chapterCode).passed}"
-                                class="badge bg-warning text-dark">
-                                Score: <span th:text="${progressMap.get(chapter.chapterCode).score}">0</span>%
-                            </span>
+        <!-- Admin Menu -->
+        <div sec:authorize="hasRole('ADMIN')" class="mb-4">
+            <h2 class="mb-3">管理者メニュー</h2>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">全ユーザーの回答状況</h5>
+                            <p class="card-text">全てのユーザーの進捗状況とスコアを確認できます。</p>
+                            <a href="/admin/progress" class="btn btn-primary">回答状況を見る</a>
                         </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">全問題と答え</h5>
+                            <p class="card-text">全ての問題文と正解を確認できます。</p>
+                            <a href="/admin/questions" class="btn btn-primary">問題と答えを見る</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <a th:if="${progressMap == null or !progressMap.containsKey(chapter.chapterCode) or !progressMap.get(chapter.chapterCode).hasSubmitted}"
-                           th:href="@{/quiz/{code}(code=${chapter.chapterCode})}" class="btn btn-primary">Start Quiz</a>
-                        <span th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode) and progressMap.get(chapter.chapterCode).hasSubmitted}"
-                              class="text-muted">Already submitted</span>
+        <!-- User Chapters (only for non-admin users) -->
+        <div sec:authorize="hasRole('USER')">
+            <h2 class="mb-4">Available Chapters</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4" th:each="chapter : ${chapters}">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${chapter.title}">Chapter Title</h5>
+                            <p class="card-text text-muted">Chapter overview coming soon.</p>
+
+                            <div th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode)}" class="mb-2">
+                                <span th:if="${progressMap.get(chapter.chapterCode).hasSubmitted}" class="badge bg-secondary">Submitted</span>
+                                <span th:if="${progressMap.get(chapter.chapterCode).passed}" class="badge bg-success">Passed</span>
+                                <span th:unless="${progressMap.get(chapter.chapterCode).passed}"
+                                      class="badge bg-warning text-dark">
+                                    Score: <span th:text="${progressMap.get(chapter.chapterCode).score}">0</span>%
+                                </span>
+                            </div>
+
+                            <a th:if="${progressMap == null or !progressMap.containsKey(chapter.chapterCode) or !progressMap.get(chapter.chapterCode).hasSubmitted}"
+                               th:href="@{/quiz/{code}(code=${chapter.chapterCode})}" class="btn btn-primary">Start Quiz</a>
+                            <span th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode) and progressMap.get(chapter.chapterCode).hasSubmitted}"
+                                  class="text-muted">Already submitted</span>
+                        </div>
                     </div>
                 </div>
             </div>
