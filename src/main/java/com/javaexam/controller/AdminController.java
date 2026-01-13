@@ -87,7 +87,7 @@ public class AdminController {
             tsv.append(escapeTsvValue(progress.getTitle())).append("\t");
             tsv.append(progress.getScore()).append("%\t");
             tsv.append(progress.getPassed() ? "合格" : "不合格").append("\t");
-            tsv.append(progress.getLastAttemptedAt().format(formatter)).append("\n");
+            tsv.append(progress.getLastAttemptedAt() != null ? progress.getLastAttemptedAt().format(formatter) : "").append("\n");
         }
         
         // Convert to bytes with UTF-8 encoding (with BOM for Excel compatibility)
