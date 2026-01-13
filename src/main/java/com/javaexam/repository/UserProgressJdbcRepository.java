@@ -93,4 +93,12 @@ public class UserProgressJdbcRepository {
     public List<UserProgress> findAll() {
         return jdbcTemplate.query("SELECT * FROM user_progress", rowMapper);
     }
+
+    public void deleteByUserId(String userId) {
+        jdbcTemplate.update("DELETE FROM user_progress WHERE user_id = ?", userId);
+    }
+
+    public void deleteAll() {
+        jdbcTemplate.update("DELETE FROM user_progress");
+    }
 }

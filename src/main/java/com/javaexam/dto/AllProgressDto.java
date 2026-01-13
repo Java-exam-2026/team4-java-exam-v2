@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AllProgressDto {
     
+    private String userId;
     private String username;
     private String displayName;
     private String chapterCode;

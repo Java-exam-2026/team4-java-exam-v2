@@ -34,6 +34,7 @@ public class AdminService {
         List<UserProgress> allProgress = userProgressJdbcRepository.findAll();
         return allProgress.stream()
                 .map(progress -> new AllProgressDto(
+                        progress.getUser().getId(),
                         progress.getUser().getUsername(),
                         progress.getUser().getDisplayName(),
                         progress.getChapter().getChapterCode(),
@@ -62,5 +63,22 @@ public class AdminService {
                         question.getCorrectAnswer()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Deletes all progress records for a specific user.
+     * @param userId the ID of the user whose progress should be deleted
+     */
+    @Transactional
+    public void deleteUserProgress(String userId) {
+        userProgressJdbcRepository.deleteByUserId(userId);
+    }
+
+    /**
+     * Deletes all user progress records in the system.
+     */
+    @Transactional
+    public void deleteAllProgress() {
+        userProgressJdbcRepository.deleteAll();
     }
 }
