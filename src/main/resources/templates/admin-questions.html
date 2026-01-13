@@ -38,14 +38,38 @@
         
         <h2 class="mb-4">全問題と答え</h2>
 
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="mb-3">
+            <a href="/admin/questions/new" class="btn btn-primary">+ 新しい問題を作成</a>
+        </div>
+
         <div th:if="${#lists.isEmpty(questions)}" class="alert alert-info">
             まだ問題がありません
         </div>
 
         <div th:each="question, stat : ${questions}" class="card question-card">
-            <div class="card-header">
-                <strong>問題 <span th:text="${stat.count}">1</span></strong> 
-                <span class="badge bg-secondary" th:text="${question.chapterCode}">chap1</span>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>問題 <span th:text="${stat.count}">1</span></strong> 
+                    <span class="badge bg-secondary" th:text="${question.chapterCode}">chap1</span>
+                    <small class="text-muted ms-2">ID: <span th:text="${question.id}">id</span></small>
+                </div>
+                <div>
+                    <a th:href="@{/admin/questions/edit/{id}(id=${question.id})}" class="btn btn-sm btn-outline-primary">編集</a>
+                    <form th:action="@{/admin/questions/delete/{id}(id=${question.id})}" method="post" class="d-inline" 
+                          onsubmit="return confirm('この問題を削除してもよろしいですか？');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">削除</button>
+                    </form>
+                </div>
             </div>
             <div class="card-body">
                 <h5 class="card-title" th:text="${question.questionText}">Question Text</h5>
