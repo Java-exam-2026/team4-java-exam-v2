@@ -37,6 +37,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
+        <!-- Error message display -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <div class="card">
             <div class="card-body">
                 <div class="table-responsive">
@@ -98,8 +104,14 @@
         function confirmDeleteUser(button) {
             var userId = button.getAttribute('data-user-id');
             var username = button.getAttribute('data-username');
-            // Escape HTML to prevent XSS
-            var escapedUsername = username.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            // Escape for JavaScript string context to prevent XSS
+            var escapedUsername = username
+                .replace(/\\/g, '\\\\')  // Backslash must be first
+                .replace(/'/g, "\\'")     // Single quote
+                .replace(/"/g, '\\"')     // Double quote
+                .replace(/\n/g, '\\n')    // Newline
+                .replace(/\r/g, '\\r')    // Carriage return
+                .replace(/\t/g, '\\t');   // Tab
             
             if (confirm('ユーザー「' + escapedUsername + '」の解答状況を削除してもよろしいですか？')) {
                 button.closest('form').submit();

@@ -68,17 +68,22 @@ public class AdminService {
     /**
      * Deletes all progress records for a specific user.
      * @param userId the ID of the user whose progress should be deleted
+     * @throws IllegalArgumentException if no progress records exist for the given userId
      */
     @Transactional
     public void deleteUserProgress(String userId) {
-        userProgressJdbcRepository.deleteByUserId(userId);
+        int deletedCount = userProgressJdbcRepository.deleteByUserId(userId);
+        if (deletedCount == 0) {
+            throw new IllegalArgumentException("No progress records found for userId: " + userId);
+        }
     }
 
     /**
      * Deletes all user progress records in the system.
+     * @return the number of records deleted
      */
     @Transactional
-    public void deleteAllProgress() {
-        userProgressJdbcRepository.deleteAll();
+    public int deleteAllProgress() {
+        return userProgressJdbcRepository.deleteAll();
     }
 }

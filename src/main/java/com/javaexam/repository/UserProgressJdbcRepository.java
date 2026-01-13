@@ -94,11 +94,11 @@ public class UserProgressJdbcRepository {
         return jdbcTemplate.query("SELECT * FROM user_progress", rowMapper);
     }
 
-    public void deleteByUserId(String userId) {
-        jdbcTemplate.update("DELETE FROM user_progress WHERE user_id = ?", userId);
+    public int deleteByUserId(String userId) {
+        return jdbcTemplate.update("DELETE FROM user_progress WHERE user_id = ?", userId);
     }
 
-    public void deleteAll() {
-        jdbcTemplate.update("DELETE FROM user_progress");
+    public int deleteAll() {
+        return jdbcTemplate.update("DELETE FROM user_progress");
     }
 }
