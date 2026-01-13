@@ -244,7 +244,8 @@ public class AdminController {
     private void populateFormAttributes(Model model, boolean isEdit) {
         List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
         model.addAttribute("chapters", chapters);
-        model.addAttribute("questionTypes", QuestionType.values());
+        // Only allow SINGLE_CHOICE questions
+        model.addAttribute("questionTypes", new QuestionType[]{QuestionType.SINGLE_CHOICE});
         model.addAttribute("isEdit", isEdit);
     }
     
