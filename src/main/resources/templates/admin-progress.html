@@ -81,6 +81,10 @@
                                 </td>
                                 <td th:text="${#temporals.format(progress.lastAttemptedAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</td>
                                 <td>
+                                    <a th:href="@{/admin/progress/detail/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}" 
+                                       class="btn btn-sm btn-outline-primary me-1">
+                                        詳細
+                                    </a>
                                     <form th:action="@{/admin/progress/delete/{userId}(userId=${progress.userId})}" method="post" style="display: inline;">
                                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                                 th:attr="data-user-id=${progress.userId},data-username=${progress.username}"

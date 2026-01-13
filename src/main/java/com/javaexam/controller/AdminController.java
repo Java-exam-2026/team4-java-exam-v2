@@ -4,6 +4,7 @@ import com.javaexam.dto.AllProgressDto;
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.ChapterFormDto;
 import com.javaexam.dto.QuestionFormDto;
+import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
 import com.javaexam.entity.QuestionType;
@@ -50,6 +51,27 @@ public class AdminController {
         List<AllProgressDto> progressList = adminService.getAllUsersProgress();
         model.addAttribute("progressList", progressList);
         return "admin-progress";
+    }
+
+    @GetMapping("/progress/detail/{userId}/{chapterId}")
+    public String viewUserAnswerDetail(@PathVariable String userId, 
+                                       @PathVariable String chapterId, 
+                                       Model model,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            List<UserAnswerDetailDto> answerDetails = adminService.getUserAnswerDetails(userId, chapterId);
+            Chapter chapter = adminService.getChapterById(chapterId);
+            
+            model.addAttribute("answerDetails", answerDetails);
+            model.addAttribute("chapterTitle", chapter.getTitle());
+            model.addAttribute("userId", userId);
+            model.addAttribute("chapterId", chapterId);
+            
+            return "admin-answer-detail";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "指定されたデータが見つかりませんでした");
+            return "redirect:/admin/progress";
+        }
     }
 
     @GetMapping("/questions")

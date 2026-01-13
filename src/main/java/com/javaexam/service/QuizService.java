@@ -5,6 +5,7 @@ import com.javaexam.entity.*;
 import com.javaexam.exception.AlreadySubmittedException;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
+import com.javaexam.repository.UserAnswerJdbcRepository;
 import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,9 @@ public class QuizService {
 
   @Autowired
   private UserJdbcRepository userJdbcRepository;
+
+  @Autowired
+  private UserAnswerJdbcRepository userAnswerJdbcRepository;
 
   @Transactional(readOnly = true)
   public Map<String, Object> getQuizForChapter(String chapterCode) {
@@ -80,15 +84,28 @@ public class QuizService {
 
     int totalQuestions = submission.getAnswers().size();
     int correctCount = 0;
+    java.time.LocalDateTime answeredAt = java.time.LocalDateTime.now();
 
     for (AnswerSubmissionDto answerDto : submission.getAnswers()) {
       Question question = questionJdbcRepository.findById(answerDto.getQuestionId().toString())
           .orElse(null);
 
       if (question != null) {
-        if (checkAnswer(question, answerDto.getSelectedAnswer())) {
+        boolean isCorrect = checkAnswer(question, answerDto.getSelectedAnswer());
+        if (isCorrect) {
           correctCount++;
         }
+        
+        // Save individual answer
+        UserAnswer userAnswer = new UserAnswer();
+        userAnswer.setId(UUID.randomUUID().toString());
+        userAnswer.setUser(user);
+        userAnswer.setChapter(chapter);
+        userAnswer.setQuestion(question);
+        userAnswer.setSelectedAnswer(answerDto.getSelectedAnswer());
+        userAnswer.setIsCorrect(isCorrect);
+        userAnswer.setAnsweredAt(answeredAt);
+        userAnswerJdbcRepository.save(userAnswer);
       }
     }
 
