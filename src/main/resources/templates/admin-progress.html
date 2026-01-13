@@ -24,7 +24,24 @@
             <a href="/" class="btn btn-secondary">← ダッシュボードに戻る</a>
         </div>
         
-        <h2 class="mb-4">全ユーザーの回答状況</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">全ユーザーの回答状況</h2>
+            <button type="button" class="btn btn-danger" onclick="confirmDeleteAll()">
+                すべての解答を削除
+            </button>
+        </div>
+
+        <!-- Success message display -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Error message display -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
 
         <div class="card">
             <div class="card-body">
@@ -39,6 +56,7 @@
                                 <th>スコア</th>
                                 <th>合格</th>
                                 <th>最終受験日時</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,9 +75,18 @@
                                     <span th:unless="${progress.passed}" class="badge bg-danger">不合格</span>
                                 </td>
                                 <td th:text="${#temporals.format(progress.lastAttemptedAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</td>
+                                <td>
+                                    <form th:action="@{/admin/progress/delete/{userId}(userId=${progress.userId})}" method="post" style="display: inline;">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                th:attr="data-user-id=${progress.userId},data-username=${progress.username}"
+                                                onclick="confirmDeleteUser(this)">
+                                            削除
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(progressList)}">
-                                <td colspan="7" class="text-center text-muted">まだ回答データがありません</td>
+                                <td colspan="8" class="text-center text-muted">まだ回答データがありません</td>
                             </tr>
                         </tbody>
                     </table>
@@ -68,7 +95,37 @@
         </div>
     </div>
 
+    <!-- Hidden form for delete all operation -->
+    <form id="deleteAllForm" th:action="@{/admin/progress/delete-all}" method="post" style="display: none;">
+    </form>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function confirmDeleteUser(button) {
+            var userId = button.getAttribute('data-user-id');
+            var username = button.getAttribute('data-username');
+            // Escape for JavaScript string context to prevent XSS
+            var escapedUsername = username
+                .replace(/\\/g, '\\\\')  // Backslash must be first
+                .replace(/'/g, "\\'")     // Single quote
+                .replace(/"/g, '\\"')     // Double quote
+                .replace(/\n/g, '\\n')    // Newline
+                .replace(/\r/g, '\\r')    // Carriage return
+                .replace(/\t/g, '\\t');   // Tab
+            
+            if (confirm('ユーザー「' + escapedUsername + '」の解答状況を削除してもよろしいですか？')) {
+                button.closest('form').submit();
+            }
+        }
+
+        function confirmDeleteAll() {
+            if (confirm('すべてのユーザーの解答状況を削除してもよろしいですか？\nこの操作は取り消せません。')) {
+                if (confirm('本当によろしいですか？すべてのデータが削除されます。')) {
+                    document.getElementById('deleteAllForm').submit();
+                }
+            }
+        }
+    </script>
 </body>
 
 </html>
