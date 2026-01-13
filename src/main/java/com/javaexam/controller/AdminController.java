@@ -2,12 +2,20 @@ package com.javaexam.controller;
 
 import com.javaexam.dto.AllProgressDto;
 import com.javaexam.dto.AdminQuestionDto;
+import com.javaexam.dto.QuestionFormDto;
+import com.javaexam.entity.Chapter;
+import com.javaexam.entity.Question;
+import com.javaexam.entity.QuestionType;
+import com.javaexam.repository.ChapterJdbcRepository;
+import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,16 +24,24 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
 
     private final AdminService adminService;
+    private final ChapterJdbcRepository chapterJdbcRepository;
+    private final QuestionJdbcRepository questionJdbcRepository;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, 
+                           ChapterJdbcRepository chapterJdbcRepository,
+                           QuestionJdbcRepository questionJdbcRepository) {
         this.adminService = adminService;
+        this.chapterJdbcRepository = chapterJdbcRepository;
+        this.questionJdbcRepository = questionJdbcRepository;
     }
 
     @GetMapping("/progress")
@@ -119,5 +135,153 @@ public class AdminController {
         return value.replace("\t", " ")
                     .replace("\n", " ")
                     .replace("\r", "");
+    }
+
+    @GetMapping("/questions/new")
+    public String showCreateQuestionForm(Model model) {
+        List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
+        model.addAttribute("chapters", chapters);
+        model.addAttribute("questionTypes", QuestionType.values());
+        model.addAttribute("questionForm", new QuestionFormDto());
+        model.addAttribute("isEdit", false);
+        return "admin-question-form";
+    }
+
+    @PostMapping("/questions/new")
+    public String createQuestion(@Valid QuestionFormDto questionForm,
+                                  BindingResult bindingResult,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
+            model.addAttribute("chapters", chapters);
+            model.addAttribute("questionTypes", QuestionType.values());
+            model.addAttribute("isEdit", false);
+            return "admin-question-form";
+        }
+
+        try {
+            Chapter chapter = chapterJdbcRepository.findById(questionForm.getChapterId())
+                    .orElseThrow(() -> new IllegalArgumentException("Chapter not found"));
+
+            Map<String, String> options = new HashMap<>();
+            if (questionForm.getOptionA() != null && !questionForm.getOptionA().trim().isEmpty()) {
+                options.put("A", questionForm.getOptionA());
+            }
+            if (questionForm.getOptionB() != null && !questionForm.getOptionB().trim().isEmpty()) {
+                options.put("B", questionForm.getOptionB());
+            }
+            if (questionForm.getOptionC() != null && !questionForm.getOptionC().trim().isEmpty()) {
+                options.put("C", questionForm.getOptionC());
+            }
+            if (questionForm.getOptionD() != null && !questionForm.getOptionD().trim().isEmpty()) {
+                options.put("D", questionForm.getOptionD());
+            }
+
+            Question question = new Question();
+            question.setChapter(chapter);
+            question.setQuestionText(questionForm.getQuestionText());
+            question.setQuestionType(questionForm.getQuestionType());
+            question.setOptions(options);
+            question.setCorrectAnswer(questionForm.getCorrectAnswer());
+
+            adminService.createQuestion(question);
+            redirectAttributes.addFlashAttribute("message", "問題を作成しました");
+            return "redirect:/admin/questions";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "問題の作成に失敗しました: " + e.getMessage());
+            return "redirect:/admin/questions/new";
+        }
+    }
+
+    @GetMapping("/questions/edit/{id}")
+    public String showEditQuestionForm(@PathVariable String id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Question question = questionJdbcRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Question not found"));
+
+            QuestionFormDto questionForm = new QuestionFormDto();
+            questionForm.setId(question.getId());
+            questionForm.setChapterId(question.getChapter().getId());
+            questionForm.setQuestionText(question.getQuestionText());
+            questionForm.setQuestionType(question.getQuestionType());
+            questionForm.setOptionA(question.getOptions().get("A"));
+            questionForm.setOptionB(question.getOptions().get("B"));
+            questionForm.setOptionC(question.getOptions().get("C"));
+            questionForm.setOptionD(question.getOptions().get("D"));
+            questionForm.setCorrectAnswer(question.getCorrectAnswer());
+
+            List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
+            model.addAttribute("chapters", chapters);
+            model.addAttribute("questionTypes", QuestionType.values());
+            model.addAttribute("questionForm", questionForm);
+            model.addAttribute("isEdit", true);
+            return "admin-question-form";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "問題が見つかりませんでした");
+            return "redirect:/admin/questions";
+        }
+    }
+
+    @PostMapping("/questions/edit/{id}")
+    public String updateQuestion(@PathVariable String id,
+                                  @Valid QuestionFormDto questionForm,
+                                  BindingResult bindingResult,
+                                  Model model,
+                                  RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
+            model.addAttribute("chapters", chapters);
+            model.addAttribute("questionTypes", QuestionType.values());
+            model.addAttribute("isEdit", true);
+            return "admin-question-form";
+        }
+
+        try {
+            Chapter chapter = chapterJdbcRepository.findById(questionForm.getChapterId())
+                    .orElseThrow(() -> new IllegalArgumentException("Chapter not found"));
+
+            Map<String, String> options = new HashMap<>();
+            if (questionForm.getOptionA() != null && !questionForm.getOptionA().trim().isEmpty()) {
+                options.put("A", questionForm.getOptionA());
+            }
+            if (questionForm.getOptionB() != null && !questionForm.getOptionB().trim().isEmpty()) {
+                options.put("B", questionForm.getOptionB());
+            }
+            if (questionForm.getOptionC() != null && !questionForm.getOptionC().trim().isEmpty()) {
+                options.put("C", questionForm.getOptionC());
+            }
+            if (questionForm.getOptionD() != null && !questionForm.getOptionD().trim().isEmpty()) {
+                options.put("D", questionForm.getOptionD());
+            }
+
+            Question question = new Question();
+            question.setId(id);
+            question.setChapter(chapter);
+            question.setQuestionText(questionForm.getQuestionText());
+            question.setQuestionType(questionForm.getQuestionType());
+            question.setOptions(options);
+            question.setCorrectAnswer(questionForm.getCorrectAnswer());
+
+            adminService.updateQuestion(question);
+            redirectAttributes.addFlashAttribute("message", "問題を更新しました");
+            return "redirect:/admin/questions";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "問題の更新に失敗しました: " + e.getMessage());
+            return "redirect:/admin/questions/edit/" + id;
+        }
+    }
+
+    @PostMapping("/questions/delete/{id}")
+    public String deleteQuestion(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            adminService.deleteQuestion(id);
+            redirectAttributes.addFlashAttribute("message", "問題を削除しました");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "問題が見つかりませんでした");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "問題の削除に失敗しました: " + e.getMessage());
+        }
+        return "redirect:/admin/questions";
     }
 }

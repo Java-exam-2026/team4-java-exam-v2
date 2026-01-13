@@ -80,4 +80,54 @@ public class QuestionJdbcRepository {
                 "SELECT * FROM questions ORDER BY chapter_id",
                 questionRowMapper);
     }
+
+    /**
+     * Saves a question (insert or update).
+     * @param question the question to save
+     * @return the number of rows affected
+     */
+    public int save(Question question) {
+        try {
+            String optionsJson = objectMapper.writeValueAsString(question.getOptions());
+            
+            if (question.getId() == null || question.getId().isEmpty()) {
+                // Insert new question
+                String id = java.util.UUID.randomUUID().toString();
+                question.setId(id);
+                return jdbcTemplate.update(
+                        "INSERT INTO questions (id, chapter_id, question_text, options, question_type, correct_answer, created_at, updated_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                        id,
+                        question.getChapter().getId(),
+                        question.getQuestionText(),
+                        optionsJson,
+                        question.getQuestionType().name(),
+                        question.getCorrectAnswer()
+                );
+            } else {
+                // Update existing question
+                return jdbcTemplate.update(
+                        "UPDATE questions SET chapter_id = ?, question_text = ?, options = ?, question_type = ?, " +
+                        "correct_answer = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                        question.getChapter().getId(),
+                        question.getQuestionText(),
+                        optionsJson,
+                        question.getQuestionType().name(),
+                        question.getCorrectAnswer(),
+                        question.getId()
+                );
+            }
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize options", e);
+        }
+    }
+
+    /**
+     * Deletes a question by ID.
+     * @param id the ID of the question to delete
+     * @return the number of rows affected
+     */
+    public int deleteById(String id) {
+        return jdbcTemplate.update("DELETE FROM questions WHERE id = ?", id);
+    }
 }

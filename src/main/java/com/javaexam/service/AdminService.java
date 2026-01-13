@@ -86,4 +86,35 @@ public class AdminService {
     public int deleteAllProgress() {
         return userProgressJdbcRepository.deleteAll();
     }
+
+    /**
+     * Creates a new question.
+     * @param question the question to create
+     */
+    @Transactional
+    public void createQuestion(Question question) {
+        questionJdbcRepository.save(question);
+    }
+
+    /**
+     * Updates an existing question.
+     * @param question the question to update
+     */
+    @Transactional
+    public void updateQuestion(Question question) {
+        questionJdbcRepository.save(question);
+    }
+
+    /**
+     * Deletes a question by ID.
+     * @param questionId the ID of the question to delete
+     * @throws IllegalArgumentException if the question does not exist
+     */
+    @Transactional
+    public void deleteQuestion(String questionId) {
+        int deletedCount = questionJdbcRepository.deleteById(questionId);
+        if (deletedCount == 0) {
+            throw new IllegalArgumentException("No question found with id: " + questionId);
+        }
+    }
 }
