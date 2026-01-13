@@ -2,11 +2,13 @@ package com.javaexam.service;
 
 import com.javaexam.dto.*;
 import com.javaexam.entity.*;
+import com.javaexam.exception.AlreadySubmittedException;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +48,20 @@ public class QuizService {
     return response;
   }
 
+  @Transactional(readOnly = true)
+  public boolean hasUserSubmitted(String username, String chapterCode) {
+    User user = userJdbcRepository.findByUsername(username)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
+        .orElseThrow(() -> new RuntimeException("Chapter not found"));
+
+    UserProgress progress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
+        .orElse(null);
+
+    return progress != null && Boolean.TRUE.equals(progress.getHasSubmitted());
+  }
+
   @Transactional
   public SubmissionResultDto submitQuiz(String username, String chapterCode, SubmissionRequestDto submission) {
     User user = userJdbcRepository.findByUsername(username)
@@ -53,6 +69,14 @@ public class QuizService {
 
     Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
         .orElseThrow(() -> new RuntimeException("Chapter not found"));
+
+    // Check if user has already submitted for this chapter
+    UserProgress existingProgress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
+        .orElse(null);
+    
+    if (existingProgress != null && Boolean.TRUE.equals(existingProgress.getHasSubmitted())) {
+      throw new AlreadySubmittedException("You have already submitted answers for this chapter");
+    }
 
     int totalQuestions = submission.getAnswers().size();
     int correctCount = 0;
@@ -72,8 +96,7 @@ public class QuizService {
     boolean passed = score >= 80; // Assuming 80% pass rate
 
     // Update progress
-    UserProgress progress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
-        .orElse(new UserProgress());
+    UserProgress progress = existingProgress != null ? existingProgress : new UserProgress();
 
     if (progress.getId() == null) {
       progress.setId(UUID.randomUUID().toString());
@@ -83,15 +106,23 @@ public class QuizService {
       progress.setScore(0);
     }
 
-    if (progress.getScore() < score) {
-      progress.setScore(score);
-    }
-    if ((progress.getPassed() == null || !progress.getPassed()) && passed) {
-      progress.setPassed(true);
-    }
+    progress.setScore(score);
+    progress.setPassed(passed);
+    progress.setHasSubmitted(true);
     progress.setLastAttemptedAt(java.time.LocalDateTime.now());
 
-    userProgressJdbcRepository.save(progress);
+    try {
+      userProgressJdbcRepository.save(progress);
+    } catch (DataIntegrityViolationException e) {
+      // Race condition: Another request already submitted for this user/chapter
+      // The UNIQUE(user_id, chapter_id) constraint prevents duplicate submissions
+      String message = e.getMessage();
+      if (message != null && (message.contains("user_id") || message.contains("chapter_id") || message.contains("UNIQUE"))) {
+        throw new AlreadySubmittedException("You have already submitted answers for this chapter");
+      }
+      // If it's a different constraint violation, rethrow the original exception
+      throw e;
+    }
 
     return new SubmissionResultDto(chapterCode, score, passed, correctCount, totalQuestions);
   }

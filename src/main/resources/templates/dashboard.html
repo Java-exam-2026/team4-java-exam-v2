@@ -56,14 +56,18 @@
                             <p class="card-text text-muted">Chapter overview coming soon.</p>
 
                             <div th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode)}" class="mb-2">
+                                <span th:if="${progressMap.get(chapter.chapterCode).hasSubmitted}" class="badge bg-secondary">Submitted</span>
                                 <span th:if="${progressMap.get(chapter.chapterCode).passed}" class="badge bg-success">Passed</span>
                                 <span th:unless="${progressMap.get(chapter.chapterCode).passed}"
-                                    class="badge bg-warning text-dark">
+                                      class="badge bg-warning text-dark">
                                     Score: <span th:text="${progressMap.get(chapter.chapterCode).score}">0</span>%
                                 </span>
                             </div>
 
-                            <a th:href="@{/quiz/{code}(code=${chapter.chapterCode})}" class="btn btn-primary">Start Quiz</a>
+                            <a th:if="${progressMap == null or !progressMap.containsKey(chapter.chapterCode) or !progressMap.get(chapter.chapterCode).hasSubmitted}"
+                               th:href="@{/quiz/{code}(code=${chapter.chapterCode})}" class="btn btn-primary">Start Quiz</a>
+                            <span th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode) and progressMap.get(chapter.chapterCode).hasSubmitted}"
+                                  class="text-muted">Already submitted</span>
                         </div>
                     </div>
                 </div>
