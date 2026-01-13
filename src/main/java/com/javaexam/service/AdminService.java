@@ -99,10 +99,14 @@ public class AdminService {
     /**
      * Updates an existing question.
      * @param question the question to update
+     * @throws IllegalArgumentException if the question does not exist
      */
     @Transactional
     public void updateQuestion(Question question) {
-        questionJdbcRepository.save(question);
+        int updatedCount = questionJdbcRepository.save(question);
+        if (updatedCount == 0) {
+            throw new IllegalArgumentException("No question found with id: " + question.getId());
+        }
     }
 
     /**

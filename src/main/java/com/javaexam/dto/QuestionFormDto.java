@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidQuestionForm
 public class QuestionFormDto {
     
     private String id;

@@ -65,7 +65,7 @@
                 </div>
                 <div>
                     <a th:href="@{/admin/questions/edit/{id}(id=${question.id})}" class="btn btn-sm btn-outline-primary">編集</a>
-                    <form th:action="@{/admin/questions/delete/{id}(id=${question.id})}" method="post" style="display: inline;" 
+                    <form th:action="@{/admin/questions/delete/{id}(id=${question.id})}" method="post" class="d-inline" 
                           onsubmit="return confirm('この問題を削除してもよろしいですか？');">
                         <button type="submit" class="btn btn-sm btn-outline-danger">削除</button>
                     </form>

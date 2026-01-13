@@ -92,12 +92,11 @@ public class QuestionJdbcRepository {
             
             if (question.getId() == null || question.getId().isEmpty()) {
                 // Insert new question
-                String id = java.util.UUID.randomUUID().toString();
-                question.setId(id);
+                question.setId(java.util.UUID.randomUUID().toString());
                 return jdbcTemplate.update(
                         "INSERT INTO questions (id, chapter_id, question_text, options, question_type, correct_answer, created_at, updated_at) " +
                         "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-                        id,
+                        question.getId(),
                         question.getChapter().getId(),
                         question.getQuestionText(),
                         optionsJson,

@@ -139,11 +139,8 @@ public class AdminController {
 
     @GetMapping("/questions/new")
     public String showCreateQuestionForm(Model model) {
-        List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
-        model.addAttribute("chapters", chapters);
-        model.addAttribute("questionTypes", QuestionType.values());
+        populateFormAttributes(model, false);
         model.addAttribute("questionForm", new QuestionFormDto());
-        model.addAttribute("isEdit", false);
         return "admin-question-form";
     }
 
@@ -153,38 +150,12 @@ public class AdminController {
                                   Model model,
                                   RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
-            model.addAttribute("chapters", chapters);
-            model.addAttribute("questionTypes", QuestionType.values());
-            model.addAttribute("isEdit", false);
+            populateFormAttributes(model, false);
             return "admin-question-form";
         }
 
         try {
-            Chapter chapter = chapterJdbcRepository.findById(questionForm.getChapterId())
-                    .orElseThrow(() -> new IllegalArgumentException("Chapter not found"));
-
-            Map<String, String> options = new HashMap<>();
-            if (questionForm.getOptionA() != null && !questionForm.getOptionA().trim().isEmpty()) {
-                options.put("A", questionForm.getOptionA());
-            }
-            if (questionForm.getOptionB() != null && !questionForm.getOptionB().trim().isEmpty()) {
-                options.put("B", questionForm.getOptionB());
-            }
-            if (questionForm.getOptionC() != null && !questionForm.getOptionC().trim().isEmpty()) {
-                options.put("C", questionForm.getOptionC());
-            }
-            if (questionForm.getOptionD() != null && !questionForm.getOptionD().trim().isEmpty()) {
-                options.put("D", questionForm.getOptionD());
-            }
-
-            Question question = new Question();
-            question.setChapter(chapter);
-            question.setQuestionText(questionForm.getQuestionText());
-            question.setQuestionType(questionForm.getQuestionType());
-            question.setOptions(options);
-            question.setCorrectAnswer(questionForm.getCorrectAnswer());
-
+            Question question = buildQuestionFromForm(questionForm, null);
             adminService.createQuestion(question);
             redirectAttributes.addFlashAttribute("message", "問題を作成しました");
             return "redirect:/admin/questions";
@@ -205,20 +176,26 @@ public class AdminController {
             questionForm.setChapterId(question.getChapter().getId());
             questionForm.setQuestionText(question.getQuestionText());
             questionForm.setQuestionType(question.getQuestionType());
-            questionForm.setOptionA(question.getOptions().get("A"));
-            questionForm.setOptionB(question.getOptions().get("B"));
-            questionForm.setOptionC(question.getOptions().get("C"));
-            questionForm.setOptionD(question.getOptions().get("D"));
+            
+            // Safely extract options with null check
+            Map<String, String> options = question.getOptions();
+            if (options != null) {
+                questionForm.setOptionA(options.get("A"));
+                questionForm.setOptionB(options.get("B"));
+                questionForm.setOptionC(options.get("C"));
+                questionForm.setOptionD(options.get("D"));
+            }
+            
             questionForm.setCorrectAnswer(question.getCorrectAnswer());
 
-            List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
-            model.addAttribute("chapters", chapters);
-            model.addAttribute("questionTypes", QuestionType.values());
+            populateFormAttributes(model, true);
             model.addAttribute("questionForm", questionForm);
-            model.addAttribute("isEdit", true);
             return "admin-question-form";
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", "問題が見つかりませんでした");
+            return "redirect:/admin/questions";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "問題の読み込みに失敗しました: " + e.getMessage());
             return "redirect:/admin/questions";
         }
     }
@@ -230,41 +207,17 @@ public class AdminController {
                                   Model model,
                                   RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
-            model.addAttribute("chapters", chapters);
-            model.addAttribute("questionTypes", QuestionType.values());
-            model.addAttribute("isEdit", true);
+            populateFormAttributes(model, true);
             return "admin-question-form";
         }
 
         try {
-            Chapter chapter = chapterJdbcRepository.findById(questionForm.getChapterId())
-                    .orElseThrow(() -> new IllegalArgumentException("Chapter not found"));
-
-            Map<String, String> options = new HashMap<>();
-            if (questionForm.getOptionA() != null && !questionForm.getOptionA().trim().isEmpty()) {
-                options.put("A", questionForm.getOptionA());
-            }
-            if (questionForm.getOptionB() != null && !questionForm.getOptionB().trim().isEmpty()) {
-                options.put("B", questionForm.getOptionB());
-            }
-            if (questionForm.getOptionC() != null && !questionForm.getOptionC().trim().isEmpty()) {
-                options.put("C", questionForm.getOptionC());
-            }
-            if (questionForm.getOptionD() != null && !questionForm.getOptionD().trim().isEmpty()) {
-                options.put("D", questionForm.getOptionD());
-            }
-
-            Question question = new Question();
-            question.setId(id);
-            question.setChapter(chapter);
-            question.setQuestionText(questionForm.getQuestionText());
-            question.setQuestionType(questionForm.getQuestionType());
-            question.setOptions(options);
-            question.setCorrectAnswer(questionForm.getCorrectAnswer());
-
+            Question question = buildQuestionFromForm(questionForm, id);
             adminService.updateQuestion(question);
             redirectAttributes.addFlashAttribute("message", "問題を更新しました");
+            return "redirect:/admin/questions";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/questions";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "問題の更新に失敗しました: " + e.getMessage());
@@ -283,5 +236,57 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "問題の削除に失敗しました: " + e.getMessage());
         }
         return "redirect:/admin/questions";
+    }
+    
+    /**
+     * Populates model attributes needed for the question form.
+     */
+    private void populateFormAttributes(Model model, boolean isEdit) {
+        List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
+        model.addAttribute("chapters", chapters);
+        model.addAttribute("questionTypes", QuestionType.values());
+        model.addAttribute("isEdit", isEdit);
+    }
+    
+    /**
+     * Builds a Question entity from form data.
+     */
+    private Question buildQuestionFromForm(QuestionFormDto questionForm, String questionId) {
+        Chapter chapter = chapterJdbcRepository.findById(questionForm.getChapterId())
+                .orElseThrow(() -> new IllegalArgumentException("Chapter not found"));
+
+        Map<String, String> options = buildOptionsMap(questionForm);
+
+        Question question = new Question();
+        if (questionId != null) {
+            question.setId(questionId);
+        }
+        question.setChapter(chapter);
+        question.setQuestionText(questionForm.getQuestionText());
+        question.setQuestionType(questionForm.getQuestionType());
+        question.setOptions(options);
+        question.setCorrectAnswer(questionForm.getCorrectAnswer());
+        
+        return question;
+    }
+    
+    /**
+     * Builds options map from form fields.
+     */
+    private Map<String, String> buildOptionsMap(QuestionFormDto questionForm) {
+        Map<String, String> options = new HashMap<>();
+        if (questionForm.getOptionA() != null && !questionForm.getOptionA().trim().isEmpty()) {
+            options.put("A", questionForm.getOptionA());
+        }
+        if (questionForm.getOptionB() != null && !questionForm.getOptionB().trim().isEmpty()) {
+            options.put("B", questionForm.getOptionB());
+        }
+        if (questionForm.getOptionC() != null && !questionForm.getOptionC().trim().isEmpty()) {
+            options.put("C", questionForm.getOptionC());
+        }
+        if (questionForm.getOptionD() != null && !questionForm.getOptionD().trim().isEmpty()) {
+            options.put("D", questionForm.getOptionD());
+        }
+        return options;
     }
 }
