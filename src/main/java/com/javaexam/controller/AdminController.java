@@ -160,7 +160,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("message", "問題を作成しました");
             return "redirect:/admin/questions";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "問題の作成に失敗しました: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "問題の作成に失敗しました");
             return "redirect:/admin/questions/new";
         }
     }
@@ -195,7 +195,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "問題が見つかりませんでした");
             return "redirect:/admin/questions";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "問題の読み込みに失敗しました: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "問題の読み込みに失敗しました");
             return "redirect:/admin/questions";
         }
     }
@@ -220,7 +220,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/questions";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "問題の更新に失敗しました: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "問題の更新に失敗しました");
             return "redirect:/admin/questions/edit/" + id;
         }
     }

@@ -22,7 +22,6 @@ public class QuestionFormValidator implements ConstraintValidator<ValidQuestionF
             }
 
             // Check if correctAnswer references a provided option
-            boolean validAnswer = false;
             String[] answers = correctAnswer.split(",");
             
             for (String answer : answers) {
