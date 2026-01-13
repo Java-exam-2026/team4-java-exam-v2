@@ -61,7 +61,7 @@ public class QuestionJdbcRepository {
 
     public List<Question> findRandomByChapterId(String chapterId, int limit) {
         return jdbcTemplate.query(
-                "SELECT * FROM questions WHERE chapter_id = ? ORDER BY created_at DESC LIMIT ?",
+                "SELECT * FROM questions WHERE chapter_id = ? ORDER BY created_at ASC LIMIT ?",
                 questionRowMapper,
                 chapterId,
                 limit);
@@ -77,7 +77,7 @@ public class QuestionJdbcRepository {
 
     public List<Question> findAll() {
         return jdbcTemplate.query(
-                "SELECT * FROM questions ORDER BY created_at DESC",
+                "SELECT * FROM questions ORDER BY created_at ASC",
                 questionRowMapper);
     }
 
