@@ -61,7 +61,7 @@ public class QuestionJdbcRepository {
 
     public List<Question> findRandomByChapterId(String chapterId, int limit) {
         return jdbcTemplate.query(
-                "SELECT * FROM questions WHERE chapter_id = ? ORDER BY RANDOM() LIMIT ?",
+                "SELECT * FROM questions WHERE chapter_id = ? ORDER BY created_at DESC LIMIT ?",
                 questionRowMapper,
                 chapterId,
                 limit);
