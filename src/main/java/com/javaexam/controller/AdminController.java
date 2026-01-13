@@ -3,6 +3,9 @@ package com.javaexam.controller;
 import com.javaexam.dto.AllProgressDto;
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.service.AdminService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Controller
@@ -62,5 +67,57 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("message", "削除する解答状況がありませんでした");
         }
         return "redirect:/admin/progress";
+    }
+
+    @GetMapping("/progress/export/tsv")
+    public ResponseEntity<byte[]> exportProgressAsTsv() {
+        List<AllProgressDto> progressList = adminService.getAllUsersProgress();
+        
+        // Create TSV content
+        StringBuilder tsv = new StringBuilder();
+        // Add header row
+        tsv.append("ユーザー名\t表示名\tチャプターコード\tチャプタータイトル\tスコア\t合格\t最終受験日時\n");
+        
+        // Add data rows
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        for (AllProgressDto progress : progressList) {
+            tsv.append(escapeTsvValue(progress.getUsername())).append("\t");
+            tsv.append(escapeTsvValue(progress.getDisplayName())).append("\t");
+            tsv.append(escapeTsvValue(progress.getChapterCode())).append("\t");
+            tsv.append(escapeTsvValue(progress.getTitle())).append("\t");
+            tsv.append(progress.getScore()).append("%\t");
+            tsv.append(progress.getPassed() ? "合格" : "不合格").append("\t");
+            tsv.append(progress.getLastAttemptedAt() != null ? progress.getLastAttemptedAt().format(formatter) : "").append("\n");
+        }
+        
+        // Convert to bytes with UTF-8 encoding (with BOM for Excel compatibility)
+        byte[] bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        byte[] content = tsv.toString().getBytes(StandardCharsets.UTF_8);
+        byte[] result = new byte[bom.length + content.length];
+        System.arraycopy(bom, 0, result, 0, bom.length);
+        System.arraycopy(content, 0, result, bom.length, content.length);
+        
+        // Set headers for file download
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/tab-separated-values"));
+        headers.setContentDispositionFormData("attachment", "answer-status.tsv");
+        
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(result);
+    }
+    
+    /**
+     * Escapes special characters in TSV values to prevent injection and formatting issues.
+     * Replaces tabs with spaces and removes newlines and carriage returns.
+     */
+    private String escapeTsvValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        // Replace tabs with spaces and remove newlines/carriage returns
+        return value.replace("\t", " ")
+                    .replace("\n", " ")
+                    .replace("\r", "");
     }
 }
