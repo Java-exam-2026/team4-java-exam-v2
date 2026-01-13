@@ -70,10 +70,13 @@
                                 </td>
                                 <td th:text="${#temporals.format(progress.lastAttemptedAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</td>
                                 <td>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" 
-                                            th:onclick="'confirmDeleteUser(\'' + ${progress.userId} + '\', \'' + ${progress.username} + '\')'">
-                                        削除
-                                    </button>
+                                    <form th:action="@{/admin/progress/delete/{userId}(userId=${progress.userId})}" method="post" style="display: inline;">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                th:attr="data-user-id=${progress.userId},data-username=${progress.username}"
+                                                onclick="confirmDeleteUser(this)">
+                                            削除
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(progressList)}">
@@ -86,20 +89,20 @@
         </div>
     </div>
 
-    <!-- Hidden forms for delete operations -->
-    <form id="deleteUserForm" th:action="@{/admin/progress/delete/{userId}(userId='')}" method="post" style="display: none;">
-    </form>
-    
+    <!-- Hidden form for delete all operation -->
     <form id="deleteAllForm" th:action="@{/admin/progress/delete-all}" method="post" style="display: none;">
     </form>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function confirmDeleteUser(userId, username) {
-            if (confirm('ユーザー「' + username + '」の解答状況を削除してもよろしいですか？')) {
-                var form = document.getElementById('deleteUserForm');
-                form.action = '/admin/progress/delete/' + userId;
-                form.submit();
+        function confirmDeleteUser(button) {
+            var userId = button.getAttribute('data-user-id');
+            var username = button.getAttribute('data-username');
+            // Escape HTML to prevent XSS
+            var escapedUsername = username.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            
+            if (confirm('ユーザー「' + escapedUsername + '」の解答状況を削除してもよろしいですか？')) {
+                button.closest('form').submit();
             }
         }
 
