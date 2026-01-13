@@ -2,6 +2,7 @@ package com.javaexam.controller;
 
 import com.javaexam.dto.AllProgressDto;
 import com.javaexam.dto.AdminQuestionDto;
+import com.javaexam.dto.ChapterFormDto;
 import com.javaexam.dto.QuestionFormDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
@@ -289,5 +290,112 @@ public class AdminController {
             options.put("D", questionForm.getOptionD());
         }
         return options;
+    }
+
+    // Chapter management endpoints
+
+    @GetMapping("/chapters")
+    public String viewAllChapters(Model model) {
+        List<Chapter> chapters = adminService.getAllChapters();
+        model.addAttribute("chapters", chapters);
+        return "admin-chapters";
+    }
+
+    @GetMapping("/chapters/new")
+    public String showCreateChapterForm(Model model) {
+        model.addAttribute("chapterForm", new ChapterFormDto());
+        model.addAttribute("isEdit", false);
+        return "admin-chapter-form";
+    }
+
+    @PostMapping("/chapters/new")
+    public String createChapter(@Valid ChapterFormDto chapterForm,
+                                 BindingResult bindingResult,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("isEdit", false);
+            return "admin-chapter-form";
+        }
+
+        try {
+            Chapter chapter = new Chapter();
+            chapter.setChapterCode(chapterForm.getChapterCode());
+            chapter.setTitle(chapterForm.getTitle());
+            chapter.setSortOrder(chapterForm.getSortOrder());
+            
+            adminService.createChapter(chapter);
+            redirectAttributes.addFlashAttribute("message", "チャプターを作成しました");
+            return "redirect:/admin/chapters";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "チャプターの作成に失敗しました");
+            return "redirect:/admin/chapters/new";
+        }
+    }
+
+    @GetMapping("/chapters/edit/{id}")
+    public String showEditChapterForm(@PathVariable String id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Chapter chapter = adminService.getChapterById(id);
+
+            ChapterFormDto chapterForm = new ChapterFormDto();
+            chapterForm.setId(chapter.getId());
+            chapterForm.setChapterCode(chapter.getChapterCode());
+            chapterForm.setTitle(chapter.getTitle());
+            chapterForm.setSortOrder(chapter.getSortOrder());
+
+            model.addAttribute("chapterForm", chapterForm);
+            model.addAttribute("isEdit", true);
+            return "admin-chapter-form";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "チャプターが見つかりませんでした");
+            return "redirect:/admin/chapters";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "チャプターの読み込みに失敗しました");
+            return "redirect:/admin/chapters";
+        }
+    }
+
+    @PostMapping("/chapters/edit/{id}")
+    public String updateChapter(@PathVariable String id,
+                                 @Valid ChapterFormDto chapterForm,
+                                 BindingResult bindingResult,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("isEdit", true);
+            return "admin-chapter-form";
+        }
+
+        try {
+            Chapter chapter = new Chapter();
+            chapter.setId(id);
+            chapter.setChapterCode(chapterForm.getChapterCode());
+            chapter.setTitle(chapterForm.getTitle());
+            chapter.setSortOrder(chapterForm.getSortOrder());
+            
+            adminService.updateChapter(chapter);
+            redirectAttributes.addFlashAttribute("message", "チャプターを更新しました");
+            return "redirect:/admin/chapters";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/chapters";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "チャプターの更新に失敗しました");
+            return "redirect:/admin/chapters/edit/" + id;
+        }
+    }
+
+    @PostMapping("/chapters/delete/{id}")
+    public String deleteChapter(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            adminService.deleteChapter(id);
+            redirectAttributes.addFlashAttribute("message", "チャプターを削除しました");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "チャプターが見つかりませんでした");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "チャプターの削除に失敗しました");
+        }
+        return "redirect:/admin/chapters";
     }
 }

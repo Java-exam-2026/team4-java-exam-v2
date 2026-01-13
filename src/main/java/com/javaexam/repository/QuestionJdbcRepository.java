@@ -77,7 +77,7 @@ public class QuestionJdbcRepository {
 
     public List<Question> findAll() {
         return jdbcTemplate.query(
-                "SELECT * FROM questions ORDER BY chapter_id",
+                "SELECT * FROM questions ORDER BY created_at DESC",
                 questionRowMapper);
     }
 

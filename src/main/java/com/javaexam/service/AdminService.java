@@ -2,8 +2,10 @@ package com.javaexam.service;
 
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
+import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
 import com.javaexam.entity.UserProgress;
+import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.stereotype.Service;
@@ -17,11 +19,14 @@ public class AdminService {
 
     private final UserProgressJdbcRepository userProgressJdbcRepository;
     private final QuestionJdbcRepository questionJdbcRepository;
+    private final ChapterJdbcRepository chapterJdbcRepository;
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
-                        QuestionJdbcRepository questionJdbcRepository) {
+                        QuestionJdbcRepository questionJdbcRepository,
+                        ChapterJdbcRepository chapterJdbcRepository) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
+        this.chapterJdbcRepository = chapterJdbcRepository;
     }
 
     /**
@@ -120,5 +125,58 @@ public class AdminService {
         if (deletedCount == 0) {
             throw new IllegalArgumentException("No question found with id: " + questionId);
         }
+    }
+
+    /**
+     * Retrieves all chapters.
+     * @return list of all chapters
+     */
+    public List<Chapter> getAllChapters() {
+        return chapterJdbcRepository.findAllOrdered();
+    }
+
+    /**
+     * Creates a new chapter.
+     * @param chapter the chapter to create
+     */
+    @Transactional
+    public void createChapter(Chapter chapter) {
+        chapterJdbcRepository.save(chapter);
+    }
+
+    /**
+     * Updates an existing chapter.
+     * @param chapter the chapter to update
+     * @throws IllegalArgumentException if the chapter does not exist
+     */
+    @Transactional
+    public void updateChapter(Chapter chapter) {
+        int updatedCount = chapterJdbcRepository.save(chapter);
+        if (updatedCount == 0) {
+            throw new IllegalArgumentException("No chapter found with id: " + chapter.getId());
+        }
+    }
+
+    /**
+     * Deletes a chapter by ID.
+     * @param chapterId the ID of the chapter to delete
+     * @throws IllegalArgumentException if the chapter does not exist
+     */
+    @Transactional
+    public void deleteChapter(String chapterId) {
+        int deletedCount = chapterJdbcRepository.deleteById(chapterId);
+        if (deletedCount == 0) {
+            throw new IllegalArgumentException("No chapter found with id: " + chapterId);
+        }
+    }
+
+    /**
+     * Retrieves a chapter by ID.
+     * @param chapterId the chapter ID
+     * @return the chapter
+     */
+    public Chapter getChapterById(String chapterId) {
+        return chapterJdbcRepository.findById(chapterId)
+                .orElseThrow(() -> new IllegalArgumentException("Chapter not found with id: " + chapterId));
     }
 }

@@ -42,4 +42,41 @@ public class ChapterJdbcRepository {
                 id);
         return chapters.stream().findFirst();
     }
+
+    /**
+     * Saves a chapter (insert or update).
+     * @param chapter the chapter to save
+     * @return the number of rows affected
+     */
+    public int save(Chapter chapter) {
+        if (chapter.getId() == null || chapter.getId().isEmpty()) {
+            // Insert new chapter
+            chapter.setId(java.util.UUID.randomUUID().toString());
+            return jdbcTemplate.update(
+                    "INSERT INTO chapters (id, chapter_code, title, sort_order) VALUES (?, ?, ?, ?)",
+                    chapter.getId(),
+                    chapter.getChapterCode(),
+                    chapter.getTitle(),
+                    chapter.getSortOrder()
+            );
+        } else {
+            // Update existing chapter
+            return jdbcTemplate.update(
+                    "UPDATE chapters SET chapter_code = ?, title = ?, sort_order = ? WHERE id = ?",
+                    chapter.getChapterCode(),
+                    chapter.getTitle(),
+                    chapter.getSortOrder(),
+                    chapter.getId()
+            );
+        }
+    }
+
+    /**
+     * Deletes a chapter by ID.
+     * @param id the chapter ID
+     * @return the number of rows affected
+     */
+    public int deleteById(String id) {
+        return jdbcTemplate.update("DELETE FROM chapters WHERE id = ?", id);
+    }
 }
