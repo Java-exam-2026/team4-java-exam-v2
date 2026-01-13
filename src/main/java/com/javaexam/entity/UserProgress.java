@@ -16,5 +16,6 @@ public class UserProgress {
     private Chapter chapter;
     private Integer score;
     private Boolean passed;
+    private Boolean hasSubmitted;
     private LocalDateTime lastAttemptedAt;
 }

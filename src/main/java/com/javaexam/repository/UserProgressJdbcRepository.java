@@ -41,6 +41,7 @@ public class UserProgressJdbcRepository {
         progress.setChapter(chapter);
         progress.setScore(rs.getInt("score"));
         progress.setPassed(rs.getBoolean("passed"));
+        progress.setHasSubmitted(rs.getBoolean("has_submitted"));
         Timestamp timestamp = rs.getTimestamp("last_attempted_at");
         progress.setLastAttemptedAt(timestamp != null ? timestamp.toLocalDateTime() : null);
         return progress;
@@ -66,19 +67,21 @@ public class UserProgressJdbcRepository {
 
     public void save(UserProgress progress) {
         int updated = jdbcTemplate.update(
-                "UPDATE user_progress SET score = ?, passed = ?, last_attempted_at = ? WHERE id = ?",
+                "UPDATE user_progress SET score = ?, passed = ?, has_submitted = ?, last_attempted_at = ? WHERE id = ?",
                 progress.getScore(),
                 progress.getPassed(),
+                progress.getHasSubmitted(),
                 toTimestamp(progress.getLastAttemptedAt()),
                 progress.getId());
         if (updated == 0) {
             jdbcTemplate.update(
-                    "INSERT INTO user_progress (id, user_id, chapter_id, score, passed, last_attempted_at) VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO user_progress (id, user_id, chapter_id, score, passed, has_submitted, last_attempted_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
                     progress.getId(),
                     progress.getUser().getId(),
                     progress.getChapter().getId(),
                     progress.getScore(),
                     progress.getPassed(),
+                    progress.getHasSubmitted(),
                     toTimestamp(progress.getLastAttemptedAt()));
         }
     }
