@@ -86,12 +86,26 @@
                                        title="このユーザーの回答詳細を表示">
                                         回答
                                     </a>
-                                    <form th:action="@{/admin/progress/delete/{userId}(userId=${progress.userId})}" method="post" style="display: inline;">
-                                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                th:attr="data-user-id=${progress.userId},data-username=${progress.username}"
-                                                onclick="confirmDeleteUser(this)"
-                                                title="このユーザーの回答状況を削除">
-                                            削除
+
+                                    <!-- Delete only this chapter (row-level) -->
+                                    <form th:action="@{/admin/progress/delete/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}"
+                                          method="post" style="display: inline;">
+                                        <button type="button" class="btn btn-sm btn-outline-danger me-1"
+                                                th:attr="data-username=${progress.username},data-chapter-code=${progress.chapterCode}"
+                                                onclick="confirmDeleteChapter(this)"
+                                                title="このユーザーのこのチャプターの回答状況を削除">
+                                            この章を削除
+                                        </button>
+                                    </form>
+
+                                    <!-- Delete all chapters for this user (user-level) -->
+                                    <form th:action="@{/admin/progress/delete/{userId}(userId=${progress.userId})}"
+                                          method="post" style="display: inline;">
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:attr="data-username=${progress.username}"
+                                                onclick="confirmDeleteUserAll(this)"
+                                                title="このユーザーの全チャプターの回答状況を削除">
+                                            ユーザー全削除
                                         </button>
                                     </form>
                                 </td>
@@ -112,19 +126,28 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function confirmDeleteUser(button) {
-            var userId = button.getAttribute('data-user-id');
-            var username = button.getAttribute('data-username');
-            // Escape for JavaScript string context to prevent XSS
-            var escapedUsername = username
+        function escapeForJsString(value) {
+            if (value == null) return '';
+            return String(value)
                 .replace(/\\/g, '\\\\')  // Backslash must be first
-                .replace(/'/g, "\\'")     // Single quote
+                .replace(/'/g, "\\'")      // Single quote
                 .replace(/"/g, '\\"')     // Double quote
-                .replace(/\n/g, '\\n')    // Newline
-                .replace(/\r/g, '\\r')    // Carriage return
-                .replace(/\t/g, '\\t');   // Tab
-            
-            if (confirm('ユーザー「' + escapedUsername + '」の解答状況を削除してもよろしいですか？')) {
+                .replace(/\n/g, '\\n')     // Newline
+                .replace(/\r/g, '\\r')     // Carriage return
+                .replace(/\t/g, '\\t');    // Tab
+        }
+
+        function confirmDeleteChapter(button) {
+            var username = escapeForJsString(button.getAttribute('data-username'));
+            var chapterCode = escapeForJsString(button.getAttribute('data-chapter-code'));
+            if (confirm('ユーザー「' + username + '」のチャプター「' + chapterCode + '」の解答状況を削除してもよろしいですか？')) {
+                button.closest('form').submit();
+            }
+        }
+
+        function confirmDeleteUserAll(button) {
+            var username = escapeForJsString(button.getAttribute('data-username'));
+            if (confirm('ユーザー「' + username + '」の全チャプターの解答状況を削除してもよろしいですか？\nこの操作は取り消せません。')) {
                 button.closest('form').submit();
             }
         }

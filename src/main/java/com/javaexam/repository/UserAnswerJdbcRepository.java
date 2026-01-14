@@ -113,6 +113,18 @@ public class UserAnswerJdbcRepository {
         return jdbcTemplate.update("DELETE FROM user_answers WHERE user_id = ?", userId);
     }
 
+    /**
+     * Deletes all answers for a specific user and chapter.
+     *
+     * @return number of rows deleted
+     */
+    public int deleteByUserIdAndChapterId(String userId, String chapterId) {
+        return jdbcTemplate.update(
+                "DELETE FROM user_answers WHERE user_id = ? AND chapter_id = ?",
+                userId,
+                chapterId);
+    }
+
     public int deleteAll() {
         return jdbcTemplate.update("DELETE FROM user_answers");
     }
