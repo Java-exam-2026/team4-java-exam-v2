@@ -86,7 +86,7 @@ public class UserAnswerJdbcRepository {
                 ua.selected_answer, ua.is_correct, ua.answered_at,
                 u.username, u.display_name, u.role,
                 c.chapter_code, c.title as chapter_title, c.sort_order as chapter_sort_order,
-                q.question_text, q.options_json, q.correct_answer
+                q.question_text, q.options AS options_json, q.correct_answer
             FROM user_answers ua
             JOIN users u ON ua.user_id = u.id
             JOIN chapters c ON ua.chapter_id = c.id

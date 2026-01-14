@@ -81,12 +81,7 @@
                                 </td>
                                 <td th:text="${#temporals.format(progress.lastAttemptedAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</td>
                                 <td>
-                                    <a th:href="@{/admin/progress/detail/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}" 
-                                       class="btn btn-sm btn-outline-primary me-1"
-                                       title="この章の進捗状況を表示">
-                                        詳細
-                                    </a>
-                                    <a th:href="@{/admin/progress/detail/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}" 
+                                    <a th:href="@{/admin/progress/detail/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}"
                                        class="btn btn-sm btn-outline-info me-1"
                                        title="このユーザーの回答詳細を表示">
                                         回答
