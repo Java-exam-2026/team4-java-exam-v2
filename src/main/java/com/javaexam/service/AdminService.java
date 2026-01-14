@@ -249,16 +249,13 @@ public class AdminService {
         
         // Group by user to get distinct users with their first answer time of the day
         return userAnswers.stream()
-                .collect(Collectors.groupingBy(
+                .collect(Collectors.toMap(
                         answer -> answer.getUser().getId(),
-                        Collectors.collectingAndThen(
-                                Collectors.toList(),
-                                list -> list.isEmpty() ? null : list.get(0)
-                        )
+                        answer -> answer,
+                        (existing, replacement) -> existing
                 ))
                 .values()
                 .stream()
-                .filter(answer -> answer != null)
                 .map(answer -> new com.javaexam.dto.UserAnswerByDateDto(
                         answer.getUser().getId(),
                         answer.getUser().getUsername(),

@@ -5,6 +5,8 @@ import com.javaexam.service.AdminService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -26,8 +28,10 @@ public class ApiController {
     @GetMapping("/users/by-answer-date")
     public ResponseEntity<List<UserAnswerByDateDto>> getUsersByAnswerDate(
             @RequestParam("date") String date) {
-        // Validate date format (YYYY-MM-DD)
-        if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+        // Validate date format and validity
+        try {
+            LocalDate.parse(date);
+        } catch (DateTimeParseException e) {
             return ResponseEntity.badRequest().build();
         }
         
