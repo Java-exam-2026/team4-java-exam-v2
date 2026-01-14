@@ -236,4 +236,34 @@ public class AdminService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Retrieves distinct users who answered questions on a specific date.
+     * 
+     * @param date the date in format YYYY-MM-DD
+     * @return a list of users with their answer information from that date
+     */
+    @Transactional(readOnly = true)
+    public List<com.javaexam.dto.UserAnswerByDateDto> getUsersByAnswerDate(String date) {
+        List<UserAnswer> userAnswers = userAnswerJdbcRepository.findUsersByAnswerDate(date);
+        
+        // Group by user to get distinct users with their first answer time of the day
+        return userAnswers.stream()
+                .collect(Collectors.groupingBy(
+                        answer -> answer.getUser().getId(),
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                list -> list.get(0)
+                        )
+                ))
+                .values()
+                .stream()
+                .map(answer -> new com.javaexam.dto.UserAnswerByDateDto(
+                        answer.getUser().getId(),
+                        answer.getUser().getUsername(),
+                        answer.getUser().getDisplayName(),
+                        answer.getAnsweredAt()
+                ))
+                .collect(Collectors.toList());
+    }
 }
