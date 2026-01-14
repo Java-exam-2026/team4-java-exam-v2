@@ -22,11 +22,10 @@ import java.util.Map;
 public class UserAnswerJdbcRepository {
 
     private final JdbcTemplate jdbcTemplate;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public UserAnswerJdbcRepository(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+    public UserAnswerJdbcRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.objectMapper = objectMapper;
     }
 
     private Map<String, String> readOptions(String json) {
