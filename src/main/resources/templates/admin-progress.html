@@ -86,9 +86,9 @@
                                        title="この章の進捗状況を表示">
                                         詳細
                                     </a>
-                                    <a th:href="@{/admin/user/{userId}/answers(userId=${progress.userId})}" 
+                                    <a th:href="@{/admin/progress/detail/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}" 
                                        class="btn btn-sm btn-outline-info me-1"
-                                       title="このユーザーの全回答を表示">
+                                       title="このユーザーの回答詳細を表示">
                                         回答
                                     </a>
                                     <form th:action="@{/admin/progress/delete/{userId}(userId=${progress.userId})}" method="post" style="display: inline;">

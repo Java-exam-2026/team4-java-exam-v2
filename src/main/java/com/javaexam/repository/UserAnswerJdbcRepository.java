@@ -18,28 +18,35 @@ import java.util.List;
 public class UserAnswerJdbcRepository {
 
     private final JdbcTemplate jdbcTemplate;
-    private final UserJdbcRepository userJdbcRepository;
-    private final ChapterJdbcRepository chapterJdbcRepository;
-    private final QuestionJdbcRepository questionJdbcRepository;
 
-    public UserAnswerJdbcRepository(JdbcTemplate jdbcTemplate,
-                                    UserJdbcRepository userJdbcRepository,
-                                    ChapterJdbcRepository chapterJdbcRepository,
-                                    QuestionJdbcRepository questionJdbcRepository) {
+    public UserAnswerJdbcRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.userJdbcRepository = userJdbcRepository;
-        this.chapterJdbcRepository = chapterJdbcRepository;
-        this.questionJdbcRepository = questionJdbcRepository;
     }
 
-    private UserAnswer mapUserAnswer(ResultSet rs) throws SQLException {
-        User user = userJdbcRepository.findById(rs.getString("user_id"))
-                .orElseThrow(() -> new IllegalStateException("User not found"));
-        Chapter chapter = chapterJdbcRepository.findById(rs.getString("chapter_id"))
-                .orElseThrow(() -> new IllegalStateException("Chapter not found"));
-        Question question = questionJdbcRepository.findById(rs.getString("question_id"))
-                .orElseThrow(() -> new IllegalStateException("Question not found"));
+    private UserAnswer mapUserAnswerWithJoin(ResultSet rs) throws SQLException {
+        // Map User
+        User user = new User();
+        user.setId(rs.getString("user_id"));
+        user.setUsername(rs.getString("username"));
+        user.setDisplayName(rs.getString("display_name"));
+        user.setRole(rs.getString("role"));
         
+        // Map Chapter
+        Chapter chapter = new Chapter();
+        chapter.setId(rs.getString("chapter_id"));
+        chapter.setChapterCode(rs.getString("chapter_code"));
+        chapter.setTitle(rs.getString("chapter_title"));
+        chapter.setSortOrder(rs.getInt("chapter_sort_order"));
+        
+        // Map Question
+        Question question = new Question();
+        question.setId(rs.getString("question_id"));
+        question.setChapter(chapter);
+        question.setQuestionText(rs.getString("question_text"));
+        question.setOptionsJson(rs.getString("options_json"));
+        question.setCorrectAnswer(rs.getString("correct_answer"));
+        
+        // Map UserAnswer
         UserAnswer userAnswer = new UserAnswer();
         userAnswer.setId(rs.getString("id"));
         userAnswer.setUser(user);
@@ -52,14 +59,24 @@ public class UserAnswerJdbcRepository {
         return userAnswer;
     }
 
-    private final RowMapper<UserAnswer> rowMapper = (rs, rowNum) -> mapUserAnswer(rs);
+    private final RowMapper<UserAnswer> joinRowMapper = (rs, rowNum) -> mapUserAnswerWithJoin(rs);
 
     public List<UserAnswer> findByUserAndChapter(String userId, String chapterId) {
-        return jdbcTemplate.query(
-                "SELECT * FROM user_answers WHERE user_id = ? AND chapter_id = ? ORDER BY answered_at",
-                rowMapper,
-                userId,
-                chapterId);
+        String sql = """
+            SELECT 
+                ua.id, ua.user_id, ua.chapter_id, ua.question_id, 
+                ua.selected_answer, ua.is_correct, ua.answered_at,
+                u.username, u.display_name, u.role,
+                c.chapter_code, c.title as chapter_title, c.sort_order as chapter_sort_order,
+                q.question_text, q.options_json, q.correct_answer
+            FROM user_answers ua
+            JOIN users u ON ua.user_id = u.id
+            JOIN chapters c ON ua.chapter_id = c.id
+            JOIN questions q ON ua.question_id = q.id
+            WHERE ua.user_id = ? AND ua.chapter_id = ?
+            ORDER BY ua.answered_at
+            """;
+        return jdbcTemplate.query(sql, joinRowMapper, userId, chapterId);
     }
 
     public void save(UserAnswer userAnswer) {

@@ -193,9 +193,14 @@ public class AdminService {
 
     /**
      * Retrieves detailed user answers for a specific user and chapter.
-     * @param userId the user ID
+     * <p>
+     * If the user has not submitted any answers for the given chapter, this method
+     * returns an empty list rather than {@code null}.
+     * 
+     * @param userId    the user ID
      * @param chapterId the chapter ID
-     * @return list of user answer details
+     * @return a list of user answer details; the list will be empty if no answers
+     *         are found for the specified user and chapter
      */
     @Transactional(readOnly = true)
     public List<UserAnswerDetailDto> getUserAnswerDetails(String userId, String chapterId) {

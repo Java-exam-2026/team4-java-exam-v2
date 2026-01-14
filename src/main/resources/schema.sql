@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS user_answers (
     answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE,
-    FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+    FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+    UNIQUE(user_id, chapter_id, question_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_answers_user_chapter ON user_answers(user_id, chapter_id);
