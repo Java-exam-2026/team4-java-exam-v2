@@ -2,11 +2,14 @@ package com.javaexam.service;
 
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
+import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
+import com.javaexam.entity.UserAnswer;
 import com.javaexam.entity.UserProgress;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
+import com.javaexam.repository.UserAnswerJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +23,16 @@ public class AdminService {
     private final UserProgressJdbcRepository userProgressJdbcRepository;
     private final QuestionJdbcRepository questionJdbcRepository;
     private final ChapterJdbcRepository chapterJdbcRepository;
+    private final UserAnswerJdbcRepository userAnswerJdbcRepository;
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
                         QuestionJdbcRepository questionJdbcRepository,
-                        ChapterJdbcRepository chapterJdbcRepository) {
+                        ChapterJdbcRepository chapterJdbcRepository,
+                        UserAnswerJdbcRepository userAnswerJdbcRepository) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
+        this.userAnswerJdbcRepository = userAnswerJdbcRepository;
     }
 
     /**
@@ -42,6 +48,7 @@ public class AdminService {
                         progress.getUser().getId(),
                         progress.getUser().getUsername(),
                         progress.getUser().getDisplayName(),
+                        progress.getChapter().getId(),
                         progress.getChapter().getChapterCode(),
                         progress.getChapter().getTitle(),
                         progress.getScore(),
@@ -77,6 +84,8 @@ public class AdminService {
      */
     @Transactional
     public void deleteUserProgress(String userId) {
+        // Delete user answers first due to foreign key constraint
+        userAnswerJdbcRepository.deleteByUserId(userId);
         int deletedCount = userProgressJdbcRepository.deleteByUserId(userId);
         if (deletedCount == 0) {
             throw new IllegalArgumentException("No progress records found for userId: " + userId);
@@ -89,6 +98,8 @@ public class AdminService {
      */
     @Transactional
     public int deleteAllProgress() {
+        // Delete all user answers first due to foreign key constraint
+        userAnswerJdbcRepository.deleteAll();
         return userProgressJdbcRepository.deleteAll();
     }
 
@@ -178,5 +189,32 @@ public class AdminService {
     public Chapter getChapterById(String chapterId) {
         return chapterJdbcRepository.findById(chapterId)
                 .orElseThrow(() -> new IllegalArgumentException("Chapter not found with id: " + chapterId));
+    }
+
+    /**
+     * Retrieves detailed user answers for a specific user and chapter.
+     * <p>
+     * If the user has not submitted any answers for the given chapter, this method
+     * returns an empty list rather than {@code null}.
+     * 
+     * @param userId    the user ID
+     * @param chapterId the chapter ID
+     * @return a list of user answer details; the list will be empty if no answers
+     *         are found for the specified user and chapter
+     */
+    @Transactional(readOnly = true)
+    public List<UserAnswerDetailDto> getUserAnswerDetails(String userId, String chapterId) {
+        List<UserAnswer> userAnswers = userAnswerJdbcRepository.findByUserAndChapter(userId, chapterId);
+        return userAnswers.stream()
+                .map(answer -> new UserAnswerDetailDto(
+                        answer.getQuestion().getId(),
+                        answer.getQuestion().getQuestionText(),
+                        answer.getQuestion().getOptions(),
+                        answer.getSelectedAnswer(),
+                        answer.getQuestion().getCorrectAnswer(),
+                        answer.getIsCorrect(),
+                        answer.getAnsweredAt()
+                ))
+                .collect(Collectors.toList());
     }
 }

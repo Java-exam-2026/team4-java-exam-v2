@@ -14,6 +14,7 @@ public class AllProgressDto {
     private String userId;
     private String username;
     private String displayName;
+    private String chapterId;
     private String chapterCode;
     private String title;
     private Integer score;
