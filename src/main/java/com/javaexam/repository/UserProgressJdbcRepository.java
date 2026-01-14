@@ -98,6 +98,18 @@ public class UserProgressJdbcRepository {
         return jdbcTemplate.update("DELETE FROM user_progress WHERE user_id = ?", userId);
     }
 
+    /**
+     * Deletes a single progress record for a specific user and chapter.
+     *
+     * @return number of rows deleted (0 or 1)
+     */
+    public int deleteByUserIdAndChapterId(String userId, String chapterId) {
+        return jdbcTemplate.update(
+                "DELETE FROM user_progress WHERE user_id = ? AND chapter_id = ?",
+                userId,
+                chapterId);
+    }
+
     public int deleteAll() {
         return jdbcTemplate.update("DELETE FROM user_progress");
     }

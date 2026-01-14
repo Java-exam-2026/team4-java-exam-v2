@@ -93,6 +93,25 @@ public class AdminService {
     }
 
     /**
+     * Deletes progress/answers for a specific user and chapter only.
+     *
+     * @throws IllegalArgumentException if no progress record exists for the given userId/chapterId
+     */
+    @Transactional
+    public void deleteUserChapterProgress(String userId, String chapterId) {
+        if (userId == null || userId.trim().isEmpty() || chapterId == null || chapterId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid userId/chapterId");
+        }
+        // Delete answers first due to foreign key constraint
+        userAnswerJdbcRepository.deleteByUserIdAndChapterId(userId, chapterId);
+        int deletedCount = userProgressJdbcRepository.deleteByUserIdAndChapterId(userId, chapterId);
+        if (deletedCount == 0) {
+            throw new IllegalArgumentException(
+                    "No progress record found for userId/chapterId: " + userId + "/" + chapterId);
+        }
+    }
+
+    /**
      * Deletes all user progress records in the system.
      * @return the number of records deleted
      */

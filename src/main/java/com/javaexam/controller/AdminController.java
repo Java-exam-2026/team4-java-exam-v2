@@ -97,6 +97,24 @@ public class AdminController {
         return "redirect:/admin/progress";
     }
 
+    @PostMapping("/progress/delete/{userId}/{chapterId}")
+    public String deleteUserChapterProgress(@PathVariable String userId,
+                                           @PathVariable String chapterId,
+                                           RedirectAttributes redirectAttributes) {
+        if (userId == null || userId.trim().isEmpty() || chapterId == null || chapterId.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "無効なユーザーID/チャプターIDです");
+            return "redirect:/admin/progress";
+        }
+
+        try {
+            adminService.deleteUserChapterProgress(userId, chapterId);
+            redirectAttributes.addFlashAttribute("message", "指定チャプターの解答状況を削除しました");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "指定された解答状況が見つかりませんでした");
+        }
+        return "redirect:/admin/progress";
+    }
+
     @PostMapping("/progress/delete-all")
     public String deleteAllProgress(RedirectAttributes redirectAttributes) {
         int deletedCount = adminService.deleteAllProgress();
