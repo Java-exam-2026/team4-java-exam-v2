@@ -114,4 +114,13 @@ class ApiControllerTest {
                         .param("date", "2026-01-14"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void getUsersByAnswerDate_shouldReturnBadRequestForInvalidDateFormat() throws Exception {
+        // When & Then: Call the API with invalid date format
+        mockMvc.perform(get("/api/users/by-answer-date")
+                        .param("date", "invalid-date"))
+                .andExpect(status().isBadRequest());
+    }
 }

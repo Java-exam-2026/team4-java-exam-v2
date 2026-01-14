@@ -253,11 +253,12 @@ public class AdminService {
                         answer -> answer.getUser().getId(),
                         Collectors.collectingAndThen(
                                 Collectors.toList(),
-                                list -> list.get(0)
+                                list -> list.isEmpty() ? null : list.get(0)
                         )
                 ))
                 .values()
                 .stream()
+                .filter(answer -> answer != null)
                 .map(answer -> new com.javaexam.dto.UserAnswerByDateDto(
                         answer.getUser().getId(),
                         answer.getUser().getUsername(),

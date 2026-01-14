@@ -26,6 +26,11 @@ public class ApiController {
     @GetMapping("/users/by-answer-date")
     public ResponseEntity<List<UserAnswerByDateDto>> getUsersByAnswerDate(
             @RequestParam("date") String date) {
+        // Validate date format (YYYY-MM-DD)
+        if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            return ResponseEntity.badRequest().build();
+        }
+        
         List<UserAnswerByDateDto> users = adminService.getUsersByAnswerDate(date);
         return ResponseEntity.ok(users);
     }
