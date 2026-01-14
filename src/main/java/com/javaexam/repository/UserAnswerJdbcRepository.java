@@ -1,5 +1,7 @@
 package com.javaexam.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
 import com.javaexam.entity.User;
@@ -12,15 +14,30 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class UserAnswerJdbcRepository {
 
     private final JdbcTemplate jdbcTemplate;
+    private final ObjectMapper objectMapper;
 
-    public UserAnswerJdbcRepository(JdbcTemplate jdbcTemplate) {
+    public UserAnswerJdbcRepository(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
         this.jdbcTemplate = jdbcTemplate;
+        this.objectMapper = objectMapper;
+    }
+
+    private Map<String, String> readOptions(String json) {
+        if (json == null) {
+            return Collections.emptyMap();
+        }
+        try {
+            return objectMapper.readValue(json, objectMapper.getTypeFactory().constructMapType(Map.class, String.class, String.class));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to deserialize options", e);
+        }
     }
 
     private UserAnswer mapUserAnswerWithJoin(ResultSet rs) throws SQLException {
@@ -43,7 +60,9 @@ public class UserAnswerJdbcRepository {
         question.setId(rs.getString("question_id"));
         question.setChapter(chapter);
         question.setQuestionText(rs.getString("question_text"));
-        question.setOptionsJson(rs.getString("options_json"));
+        String optionsJson = rs.getString("options_json");
+        question.setOptionsJson(optionsJson);
+        question.setOptions(readOptions(optionsJson));
         question.setCorrectAnswer(rs.getString("correct_answer"));
         
         // Map UserAnswer
