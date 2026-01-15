@@ -14,7 +14,9 @@ import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -239,29 +241,37 @@ public class AdminService {
 
     /**
      * Retrieves distinct users who answered questions on a specific date.
+     * Returns one entry per user-chapter combination with score information.
      * 
      * @param date the date in format YYYY-MM-DD
-     * @return a list of users with their answer information from that date
+     * @return a list of users with their answer and score information from that date
      */
     @Transactional(readOnly = true)
     public List<com.javaexam.dto.UserAnswerByDateDto> getUsersByAnswerDate(String date) {
-        List<UserAnswer> userAnswers = userAnswerJdbcRepository.findUsersByAnswerDate(date);
+        List<Map<String, Object>> results = userAnswerJdbcRepository.findUsersWithScoreByAnswerDate(date);
         
-        // Group by user to get distinct users with their first answer time of the day
-        return userAnswers.stream()
-                .collect(Collectors.toMap(
-                        answer -> answer.getUser().getId(),
-                        answer -> answer,
-                        (existing, replacement) -> existing
-                ))
-                .values()
-                .stream()
-                .map(answer -> new com.javaexam.dto.UserAnswerByDateDto(
-                        answer.getUser().getId(),
-                        answer.getUser().getUsername(),
-                        answer.getUser().getDisplayName(),
-                        answer.getAnsweredAt()
-                ))
+        return results.stream()
+                .map(row -> {
+                    LocalDateTime answeredAt = null;
+                    Object answeredAtObj = row.get("answered_at");
+                    if (answeredAtObj instanceof Long) {
+                        answeredAt = new java.sql.Timestamp((Long) answeredAtObj).toLocalDateTime();
+                    } else if (answeredAtObj instanceof java.sql.Timestamp) {
+                        answeredAt = ((java.sql.Timestamp) answeredAtObj).toLocalDateTime();
+                    }
+                    
+                    return new com.javaexam.dto.UserAnswerByDateDto(
+                            (String) row.get("user_id"),
+                            (String) row.get("username"),
+                            (String) row.get("display_name"),
+                            (String) row.get("chapter_id"),
+                            (String) row.get("chapter_code"),
+                            (String) row.get("chapter_title"),
+                            (Integer) row.get("score"),
+                            row.get("passed") != null ? ((Number) row.get("passed")).intValue() == 1 : null,
+                            answeredAt
+                    );
+                })
                 .collect(Collectors.toList());
     }
 }

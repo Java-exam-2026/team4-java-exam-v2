@@ -7,10 +7,12 @@ import com.javaexam.entity.Question;
 import com.javaexam.entity.QuestionType;
 import com.javaexam.entity.User;
 import com.javaexam.entity.UserAnswer;
+import com.javaexam.entity.UserProgress;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserAnswerJdbcRepository;
 import com.javaexam.repository.UserJdbcRepository;
+import com.javaexam.repository.UserProgressJdbcRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,10 +48,14 @@ class ApiControllerTest {
     @Autowired
     private QuestionJdbcRepository questionJdbcRepository;
 
+    @Autowired
+    private UserProgressJdbcRepository userProgressJdbcRepository;
+
     @BeforeEach
     void setUp() {
         // Clean up test data
         userAnswerJdbcRepository.deleteAll();
+        userProgressJdbcRepository.deleteAll();
     }
 
     @Test
@@ -70,6 +76,17 @@ class ApiControllerTest {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Test question not found"));
 
+        // Create user progress with score
+        UserProgress userProgress = new UserProgress();
+        userProgress.setId(UUID.randomUUID().toString());
+        userProgress.setUser(existingUser);
+        userProgress.setChapter(existingChapter);
+        userProgress.setScore(85);
+        userProgress.setPassed(true);
+        userProgress.setHasSubmitted(true);
+        userProgress.setLastAttemptedAt(LocalDateTime.of(2026, 1, 14, 10, 30, 0));
+        userProgressJdbcRepository.save(userProgress);
+
         // Create a user answer with specific date
         UserAnswer userAnswer = new UserAnswer();
         userAnswer.setId(UUID.randomUUID().toString());
@@ -89,7 +106,12 @@ class ApiControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].userId").value(existingUser.getId()))
                 .andExpect(jsonPath("$[0].username").value(existingUser.getUsername()))
-                .andExpect(jsonPath("$[0].displayName").value(existingUser.getDisplayName()));
+                .andExpect(jsonPath("$[0].displayName").value(existingUser.getDisplayName()))
+                .andExpect(jsonPath("$[0].chapterId").value(existingChapter.getId()))
+                .andExpect(jsonPath("$[0].chapterCode").value(existingChapter.getChapterCode()))
+                .andExpect(jsonPath("$[0].chapterTitle").value(existingChapter.getTitle()))
+                .andExpect(jsonPath("$[0].score").value(85))
+                .andExpect(jsonPath("$[0].passed").value(true));
     }
 
     @Test

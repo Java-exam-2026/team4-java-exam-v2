@@ -14,5 +14,10 @@ public class UserAnswerByDateDto {
     private String userId;
     private String username;
     private String displayName;
+    private String chapterId;
+    private String chapterCode;
+    private String chapterTitle;
+    private Integer score;
+    private Boolean passed;
     private LocalDateTime answeredAt;
 }
