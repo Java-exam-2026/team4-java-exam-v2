@@ -2,6 +2,7 @@ package com.javaexam.service;
 
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
+import com.javaexam.dto.UserAnswerByDateDto;
 import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
@@ -14,7 +15,9 @@ import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -234,6 +237,62 @@ public class AdminService {
                         answer.getIsCorrect(),
                         answer.getAnsweredAt()
                 ))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves distinct users who answered questions on a specific date.
+     * Returns one entry per user-chapter combination with score information.
+     * 
+     * @param date the date in format YYYY-MM-DD
+     * @return a list of users with their answer and score information from that date
+     */
+    @Transactional(readOnly = true)
+    public List<UserAnswerByDateDto> getUsersByAnswerDate(String date) {
+        List<Map<String, Object>> results = userAnswerJdbcRepository.findUsersWithScoreByAnswerDate(date);
+        
+        return results.stream()
+                .map(row -> {
+                    LocalDateTime answeredAt = null;
+                    Object answeredAtObj = row.get("answered_at");
+                    if (answeredAtObj instanceof Long) {
+                        answeredAt = new java.sql.Timestamp((Long) answeredAtObj).toLocalDateTime();
+                    } else if (answeredAtObj instanceof java.sql.Timestamp) {
+                        answeredAt = ((java.sql.Timestamp) answeredAtObj).toLocalDateTime();
+                    }
+                    
+                    // Handle passed field which can be Integer (0/1) or Boolean
+                    Boolean passed = null;
+                    Object passedObj = row.get("passed");
+                    if (passedObj != null) {
+                        if (passedObj instanceof Boolean) {
+                            passed = (Boolean) passedObj;
+                        } else if (passedObj instanceof Number) {
+                            passed = ((Number) passedObj).intValue() != 0;
+                        }
+                    }
+                    
+                    // Handle score field
+                    Integer score = null;
+                    Object scoreObj = row.get("score");
+                    if (scoreObj instanceof Integer) {
+                        score = (Integer) scoreObj;
+                    } else if (scoreObj instanceof Number) {
+                        score = ((Number) scoreObj).intValue();
+                    }
+                    
+                    return new UserAnswerByDateDto(
+                            (String) row.get("user_id"),
+                            (String) row.get("username"),
+                            (String) row.get("display_name"),
+                            (String) row.get("chapter_id"),
+                            (String) row.get("chapter_code"),
+                            (String) row.get("chapter_title"),
+                            score,
+                            passed,
+                            answeredAt
+                    );
+                })
                 .collect(Collectors.toList());
     }
 }

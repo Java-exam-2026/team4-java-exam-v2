@@ -128,4 +128,34 @@ public class UserAnswerJdbcRepository {
     public int deleteAll() {
         return jdbcTemplate.update("DELETE FROM user_answers");
     }
+
+    /**
+     * Find users with their progress/scores who answered questions on a specific date.
+     * Groups by user and chapter to get distinct user-chapter combinations.
+     * 
+     * @param date The date to search for (format: YYYY-MM-DD)
+     * @return List of user answer data with score information
+     */
+    public List<Map<String, Object>> findUsersWithScoreByAnswerDate(String date) {
+        String sql = """
+            SELECT 
+                u.id as user_id,
+                u.username,
+                u.display_name,
+                c.id as chapter_id,
+                c.chapter_code,
+                c.title as chapter_title,
+                up.score,
+                up.passed,
+                MIN(ua.answered_at) as answered_at
+            FROM user_answers ua
+            JOIN users u ON ua.user_id = u.id
+            JOIN chapters c ON ua.chapter_id = c.id
+            LEFT JOIN user_progress up ON ua.user_id = up.user_id AND ua.chapter_id = up.chapter_id
+            WHERE DATE(ua.answered_at / 1000, 'unixepoch') = ?
+            GROUP BY u.id, u.username, u.display_name, c.id, c.chapter_code, c.title, up.score, up.passed
+            ORDER BY answered_at DESC, u.username
+            """;
+        return jdbcTemplate.queryForList(sql, date);
+    }
 }
