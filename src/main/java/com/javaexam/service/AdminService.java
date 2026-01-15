@@ -260,6 +260,26 @@ public class AdminService {
                         answeredAt = ((java.sql.Timestamp) answeredAtObj).toLocalDateTime();
                     }
                     
+                    // Handle passed field which can be Integer (0/1) or Boolean
+                    Boolean passed = null;
+                    Object passedObj = row.get("passed");
+                    if (passedObj != null) {
+                        if (passedObj instanceof Boolean) {
+                            passed = (Boolean) passedObj;
+                        } else if (passedObj instanceof Number) {
+                            passed = ((Number) passedObj).intValue() != 0;
+                        }
+                    }
+                    
+                    // Handle score field
+                    Integer score = null;
+                    Object scoreObj = row.get("score");
+                    if (scoreObj instanceof Integer) {
+                        score = (Integer) scoreObj;
+                    } else if (scoreObj instanceof Number) {
+                        score = ((Number) scoreObj).intValue();
+                    }
+                    
                     return new com.javaexam.dto.UserAnswerByDateDto(
                             (String) row.get("user_id"),
                             (String) row.get("username"),
@@ -267,8 +287,8 @@ public class AdminService {
                             (String) row.get("chapter_id"),
                             (String) row.get("chapter_code"),
                             (String) row.get("chapter_title"),
-                            (Integer) row.get("score"),
-                            row.get("passed") != null ? ((Number) row.get("passed")).intValue() == 1 : null,
+                            score,
+                            passed,
                             answeredAt
                     );
                 })
