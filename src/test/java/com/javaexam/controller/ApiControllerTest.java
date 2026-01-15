@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -55,7 +54,6 @@ class ApiControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getUsersByAnswerDate_shouldReturnUsersWhoAnsweredOnSpecificDate() throws Exception {
         // Given: Create test data
         String testDate = "2026-01-14";
@@ -111,7 +109,6 @@ class ApiControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getUsersByAnswerDate_shouldReturnEmptyListWhenNoAnswersOnDate() throws Exception {
         // Given: A date with no answers
         String testDate = "2025-01-01";
@@ -125,16 +122,6 @@ class ApiControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    void getUsersByAnswerDate_shouldReturnForbiddenForNonAdminUsers() throws Exception {
-        // When & Then: Call the API with USER role
-        mockMvc.perform(get("/api/users/by-answer-date")
-                        .param("date", "2026-01-14"))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
     void getUsersByAnswerDate_shouldReturnBadRequestForInvalidDateFormat() throws Exception {
         // When & Then: Call the API with invalid date format
         mockMvc.perform(get("/api/users/by-answer-date")
