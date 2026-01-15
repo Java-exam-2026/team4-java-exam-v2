@@ -130,30 +130,6 @@ public class UserAnswerJdbcRepository {
     }
 
     /**
-     * Find distinct users who answered questions on a specific date.
-     * 
-     * @param date The date to search for (format: YYYY-MM-DD)
-     * @return List of UserAnswer objects with user information
-     */
-    public List<UserAnswer> findUsersByAnswerDate(String date) {
-        String sql = """
-            SELECT DISTINCT
-                ua.id, ua.user_id, ua.chapter_id, ua.question_id, 
-                ua.selected_answer, ua.is_correct, ua.answered_at,
-                u.username, u.display_name, u.role,
-                c.chapter_code, c.title as chapter_title, c.sort_order as chapter_sort_order,
-                q.question_text, q.options AS options_json, q.correct_answer
-            FROM user_answers ua
-            JOIN users u ON ua.user_id = u.id
-            JOIN chapters c ON ua.chapter_id = c.id
-            JOIN questions q ON ua.question_id = q.id
-            WHERE DATE(ua.answered_at / 1000, 'unixepoch') = ?
-            ORDER BY ua.answered_at DESC, u.username
-            """;
-        return jdbcTemplate.query(sql, joinRowMapper, date);
-    }
-
-    /**
      * Find users with their progress/scores who answered questions on a specific date.
      * Groups by user and chapter to get distinct user-chapter combinations.
      * 

@@ -1,10 +1,8 @@
 package com.javaexam.controller;
 
 import com.javaexam.JavaExamApplication;
-import com.javaexam.dto.UserAnswerByDateDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
-import com.javaexam.entity.QuestionType;
 import com.javaexam.entity.User;
 import com.javaexam.entity.UserAnswer;
 import com.javaexam.entity.UserProgress;
@@ -22,8 +20,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

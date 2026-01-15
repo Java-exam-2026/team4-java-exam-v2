@@ -2,6 +2,7 @@ package com.javaexam.service;
 
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
+import com.javaexam.dto.UserAnswerByDateDto;
 import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
@@ -247,7 +248,7 @@ public class AdminService {
      * @return a list of users with their answer and score information from that date
      */
     @Transactional(readOnly = true)
-    public List<com.javaexam.dto.UserAnswerByDateDto> getUsersByAnswerDate(String date) {
+    public List<UserAnswerByDateDto> getUsersByAnswerDate(String date) {
         List<Map<String, Object>> results = userAnswerJdbcRepository.findUsersWithScoreByAnswerDate(date);
         
         return results.stream()
@@ -280,7 +281,7 @@ public class AdminService {
                         score = ((Number) scoreObj).intValue();
                     }
                     
-                    return new com.javaexam.dto.UserAnswerByDateDto(
+                    return new UserAnswerByDateDto(
                             (String) row.get("user_id"),
                             (String) row.get("username"),
                             (String) row.get("display_name"),
