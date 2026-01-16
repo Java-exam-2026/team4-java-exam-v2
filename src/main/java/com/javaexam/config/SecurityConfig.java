@@ -1,6 +1,7 @@
 package com.javaexam.config;
 
 import com.javaexam.security.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -16,6 +17,12 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+    
+    @Value("${spring.security.remember-me.key}")
+    private String rememberMeKey;
+    
+    @Value("${spring.security.remember-me.token-validity-seconds}")
+    private int rememberMeTokenValiditySeconds;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
@@ -40,8 +47,8 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout")
                         .permitAll())
                 .rememberMe(remember -> remember
-                        .key("uniqueAndSecretKey")
-                        .tokenValiditySeconds(604800)); // 7 days
+                        .key(rememberMeKey)
+                        .tokenValiditySeconds(rememberMeTokenValiditySeconds));
 
         return http.build();
     }
