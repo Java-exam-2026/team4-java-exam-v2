@@ -2,7 +2,6 @@ package com.javaexam.service;
 
 import com.javaexam.dto.*;
 import com.javaexam.entity.*;
-import java.util.stream.Collectors;
 import com.javaexam.exception.AlreadySubmittedException;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
