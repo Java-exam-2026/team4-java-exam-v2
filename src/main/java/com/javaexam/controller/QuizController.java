@@ -2,6 +2,7 @@ package com.javaexam.controller;
 
 import com.javaexam.dto.SubmissionRequestDto;
 import com.javaexam.dto.SubmissionResultDto;
+import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.exception.AlreadySubmittedException;
 import com.javaexam.service.QuizService;
 import org.springframework.stereotype.Controller;
@@ -9,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -54,5 +56,22 @@ public class QuizController {
       model.addAttribute("chapterCode", chapterCode);
       return "already-submitted";
     }
+  }
+
+  @GetMapping("/{chapterCode}/results")
+  public String viewResults(@PathVariable String chapterCode, Principal principal, Model model) {
+    // Check if user has submitted
+    if (!quizService.hasUserSubmitted(principal.getName(), chapterCode)) {
+      return "redirect:/";
+    }
+
+    List<UserAnswerDetailDto> answerDetails = quizService.getUserAnswerDetails(principal.getName(), chapterCode);
+    String chapterTitle = quizService.getChapterTitle(chapterCode);
+    
+    model.addAttribute("answerDetails", answerDetails);
+    model.addAttribute("chapterTitle", chapterTitle);
+    model.addAttribute("chapterCode", chapterCode);
+    
+    return "user-result-detail";
   }
 }

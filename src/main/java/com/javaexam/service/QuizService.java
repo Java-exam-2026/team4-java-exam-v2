@@ -2,6 +2,7 @@ package com.javaexam.service;
 
 import com.javaexam.dto.*;
 import com.javaexam.entity.*;
+import java.util.stream.Collectors;
 import com.javaexam.exception.AlreadySubmittedException;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
@@ -173,5 +174,34 @@ public class QuizService {
         question.getQuestionText(),
         question.getQuestionType(),
         question.getOptions());
+  }
+
+  @Transactional(readOnly = true)
+  public List<UserAnswerDetailDto> getUserAnswerDetails(String username, String chapterCode) {
+    User user = userJdbcRepository.findByUsername(username)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
+        .orElseThrow(() -> new RuntimeException("Chapter not found"));
+
+    List<UserAnswer> userAnswers = userAnswerJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId());
+    return userAnswers.stream()
+        .map(answer -> new UserAnswerDetailDto(
+            answer.getQuestion().getId(),
+            answer.getQuestion().getQuestionText(),
+            answer.getQuestion().getOptions(),
+            answer.getSelectedAnswer(),
+            answer.getQuestion().getCorrectAnswer(),
+            answer.getIsCorrect(),
+            answer.getAnsweredAt()
+        ))
+        .collect(Collectors.toList());
+  }
+
+  @Transactional(readOnly = true)
+  public String getChapterTitle(String chapterCode) {
+    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
+        .orElseThrow(() -> new RuntimeException("Chapter not found"));
+    return chapter.getTitle();
   }
 }
