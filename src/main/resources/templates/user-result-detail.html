@@ -94,7 +94,7 @@
                 
                 <div class="text-muted mt-2 small">
                     <span th:if="${answer.answeredAt != null}">
-                        回答日時: <span th:text="${#temporals.format(answer.answeredAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</span>
+                        回答日時: <span th:text="${#temporals.format(answer.answeredAt.atZone(T(java.time.ZoneId).of('UTC')).withZoneSameInstant(T(java.time.ZoneId).of('Asia/Tokyo')), 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</span>
                     </span>
                 </div>
             </div>
