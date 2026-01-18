@@ -66,8 +66,8 @@
 
                             <a th:if="${progressMap == null or !progressMap.containsKey(chapter.chapterCode) or !progressMap.get(chapter.chapterCode).hasSubmitted}"
                                th:href="@{/quiz/{code}(code=${chapter.chapterCode})}" class="btn btn-primary">Start Quiz</a>
-                            <span th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode) and progressMap.get(chapter.chapterCode).hasSubmitted}"
-                                  class="text-muted">Already submitted</span>
+                            <a th:if="${progressMap != null and progressMap.containsKey(chapter.chapterCode) and progressMap.get(chapter.chapterCode).hasSubmitted}"
+                               th:href="@{/quiz/{code}/results(code=${chapter.chapterCode})}" class="btn btn-info">View Results</a>
                         </div>
                     </div>
                 </div>
