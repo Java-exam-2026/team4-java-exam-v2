@@ -5,27 +5,19 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    links:
-      - nginx
     restart: always
     environment:
-      DOMAINS: 'java-exam.com -> http://nginx:8081'
+      DOMAINS: 'java-exam.com -> http://host.docker.internal:8080'
       STAGE: 'production'
       # STAGE: 'local'
       # FORCE_RENEW: 'true'
+      CUSTOM_NGINX_SERVER_CONFIG_BLOCK: |
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/.htpasswd;
     volumes:
       - https-portal-data:/var/lib/https-portal
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-  nginx:
-    image: nginx:latest
-    container_name: 'nginx'
-    volumes:
-      - ./conf.d/server.conf:/etc/nginx/conf.d/server.conf
       - ./conf.d/.htpasswd:/etc/nginx/.htpasswd
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # ports:
-    #   - "80:80"
 volumes:
   https-portal-data:
