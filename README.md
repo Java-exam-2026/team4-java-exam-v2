@@ -40,7 +40,9 @@ git clone https://github.com/Java-exam-2026/{チーム名}-java-exam-v2.git
 cd {チーム名}-java-exam-v2
 ./mvnw package jib:dockerBuild -DskipTests
 docker compose up -d
-docker ps
+
+# 以下を実行してtest,prod環境のアプリケーションが起動したことを確認する
+docker compose logs -f
 ```
 
 #### testing実行
@@ -55,7 +57,9 @@ cd {チーム名}-java-exam-v2
 git pull
 docker compose down
 docker compose up -d
-docker ps
+
+# 以下を実行してtest,prod環境のアプリケーションが起動したことを確認する
+docker compose logs -f
 ```
 
 #### prod実行
@@ -77,7 +81,9 @@ docker image prune -f
 
 docker compose down
 docker compose up -d
-docker ps
+
+# 以下を実行してtest,prod環境のアプリケーションが起動したことを確認する
+docker compose logs -f
 ```
 
 ## データベース
