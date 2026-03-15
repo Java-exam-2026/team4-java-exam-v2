@@ -8,8 +8,6 @@ services:
     command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=${SPRING_PROFILES_ACTIVE:-default}
     ports:
       - '8080:8080'
-    environment:
-      SPRING_DATASOURCE_URL: 'jdbc:sqlite:/app/data/java-exam.db'
 
   https-portal:
     image: steveltn/https-portal:1
