@@ -15,18 +15,6 @@
 
 ## 実行方法
 
-### Docker Compose（推奨）
-
-```bash
-# 起動
-docker compose up -d
-
-# プロファイルを指定して起動
-SPRING_PROFILES_ACTIVE=dev docker compose up -d
-```
-
-`http://localhost:8080` でアプリケーションにアクセスします。
-
 ### ローカル実行
 
 ```bash
@@ -40,33 +28,57 @@ mvnw.cmd spring-boot:run
 
 `http://localhost:8080` でアプリケーションにアクセスします。
 
+### クラウド環境構築
+
+初回のみ、以下のコマンドを実行して、リポジトリをクローンし、Dockerコンテナを起動します。
+
+```bash
+sudo su - exam
+
+# リポジトリをクローン
+git clone https://github.com/Java-exam-2026/{チーム名}-java-exam-v2.git
+cd java-exam-v2
+docker compose up -d
+docker ps
+```
+
+#### testing実行
+
+testingはbuildされたdockerイメージを使用していないため、git pullで変更を反映させるだけでOKです。
+
+```bash
+sudo su - exam
+cd java-exam-v2
+
+# 変更を反映させるためにリポジトリを更新
+git pull
+docker compose up -d
+docker ps
+```
+
+#### prod実行
+
+prodはbuildされたdockerイメージを使用しているため、変更を反映させるためにリポジトリを更新した後、Dockerイメージを再ビルドする必要があります。
+
+```bash
+sudo su - exam
+cd java-exam-v2
+
+# 変更を反映させるためにリポジトリを更新
+git pull
+
+# 変更を反映させるためにDockerイメージを再ビルド
+./mvnw compile jib:dockerBuild
+
+docker compose up -d
+docker ps
+```
+
 ## データベース
 
-以下からアプリをインストール: 
-https://sqlitebrowser.org/ 
+以下からアプリをインストール:
+https://sqlitebrowser.org/
 
 このアプリケーションは、ローカルのSQLiteデータベース `java-exam.db` を使用します。
 データベースは初回実行時に `src/main/resources/data.sql` のデータで初期化されます。
 
-## プロジェクト構造
-
-- `src/main/java/com/javaexam`: バックエンドロジック (Controllers, Services, Repositories, Entities)
-- `src/main/resources/templates`: Thymeleafテンプレート (login, dashboard, quiz, result)
-- `src/main/resources/application.properties`: 設定ファイル
-
-## 回答データの消去
-
-```
-sqlite3 java-exam.db
-select * from user_progress;
-delete from user_progress;
-```
-
-## サーバー再起動
-
-```
-sudo su - shogo_nakao
-cd java-exam-v2/
-lsof -i:8080
-kill -9 <<PID>>
-```

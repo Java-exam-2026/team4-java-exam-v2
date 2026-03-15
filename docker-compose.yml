@@ -1,13 +1,18 @@
 version: '3'
 services:
-  app:
+  testing:
     image: eclipse-temurin:25-jdk
     working_dir: /app
     volumes:
       - .:/app
     command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=${SPRING_PROFILES_ACTIVE:-default}
-    ports:
-      - '8080:8080'
+
+  prod:
+    image: eclipse-temurin:25-jdk
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=${SPRING_PROFILES_ACTIVE:-default}
 
   https-portal:
     image: steveltn/https-portal:1
@@ -15,11 +20,13 @@ services:
       - '80:80'
       - '443:443'
     environment:
-      DOMAINS: 'everyone:engineer@team1.java-exam.com.35.213.80.42.nip.io -> http://app:8080'
+      DOMAINS: 'everyone:engineer@team1.java-exam.com.35.213.80.42.nip.io -> http://testing:8080,
+                everyone:engineer@test-team1.java-exam.com.35.213.80.42.nip.io -> http://prod:8081'
       STAGE: 'staging'
     volumes:
       - https-portal-data:/var/lib/https-portal
     depends_on:
-      - app
+      - testing
+      - prod
 volumes:
   https-portal-data:
