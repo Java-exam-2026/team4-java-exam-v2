@@ -32,3 +32,5 @@ build/
 ### VS Code ###
 .vscode/
 java-exam.db
+java-exam-testing.db
+java-exam-prod.db
