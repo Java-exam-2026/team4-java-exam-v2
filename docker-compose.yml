@@ -7,7 +7,7 @@ services:
       - '443:443'
     environment:
       DOMAINS: 'everyone:engineer@team1.java-exam.com.35.213.80.42.nip.io -> http://host.docker.internal:8080'
-      STAGE: 'stg'
+      STAGE: 'staging'
     volumes:
       - https-portal-data:/var/lib/https-portal
     extra_hosts:
