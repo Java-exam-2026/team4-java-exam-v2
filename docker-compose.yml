@@ -23,6 +23,7 @@ services:
       - '80:80'
       - '443:443'
     environment:
+      ## team1を自分のチームに置き換えてください
       DOMAINS: 'everyone:engineer@team1.java-exam.com.35.213.80.42.nip.io -> http://testing:8080,
                 everyone:engineer@test-team1.java-exam.com.35.213.80.42.nip.io -> http://prod:8081'
       STAGE: 'staging'

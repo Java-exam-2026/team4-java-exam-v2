@@ -53,6 +53,7 @@ cd java-exam-v2
 
 # 変更を反映させるためにリポジトリを更新
 git pull
+docker compose down
 docker compose up -d
 docker ps
 ```
@@ -74,6 +75,7 @@ git pull
 # 古いイメージを削除してディスク容量を確保
 docker image prune -f
 
+docker compose down
 docker compose up -d
 docker ps
 ```
