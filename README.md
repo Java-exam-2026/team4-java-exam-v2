@@ -38,6 +38,7 @@ sudo su - exam
 # リポジトリをクローン
 git clone https://github.com/Java-exam-2026/{チーム名}-java-exam-v2.git
 cd java-exam-v2
+./mvnw compile jib:dockerBuild
 docker compose up -d
 docker ps
 ```
@@ -69,6 +70,9 @@ git pull
 
 # 変更を反映させるためにDockerイメージを再ビルド
 ./mvnw compile jib:dockerBuild
+
+# 古いイメージを削除してディスク容量を確保
+docker image prune -f
 
 docker compose up -d
 docker ps
