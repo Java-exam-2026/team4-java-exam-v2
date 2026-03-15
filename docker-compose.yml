@@ -4,7 +4,7 @@ services:
     image: eclipse-temurin:25-jdk-alpine
     working_dir: /app
     expose:
-      - 8081
+      - 8080
     volumes:
       - .:/app
     command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=testing
@@ -12,7 +12,7 @@ services:
   prod:
     image: java-exam-v2
     expose:
-      - 8080
+      - 8081
     volumes:
       - prod-data:/app
     working_dir: /app
