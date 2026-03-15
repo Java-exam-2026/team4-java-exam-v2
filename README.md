@@ -15,17 +15,30 @@
 
 ## 実行方法
 
-アプリケーションを実行する:
-   ```bash
-   # linux または mac
-   ./mvnw spring-boot:run
+### Docker Compose（推奨）
 
-   # windows
-   mvnw.cmd spring-boot:run
-   ```
+```bash
+# 起動
+docker compose up -d
+
+# プロファイルを指定して起動
+SPRING_PROFILES_ACTIVE=dev docker compose up -d
+```
+
+`http://localhost:8080` でアプリケーションにアクセスします。
+
+### ローカル実行
+
+```bash
+# linux または mac
+./mvnw spring-boot:run
+
+# windows
+mvnw.cmd spring-boot:run
+```
 - Windowsでコマンドがエラーになる場合、「# linux または mac」の方のコマンドを試してみてください。
 
-3. `http://localhost:8080` でアプリケーションにアクセスします。
+`http://localhost:8080` でアプリケーションにアクセスします。
 
 ## データベース
 

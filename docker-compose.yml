@@ -1,11 +1,13 @@
 version: '3'
 services:
   app:
-    build: .
+    image: eclipse-temurin:25-jdk
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=${SPRING_PROFILES_ACTIVE:-default}
     ports:
       - '8080:8080'
-    volumes:
-      - app-data:/app/data
     environment:
       SPRING_DATASOURCE_URL: 'jdbc:sqlite:/app/data/java-exam.db'
 
@@ -22,5 +24,4 @@ services:
     depends_on:
       - app
 volumes:
-  app-data:
   https-portal-data:
