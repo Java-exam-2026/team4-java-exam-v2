@@ -1,16 +1,26 @@
 version: '3'
 services:
+  app:
+    build: .
+    ports:
+      - '8080:8080'
+    volumes:
+      - app-data:/app/data
+    environment:
+      SPRING_DATASOURCE_URL: 'jdbc:sqlite:/app/data/java-exam.db'
+
   https-portal:
     image: steveltn/https-portal:1
     ports:
       - '80:80'
       - '443:443'
     environment:
-      DOMAINS: 'everyone:engineer@team1.java-exam.com.35.213.80.42.nip.io -> http://host.docker.internal:8080'
+      DOMAINS: 'everyone:engineer@team1.java-exam.com.35.213.80.42.nip.io -> http://app:8080'
       STAGE: 'staging'
     volumes:
       - https-portal-data:/var/lib/https-portal
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - app
 volumes:
+  app-data:
   https-portal-data:
