@@ -5,14 +5,13 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-    command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=${SPRING_PROFILES_ACTIVE:-default}
+    command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=testing
 
   prod:
-    image: eclipse-temurin:25-jdk
-    working_dir: /app
+    image: java-exam-v2
     volumes:
-      - .:/app
-    command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=${SPRING_PROFILES_ACTIVE:-default}
+      - prod-data:/app
+    working_dir: /app
 
   https-portal:
     image: steveltn/https-portal:1
@@ -29,4 +28,5 @@ services:
       - testing
       - prod
 volumes:
+  prod-data:
   https-portal-data:
