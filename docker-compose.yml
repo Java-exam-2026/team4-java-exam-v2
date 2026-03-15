@@ -7,6 +7,7 @@ services:
       - 8080
     volumes:
       - .:/app
+      - maven-cache:/root/.m2
     command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=testing
 
   prod:
@@ -33,4 +34,5 @@ services:
       - testing
       - prod
 volumes:
+  maven-cache:
   https-portal-data:
