@@ -17,6 +17,8 @@
 
 ### ローカル実行
 
+#### アプリケーション
+
 ```bash
 # linux または mac
 ./mvnw spring-boot:run
@@ -28,69 +30,47 @@ mvnw.cmd spring-boot:run
 
 `http://localhost:8080` でアプリケーションにアクセスします。
 
-### クラウド環境構築
-
-初回のみ、以下のコマンドを実行して、リポジトリをクローンし、Dockerコンテナを起動します。
-
-```bash
-sudo su - exam
-
-# リポジトリをクローン
-git clone https://github.com/Java-exam-2026/{チーム名}-java-exam-v2.git
-cd {チーム名}-java-exam-v2
-./mvnw package jib:dockerBuild -DskipTests
-docker compose up -d
-
-# 以下を実行してtest,prod環境のアプリケーションが起動したことを確認する
-docker compose logs -f
-```
-
-#### testing実行
-
-testingはbuildされたdockerイメージを使用していないため、git pullで変更を反映させるだけでOKです。
-
-```bash
-sudo su - exam
-cd {チーム名}-java-exam-v2
-
-# 変更を反映させるためにリポジトリを更新
-git pull
-docker compose down
-docker compose up -d
-
-# 以下を実行してtest,prod環境のアプリケーションが起動したことを確認する
-docker compose logs -f
-```
-
-#### prod実行
-
-prodはbuildされたdockerイメージを使用しているため、変更を反映させるためにリポジトリを更新した後、Dockerイメージを再ビルドする必要があります。
-
-```bash
-sudo su - exam
-cd {チーム名}-java-exam-v2
-
-# 変更を反映させるためにリポジトリを更新
-git pull
-
-# 変更を反映させるためにDockerイメージを再ビルド
-./mvnw package jib:dockerBuild -DskipTests
-
-# 古いイメージを削除してディスク容量を確保
-docker image prune -f
-
-docker compose down
-docker compose up -d
-
-# 以下を実行してtest,prod環境のアプリケーションが起動したことを確認する
-docker compose logs -f
-```
-
-## データベース
+#### データベース 
 
 以下からアプリをインストール:
 https://sqlitebrowser.org/
 
-このアプリケーションは、ローカルのSQLiteデータベース `java-exam.db` を使用します。
+SQLiteデータベース `java-exam.db` に接続して使用してください。
 データベースは初回実行時に `src/main/resources/data.sql` のデータで初期化されます。
 
+### 本番構築
+
+事前に公開鍵をサーバーに登録するため、連携してください。
+
+#### アプリケーション
+
+```bash
+ssh ユーザー名@サーバーIPアドレス
+sudo su - exam
+
+# 初回のみリポジトリをクローン
+git clone https://github.com/Java-exam-2026/{チーム名}-java-exam-v2.git
+
+# すでにクローンしている場合は、以下のコマンドで最新の状態に更新
+cd {チーム名}-java-exam-v2
+git pull
+
+# アプリケーションを起動
+docker compose up -d
+
+# 以下を実行してアプリケーションが起動したことを確認する
+docker compose logs
+```
+
+#### データベース
+
+sqlite3コマンドを使用して、SQLiteデータベースに接続できます。
+
+```bash
+ssh ユーザー名@サーバーIPアドレス
+sudo su - exam
+cd {チーム名}-java-exam-v2
+
+# データベースに接続
+sqlite3 java-exam-prod.db  
+```
