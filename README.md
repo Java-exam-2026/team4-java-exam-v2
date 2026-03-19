@@ -64,6 +64,8 @@ docker compose up -d
 docker compose logs
 ```
 
+`{チーム名}-.java-exam.com` でアプリケーションにアクセスします。
+
 #### データベース
 
 sqlite3コマンドを使用して、SQLiteデータベースに接続できます。
