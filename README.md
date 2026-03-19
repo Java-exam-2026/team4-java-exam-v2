@@ -49,6 +49,8 @@ ssh ユーザー名@サーバーIPアドレス
 sudo su - exam
 
 # 初回のみリポジトリをクローン
+# github classic tokenを使用してクローンしてください。git pullでも必要になります。
+# https://docs.github.com/ja/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
 git clone https://github.com/Java-exam-2026/{チーム名}-java-exam-v2.git
 
 # すでにクローンしている場合は、以下のコマンドで最新の状態に更新
