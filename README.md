@@ -37,6 +37,7 @@ https://sqlitebrowser.org/
 
 SQLiteデータベース `java-exam.db` に接続して使用してください。
 データベースは初回実行時に `src/main/resources/data.sql` のデータで初期化されます。
+初回起動は証明書作成のため5分ほどお待ちください。
 
 ### 本番構築
 
