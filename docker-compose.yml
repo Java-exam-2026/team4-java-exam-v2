@@ -16,8 +16,9 @@ services:
       - '80:80'
       - '443:443'
     environment:
-      ## team1を自分のチームに置き換えてください
-      DOMAINS: 'everyone:engineer@team1.java-exam.com -> http://prod:8080'
+      ## 自分のチームに置き換えてください
+      ## XXXXX -> team1,team2,team3,team4,team5
+      DOMAINS: 'everyone:engineer@XXXXX.java-exam.com -> http://prod:8080'
       STAGE: 'production'
     volumes:
       - https-portal-data:/var/lib/https-portal
