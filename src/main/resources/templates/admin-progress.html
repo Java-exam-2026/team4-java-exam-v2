@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>全ユーザーの回答状況</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">Java Exam System</a>
+            <div class="d-flex">
+                <span class="navbar-text me-3" th:text="${#authentication.name}">User</span>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="mb-3">
+            <a href="/" class="btn btn-secondary">← ダッシュボードに戻る</a>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">全ユーザーの回答状況</h2>
+            <div>
+                <a href="/admin/progress/export/tsv" class="btn btn-primary me-2">
+                    TSVダウンロード
+                </a>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteAll()">
+                    すべての解答を削除
+                </button>
+            </div>
+        </div>
+
+        <!-- Success message display -->
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Error message display -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ユーザー名</th>
+                                <th>表示名</th>
+                                <th>チャプターコード</th>
+                                <th>チャプタータイトル</th>
+                                <th>スコア</th>
+                                <th>合格</th>
+                                <th>最終受験日時</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="progress : ${progressList}">
+                                <td th:text="${progress.username}">username</td>
+                                <td th:text="${progress.displayName}">Display Name</td>
+                                <td th:text="${progress.chapterCode}">chap1</td>
+                                <td th:text="${progress.title}">Chapter Title</td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${progress.score >= 80} ? 'bg-success' : 'bg-warning'"
+                                          th:text="${progress.score} + '%'">0%</span>
+                                </td>
+                                <td>
+                                    <span th:if="${progress.passed}" class="badge bg-success">合格</span>
+                                    <span th:unless="${progress.passed}" class="badge bg-danger">不合格</span>
+                                </td>
+                                <td th:text="${#temporals.format(progress.lastAttemptedAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</td>
+                                <td>
+                                    <a th:href="@{/admin/progress/detail/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}"
+                                       class="btn btn-sm btn-outline-info me-1"
+                                       title="このユーザーの回答詳細を表示">
+                                        回答
+                                    </a>
+
+                                    <!-- Delete only this chapter (row-level) -->
+                                    <form th:action="@{/admin/progress/delete/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}"
+                                          method="post" style="display: inline;">
+                                        <button type="button" class="btn btn-sm btn-outline-danger me-1"
+                                                th:attr="data-username=${progress.username},data-chapter-code=${progress.chapterCode}"
+                                                onclick="confirmDeleteChapter(this)"
+                                                title="このユーザーのこのチャプターの回答状況を削除">
+                                            この章を削除
+                                        </button>
+                                    </form>
+
+                                    <!-- Delete all chapters for this user (user-level) -->
+                                    <form th:action="@{/admin/progress/delete/{userId}(userId=${progress.userId})}"
+                                          method="post" style="display: inline;">
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                th:attr="data-username=${progress.username}"
+                                                onclick="confirmDeleteUserAll(this)"
+                                                title="このユーザーの全チャプターの回答状況を削除">
+                                            ユーザー全削除
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(progressList)}">
+                                <td colspan="8" class="text-center text-muted">まだ回答データがありません</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden form for delete all operation -->
+    <form id="deleteAllForm" th:action="@{/admin/progress/delete-all}" method="post" style="display: none;">
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function escapeForJsString(value) {
+            if (value == null) return '';
+            return String(value)
+                .replace(/\\/g, '\\\\')  // Backslash must be first
+                .replace(/'/g, "\\'")      // Single quote
+                .replace(/"/g, '\\"')     // Double quote
+                .replace(/\n/g, '\\n')     // Newline
+                .replace(/\r/g, '\\r')     // Carriage return
+                .replace(/\t/g, '\\t');    // Tab
+        }
+
+        function confirmDeleteChapter(button) {
+            var username = escapeForJsString(button.getAttribute('data-username'));
+            var chapterCode = escapeForJsString(button.getAttribute('data-chapter-code'));
+            if (confirm('ユーザー「' + username + '」のチャプター「' + chapterCode + '」の解答状況を削除してもよろしいですか？')) {
+                button.closest('form').submit();
+            }
+        }
+
+        function confirmDeleteUserAll(button) {
+            var username = escapeForJsString(button.getAttribute('data-username'));
+            if (confirm('ユーザー「' + username + '」の全チャプターの解答状況を削除してもよろしいですか？\nこの操作は取り消せません。')) {
+                button.closest('form').submit();
+            }
+        }
+
+        function confirmDeleteAll() {
+            if (confirm('すべてのユーザーの解答状況を削除してもよろしいですか？\nこの操作は取り消せません。')) {
+                if (confirm('本当によろしいですか？すべてのデータが削除されます。')) {
+                    document.getElementById('deleteAllForm').submit();
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

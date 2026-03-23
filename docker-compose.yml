@@ -1,0 +1,29 @@
+version: '3'
+services:
+  prod:
+    image: eclipse-temurin:25-jdk-alpine
+    working_dir: /app
+    expose:
+      - 8080
+    volumes:
+      - .:/app
+      - maven-cache:/root/.m2
+    command: ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
+
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      ## 自分のチームに置き換えてください
+      ## XXXXX -> team1,team2,team3,team4,team5
+      DOMAINS: 'everyone:engineer@XXXXX.java-exam.com -> http://prod:8080'
+      STAGE: 'production'
+    volumes:
+      - https-portal-data:/var/lib/https-portal
+    depends_on:
+      - prod
+volumes:
+  maven-cache:
+  https-portal-data:
