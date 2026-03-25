@@ -11,6 +11,7 @@ import com.javaexam.entity.UserProgress;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserAnswerJdbcRepository;
+import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,22 +28,20 @@ public class AdminService {
     private final QuestionJdbcRepository questionJdbcRepository;
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final UserAnswerJdbcRepository userAnswerJdbcRepository;
+    private final UserJdbcRepository userJdbcRepository;
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
                         QuestionJdbcRepository questionJdbcRepository,
                         ChapterJdbcRepository chapterJdbcRepository,
-                        UserAnswerJdbcRepository userAnswerJdbcRepository) {
+                        UserAnswerJdbcRepository userAnswerJdbcRepository,
+                        UserJdbcRepository userJdbcRepository) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.userAnswerJdbcRepository = userAnswerJdbcRepository;
+        this.userJdbcRepository = userJdbcRepository;
     }
 
-    /**
-     * Retrieves all user progress records for admin review.
-     * Note: Currently loads all records without pagination. For production systems with large datasets,
-     * consider implementing pagination or filtering.
-     */
     @Transactional(readOnly = true)
     public List<AllProgressDto> getAllUsersProgress() {
         List<UserProgress> allProgress = userProgressJdbcRepository.findAll();
@@ -295,4 +294,8 @@ public class AdminService {
                 })
                 .collect(Collectors.toList());
     }
+    public int getUserCount() {
+    return userJdbcRepository.countUsers();
+    }
 }
+

@@ -56,4 +56,12 @@ public class UserJdbcRepository {
                 username);
         return count != null && count > 0;
     }
+
+    public int countUsers() {
+    Integer count = jdbcTemplate.queryForObject(
+        "SELECT COUNT(*) FROM users",
+        Integer.class
+    );
+    return count != null ? count : 0;
+    }
 }
