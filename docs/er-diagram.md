@@ -35,38 +35,38 @@ erDiagram
         VARCHAR id PK "チャプターID(最大36文字)"
         VARCHAR chapter_code UK "NOT NULL,チャプターコード(最大20文字)"
         VARCHAR title "NOT NULL,チャプタータイトル(最大200文字)"
-        INTEGER sort_order
+        INTEGER sort_order "NOT NULL,表示順"
     }
 
     QUESTIONS {
-        VARCHAR id PK 
-        VARCHAR chapter_id FK
-        TEXT question_text
-        TEXT options
-        VARCHAR question_type
-        TEXT correct_answer
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        VARCHAR id PK "問題ID(最大36文字)"
+        VARCHAR chapter_id FK "NOT NULL,所属チャプターID(最大36文字)"
+        TEXT question_text "NOT NULL,問題文"
+        TEXT options "NOT NULL,選択肢(JSON形式)"
+        VARCHAR question_type "NOT NULL,問題形式(最大20文字)"
+        TEXT correct_answer "NOT NULL,正解"
+        TIMESTAMP created_at "問題作成日のタイムスタンプ"
+        TIMESTAMP updated_at "問題情報アップデート時のタイムスタンプ"
     }
 
     USER_PROGRESS {
-        VARCHAR_36 id PK
-        VARCHAR_36 user_id FK
-        VARCHAR_36 chapter_id FK
-        INTEGER score
-        BOOLEAN passed
-        BOOLEAN has_submitted
-        TIMESTAMP last_attempted_at
+        VARCHAR id PK "進捗ID(最大36文字)"
+        VARCHAR user_id FK "NOT NULL,ユーザーID(最大36文字)"
+        VARCHAR chapter_id FK "NOT NULL,チャプターID(最大36文字)"
+        INTEGER score "NOT NULL,スコア(0〜100)"
+        BOOLEAN passed "NOT NULL,合否"
+        BOOLEAN has_submitted "NOT NULL,提出済みフラグ"
+        TIMESTAMP last_attempted_at "最終受験日時のタイムスタンプ"
     }
 
     USER_ANSWERS {
-        VARCHAR_36 id PK
-        VARCHAR_36 user_id FK
-        VARCHAR_36 chapter_id FK
-        VARCHAR_36 question_id FK
-        TEXT selected_answer
-        BOOLEAN is_correct
-        TIMESTAMP answered_at
+        VARCHAR id PK "回答ID(最大36文字)"
+        VARCHAR user_id FK "NOT NULL,ユーザーID(最大36文字)"
+        VARCHAR chapter_id FK "NOT NULL,チャプターID(最大36文字)"
+        VARCHAR question_id FK "NOT NULL,問題ID(最大36文字)"
+        TEXT selected_answer "NOT NULL,選択した回答"
+        BOOLEAN is_correct "NOT NULL,正誤判定"
+        TIMESTAMP answered_at "回答日時のタイムスタンプ"
     }
 ```
 

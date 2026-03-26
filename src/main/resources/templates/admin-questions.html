@@ -52,6 +52,10 @@
             <a href="/admin/questions/new" class="btn btn-primary">+ 新しい問題を作成</a>
         </div>
 
+        <div class="mb-3">
+            <a th:href="@{/download/csv}" class="btn btn-primary">+ CSVから問題をインポートする</a>
+        </div>
+
         <div th:if="${#lists.isEmpty(questions)}" class="alert alert-info">
             まだ問題がありません
         </div>
