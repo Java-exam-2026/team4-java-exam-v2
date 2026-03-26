@@ -22,28 +22,28 @@ erDiagram
     QUESTIONS ||--o{ USER_ANSWERS : target
 
     USERS {
-        VARCHAR_36 id PK
-        VARCHAR_50 username UK
-        VARCHAR_255 password
-        VARCHAR_100 display_name
-        VARCHAR_20 role
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        VARCHAR id PK　 "NOT NULL,ユーザーID(最大36文字)"
+        VARCHAR username UK "NOT NULL,ユーザー名(最大50文字)" 
+        VARCHAR password "NOT NULL,ユーザーパスワード(最大255文字)"
+        VARCHAR display_name "NOT NULL,ユーザー表示名(最大100文字)"
+        VARCHAR role "NOT NULL,ユーザー権限(ROLE_USER(一般ユーザー),ROLE_ADMIN(管理者))"
+        TIMESTAMP created_at "ユーザー作成日のタイムスタンプ"
+        TIMESTAMP updated_at "ユーザー情報アップデート時のタイムスタンプ"
     }
 
     CHAPTERS {
-        VARCHAR_36 id PK
-        VARCHAR_20 chapter_code UK
-        VARCHAR_200 title
+        VARCHAR id PK "チャプターID(最大36文字)"
+        VARCHAR chapter_code UK "NOT NULL,チャプターコード(最大20文字)"
+        VARCHAR title "NOT NULL,チャプタータイトル(最大200文字)"
         INTEGER sort_order
     }
 
     QUESTIONS {
-        VARCHAR_36 id PK
-        VARCHAR_36 chapter_id FK
+        VARCHAR id PK 
+        VARCHAR chapter_id FK
         TEXT question_text
         TEXT options
-        VARCHAR_20 question_type
+        VARCHAR question_type
         TEXT correct_answer
         TIMESTAMP created_at
         TIMESTAMP updated_at
