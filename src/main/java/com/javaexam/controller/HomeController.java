@@ -6,6 +6,7 @@ import com.javaexam.service.ProgressService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.core.Authentication;
 
 import java.security.Principal;
 
@@ -14,26 +15,33 @@ public class HomeController {
 
     private final ChapterService chapterService;
     private final ProgressService progressService;
-    private final AdminService adminService;
+    //private final AdminService adminService;
 
     public HomeController(ChapterService chapterService,
-            ProgressService progressService,
-            AdminService adminService) {
+            ProgressService progressService) {
         this.chapterService = chapterService;
         this.progressService = progressService;
-        this.adminService = adminService;
     }
 
     @GetMapping("/")
-    public String dashboard(Model model, Principal principal) {
-        model.addAttribute("chapters", chapterService.getAllChapters());
+    public String dashboard(Model model, Principal principal, Authentication authentication) {
+        // 1. ログインしているかチェック
+        if (principal != null && authentication != null) {
+            // 2. 「ADMIN」というバッジ（権限）を持っているか確認
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        model.addAttribute("userCount", adminService.getUserCount()); // ←これ追加
+            // 3. 管理者なら、問答無用で管理者用トップページへ飛ばす！
+            if (isAdmin) {
+                return "redirect:/admin/dashboard";
+            }
 
-        if (principal != null) {
+            // 4. 一般ユーザーなら自分の進捗を準備
             model.addAttribute("progressMap", progressService.getProgressByUsername(principal.getName()));
         }
 
+        // 5. 一般ユーザー用のクイズ一覧を準備して画面を出す
+        model.addAttribute("chapters", chapterService.getAllChapters());
         return "dashboard";
     }
 }

@@ -45,14 +45,15 @@ public class AdminController {
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
     }
-
-    @GetMapping("/progress")
-    public String viewAllProgress(Model model) {
-        List<AllProgressDto> progressList = adminService.getAllUsersProgress();
-        model.addAttribute("progressList", progressList);
-        return "admin-progress";
+    @GetMapping("/dashboard") // これで /admin/dashboard になります
+    public String adminDashboard(Model model) {
+        // 管理者だけが使う「ユーザー数」をここで準備する
+        model.addAttribute("userCount", adminService.getUserCount());
+        
+        // さっき作った新しいHTML（admin-dashboard.html）を呼び出す
+        return "admin-dashboard";
     }
-
+    
     @GetMapping("/progress/detail/{userId}/{chapterId}")
     public String viewUserAnswerDetail(@PathVariable String userId, 
                                        @PathVariable String chapterId, 
@@ -437,5 +438,15 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "チャプターの削除に失敗しました");
         }
         return "redirect:/admin/chapters";
+    }
+    
+    @GetMapping("/progress")
+    public String viewAllProgress(Model model) {
+    // 全ユーザーの進捗を取得してモデルに入れる
+    List<AllProgressDto> progressList = adminService.getAllUsersProgress();
+    model.addAttribute("progressList", progressList);
+    
+    // admin-progress.html を呼び出す
+    return "admin-progress";
     }
 }
