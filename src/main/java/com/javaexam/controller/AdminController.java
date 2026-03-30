@@ -1,17 +1,13 @@
 package com.javaexam.controller;
 
-import com.javaexam.dto.AllProgressDto;
-import com.javaexam.dto.AdminQuestionDto;
-import com.javaexam.dto.ChapterFormDto;
-import com.javaexam.dto.QuestionFormDto;
-import com.javaexam.dto.UserAnswerDetailDto;
-import com.javaexam.entity.Chapter;
-import com.javaexam.entity.Question;
-import com.javaexam.entity.QuestionType;
-import com.javaexam.repository.ChapterJdbcRepository;
-import com.javaexam.repository.QuestionJdbcRepository;
-import com.javaexam.service.AdminService;
-import jakarta.validation.Valid;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,18 +18,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.opencsv.exceptions.CsvValidationException;
+import com.javaexam.dto.AdminQuestionDto;
+import com.javaexam.dto.AllProgressDto;
+import com.javaexam.dto.ChapterFormDto;
+import com.javaexam.dto.QuestionFormDto;
+import com.javaexam.dto.UserAnswerDetailDto;
+import com.javaexam.entity.Chapter;
+import com.javaexam.entity.Question;
+import com.javaexam.entity.QuestionType;
+import com.javaexam.repository.ChapterJdbcRepository;
+import com.javaexam.repository.QuestionJdbcRepository;
+import com.javaexam.service.AdminService;
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin")
@@ -445,12 +448,19 @@ public class AdminController {
         }
         return "redirect:/admin/chapters";
     }
-
-    @GetMapping("/import/csv")
-    public Question importCsv(){
-        try (CSVReader reader = new CSVReader(new FileReader("data.csv"))) {
+     
+    /**
+     * 
+     * @param file 受け取ったCSVファイル 
+     * @param redirectAttributes リダイレクト属性
+     * @return 問題一覧画面へリダイレクトするビュー名
+     */
+    @PostMapping("/admin/import/csv")
+    public String importCsv(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        try (Reader reader = new java.io.InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)) {
+            CSVReader Reader = new CSVReader(reader);
             String[] row;
-            while ((row = reader.readNext()) != null) {
+            while ((row = Reader.readNext()) != null) {
                 String chapterCode =row[0];
                 String questionText = row[1];
                 String questionType= row[2];
@@ -468,11 +478,14 @@ public class AdminController {
             }
         }
         catch (CsvValidationException e) {
-            System.out.println("データが不正な型です");
+            redirectAttributes.addFlashAttribute("error", "データが不正な型です");
         } catch (IOException e) {
-            System.out.println("IOエラー: " + e.getMessage());
-            }
-    
+            redirectAttributes.addFlashAttribute("error", "IOエラー: " + e.getMessage());
+    }
+    return "redirect:/admin/questions";
+
+}
+
     
 
 }

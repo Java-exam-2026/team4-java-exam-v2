@@ -50,10 +50,14 @@
 
         <div class="mb-3">
             <a href="/admin/questions/new" class="btn btn-primary">+ 新しい問題を作成</a>
+            <input type="file" id="csvFile" name="file" accept=".csv" style="display: none;">
+            <label for="csvFile" class="btn btn-primary">+ CSVから問題をインポートする</label>
         </div>
 
-        <div class="mb-3">
-            <a th:href="@{/admin/import/csv}" class="btn btn-primary">+ CSVから問題をインポートする</a>
+        
+
+</form>
+
         </div>
 
         <div th:if="${#lists.isEmpty(questions)}" class="alert alert-info">
