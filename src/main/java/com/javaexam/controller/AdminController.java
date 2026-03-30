@@ -50,6 +50,9 @@ public class AdminController {
         // 管理者だけが使う「ユーザー数」をここで準備する
         model.addAttribute("userCount", adminService.getUserCount());
         
+        // 2. ★ここを追加！「今月の受験数」をadminServiceから受け取ってHTMLに渡す
+        model.addAttribute("monthlyCount", adminService.getMonthlyAttemptCount());
+        
         // さっき作った新しいHTML（admin-dashboard.html）を呼び出す
         return "admin-dashboard";
     }

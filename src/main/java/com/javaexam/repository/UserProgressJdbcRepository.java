@@ -113,4 +113,13 @@ public class UserProgressJdbcRepository {
     public int deleteAll() {
         return jdbcTemplate.update("DELETE FROM user_progress");
     }
+    public int countByLastAttemptedAtBetween(LocalDateTime start, LocalDateTime end) {
+    String sql = "SELECT COUNT(*) FROM user_progress WHERE last_attempted_at >= ? AND last_attempted_at <= ?";
+    return jdbcTemplate.queryForObject(
+            sql,
+            Integer.class,
+            toTimestamp(start),
+            toTimestamp(end)
+    );
+}
 }

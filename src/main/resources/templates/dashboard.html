@@ -27,7 +27,7 @@
             <a href="/admin/dashboard" class="btn btn-info">管理者ダッシュボードへ</a>
         </div>
 
-        <div sec:authorize="hasRole('USER')">
+        <div sec:authorize="isAuthenticated()">
             <h2 class="mb-4">利用可能なチャプター</h2>
             <div class="row">
                 <div class="col-md-4 mb-4" th:each="chapter : ${chapters}">

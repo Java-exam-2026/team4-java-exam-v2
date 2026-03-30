@@ -40,9 +40,22 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**"))
                 .formLogin(form -> form
-                        .loginPage("/login")
-                        .defaultSuccessUrl("/", false)
-                        .permitAll())
+                .loginPage("/login")
+                // ここから書き換え！
+                .successHandler((request, response, authentication) -> {
+                    // ログインした人の権限（バッジ）を確認
+                    boolean isAdmin = authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+                if (isAdmin) {
+                    // 管理者なら、要件通り /admin/dashboard へ
+                    response.sendRedirect("/admin/dashboard");
+                } else {
+                // 一般ユーザーなら、トップページ / へ
+                    response.sendRedirect("/");
+                }
+                })
+                .permitAll())
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")
                         .permitAll())

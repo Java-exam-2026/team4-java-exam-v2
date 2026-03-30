@@ -25,23 +25,16 @@ public class HomeController {
 
     @GetMapping("/")
     public String dashboard(Model model, Principal principal, Authentication authentication) {
-        // 1. ログインしているかチェック
-        if (principal != null && authentication != null) {
-            // 2. 「ADMIN」というバッジ（権限）を持っているか確認
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    if (principal != null && authentication != null) {
+        // 【修正ポイント】
+        // isAdmin かどうかに関わらず、ログインしているなら進捗データを準備する
+        model.addAttribute("progressMap", progressService.getProgressByUsername(principal.getName()));
+        
+        // 【削除ポイント】
+        // if (isAdmin) { return "redirect:/admin/dashboard"; } は消しちゃう！
+    }
 
-            // 3. 管理者なら、問答無用で管理者用トップページへ飛ばす！
-            if (isAdmin) {
-                return "redirect:/admin/dashboard";
-            }
-
-            // 4. 一般ユーザーなら自分の進捗を準備
-            model.addAttribute("progressMap", progressService.getProgressByUsername(principal.getName()));
-        }
-
-        // 5. 一般ユーザー用のクイズ一覧を準備して画面を出す
-        model.addAttribute("chapters", chapterService.getAllChapters());
-        return "dashboard";
+    model.addAttribute("chapters", chapterService.getAllChapters());
+    return "dashboard"; // 全員「一般画面」に到着！
     }
 }

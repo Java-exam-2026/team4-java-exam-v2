@@ -294,6 +294,20 @@ public class AdminService {
                 })
                 .collect(Collectors.toList());
     }
+    @Transactional(readOnly = true)
+    public int getMonthlyAttemptCount() {
+    // 1. 「今この瞬間」の時間を取得
+    LocalDateTime now = LocalDateTime.now();
+    
+    // 2. 「今月の1日 00:00:00」を自動計算
+    LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
+    
+    // 3. 「来月の1日の 00:00:00」より前、と指定（これで今月末までをカバー）
+    LocalDateTime startOfNextMonth = startOfMonth.plusMonths(1);
+    
+    // Repositoryのメソッドを呼び出す（endの部分を「来月の頭」に変えるのがコツ）
+    return userProgressJdbcRepository.countByLastAttemptedAtBetween(startOfMonth, startOfNextMonth.minusNanos(1));
+    }
     public int getUserCount() {
     return userJdbcRepository.countUsers();
     }
