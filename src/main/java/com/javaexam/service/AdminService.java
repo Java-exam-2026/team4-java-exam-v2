@@ -348,4 +348,29 @@ public class AdminService {
 
         return stats;
     }
+
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getChapterStats() {
+    // 1. 全ユーザーの進捗データを取ってくる
+    List<AllProgressDto> progressList = getAllUsersProgress();
+
+    // 2. 集計用のMapを用意する（Key: チャプター名, Value: そのチャプターの挑戦回数）
+    Map<String, Integer> chapterCounts = new java.util.HashMap<>();
+
+    // 3. データを一つずつ見て、チャプター名ごとにカウントアップ！
+    for (AllProgressDto progress : progressList) {
+        String title = progress.getTitle(); // チャプター名を取得
+        
+        // すでにそのチャプターがMapにあるか確認
+        if (chapterCounts.containsKey(title)) {
+            // あれば、今の数に +1 して上書き保存
+            chapterCounts.put(title, chapterCounts.get(title) + 1);
+        } else {
+            // なければ、新しく「1」として登録
+            chapterCounts.put(title, 1);
+        }
+    }
+
+    return chapterCounts;
+}
 }

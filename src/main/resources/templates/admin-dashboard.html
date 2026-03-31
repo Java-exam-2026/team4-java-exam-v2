@@ -26,7 +26,7 @@
             <div class="col-md-6 mb-3">
                 <div class="card">
                     <div class="card-body">
-                        <h5>〇機能一覧</h5>
+                        <h5>🛠️機能一覧</h5>
                         <h5 class="card-title">全ユーザーの回答状況</h5>
                         <p class="card-text">全てのユーザーの進捗状況とスコアを確認できます。</p>
                         <a href="/admin/progress" class="btn btn-outline-primary mb-2 d-block">回答状況を見る</a>
@@ -55,6 +55,11 @@
                     <h6 class="text-center mb-3">合格・不合格の比率</h6>
                     <div style="height: 250px; width: 250px; margin: auto; position: relative;">
                         <canvas id="passFailChart"></canvas>
+                    </div>
+                    <hr>
+                    <h6 class="text-center mb-3">チャプター別挑戦者数</h6>
+                    <div style="height: 400px; width: 100%; position: relative;">
+                        <canvas id="chapterChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -88,6 +93,42 @@
                 }
             }
         });
+
+        // Javaから届いた chapterStats を受け取る
+        const chapterData = /*[[${chapterStats}]]*/ {};
+
+        // Chart.js で棒グラフを描く
+        // ★ここを追加！ id="chapterChart" を ctx2 として定義します
+        const ctx2 = document.getElementById('chapterChart').getContext('2d');
+
+        // Chart.js で棒グラフを描く
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(chapterData),
+                datasets: [{
+                    label: '挑戦者数',
+                    data: Object.values(chapterData),
+                    backgroundColor: '#007bff'
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                // ★ scales という項目を作って、その中に x を入れます
+                scales: {
+                    x: {
+                        ticks: {
+                            stepSize: 1,      // 1目盛りを「1」刻みにする
+                            precision: 0      // 小数点以下は表示しない
+                        },
+                        beginAtZero: true     // 必ず0から始める
+                    }
+                }
+            }
+        });
+
     </script>
 </body>
 
