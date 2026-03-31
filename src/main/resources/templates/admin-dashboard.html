@@ -1,58 +1,94 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="/">Java Exam System</a>
-        <div class="d-flex">
-            <span class="navbar-text me-3" th:text="${#authentication.name}">User</span>
-            <form th:action="@{/logout}" method="post">
-                <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-            </form>
+        <div class="container">
+            <a class="navbar-brand" href="/">Java Exam System</a>
+            <div class="d-flex">
+                <span class="navbar-text me-3" th:text="${#authentication.name}">User</span>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                </form>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
     <div class="container mt-5">
         <h2 class="mb-4">管理者メニュー</h2>
         <div class="row">
-            
+
             <div class="col-md-6 mb-3">
                 <div class="card">
                     <div class="card-body">
                         <h5>〇機能一覧</h5>
                         <h5 class="card-title">全ユーザーの回答状況</h5>
-                            <p class="card-text">全てのユーザーの進捗状況とスコアを確認できます。</p>
+                        <p class="card-text">全てのユーザーの進捗状況とスコアを確認できます。</p>
                         <a href="/admin/progress" class="btn btn-outline-primary mb-2 d-block">回答状況を見る</a>
-                         <h5 class="card-title">全問題と答え</h5>
-                            <p class="card-text">全ての問題文と正解を確認できます。</p>
+                        <h5 class="card-title">全問題と答え</h5>
+                        <p class="card-text">全ての問題文と正解を確認できます。</p>
                         <a href="/admin/questions" class="btn btn-outline-primary d-block">問題と答えを見る</a>
                     </div>
                 </div>
             </div>
+
             <div class="col-md-6 mb-3">
-    <div class="card h-100"> <div class="card-body">
-            <h5>📊 統計データ</h5>
-            <div class="mb-3">
-                <p class="text-muted mb-1">総ユーザー数</p>
-                <h3 th:text="${userCount}">0</h3> 
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5>📊 統計データ</h5>
+                        <div class="mb-3">
+                            <p class="text-muted mb-1">総ユーザー数</p>
+                            <h3 th:text="${userCount}">0</h3>
+                        </div>
+                        <hr>
+                        <div>
+                            <p class="text-muted mb-1">今月の累計受験数</p>
+                            <h3 th:text="${monthlyCount}">0</h3>
+                            <p class="small text-secondary">※当月の全ユーザーの解答回数</p>
+                        </div>
+                    </div>
+                    <h6 class="text-center mb-3">合格・不合格の比率</h6>
+                    <div style="height: 250px; width: 250px; margin: auto; position: relative;">
+                        <canvas id="passFailChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <hr>
-            <div>
-                <p class="text-muted mb-1">今月の累計受験数</p>
-                <h3 th:text="${monthlyCount}">0</h3>
-                <p class="small text-secondary">※当月の全ユーザーの解答回数</p>
-            </div>
-        </div>
-    </div>
-</div>
         </div>
         <hr>
         <a href="/" class="btn btn-secondary">一般画面に戻る</a>
     </div>
-    
+    <script th:inline="javascript">
+        // ThymeleafからJavaのMapデータを取得
+        const stats = /*[[${passFailStats}]]*/ { pass: 0, fail: 0 };
+
+        const ctx = document.getElementById('passFailChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut', // ドーナツ型のグラフ
+            data: {
+                labels: ['合格', '不合格'],
+                datasets: [{
+                    data: [stats.pass, stats.fail],
+                    backgroundColor: ['#28a745', '#dc3545'], // 緑と赤
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // ← これを追加（サイズを維持する）
+                animation: false,           // ← いったん「すぅっ」を止めるためにオフ！
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
 </body>
+
 </html>

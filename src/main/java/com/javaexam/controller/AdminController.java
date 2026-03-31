@@ -53,6 +53,10 @@ public class AdminController {
         // 2. ★ここを追加！「今月の受験数」をadminServiceから受け取ってHTMLに渡す
         model.addAttribute("monthlyCount", adminService.getMonthlyAttemptCount());
         
+        // --- ★ここを追加！ 合格・不合格の統計データを渡す ---
+        // adminService.getPassFailStats() が { "pass": 10, "fail": 5 } のようなMapを返します
+        model.addAttribute("passFailStats", adminService.getPassFailStats());
+
         // さっき作った新しいHTML（admin-dashboard.html）を呼び出す
         return "admin-dashboard";
     }

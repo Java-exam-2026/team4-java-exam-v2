@@ -31,10 +31,10 @@ public class AdminService {
     private final UserJdbcRepository userJdbcRepository;
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
-                        QuestionJdbcRepository questionJdbcRepository,
-                        ChapterJdbcRepository chapterJdbcRepository,
-                        UserAnswerJdbcRepository userAnswerJdbcRepository,
-                        UserJdbcRepository userJdbcRepository) {
+            QuestionJdbcRepository questionJdbcRepository,
+            ChapterJdbcRepository chapterJdbcRepository,
+            UserAnswerJdbcRepository userAnswerJdbcRepository,
+            UserJdbcRepository userJdbcRepository) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
@@ -55,14 +55,14 @@ public class AdminService {
                         progress.getChapter().getTitle(),
                         progress.getScore(),
                         progress.getPassed(),
-                        progress.getLastAttemptedAt()
-                ))
+                        progress.getLastAttemptedAt()))
                 .collect(Collectors.toList());
     }
 
     /**
      * Retrieves all questions with their correct answers for admin review.
-     * Note: Currently loads all records without pagination. For production systems with large datasets,
+     * Note: Currently loads all records without pagination. For production systems
+     * with large datasets,
      * consider implementing pagination or filtering by chapter.
      */
     @Transactional(readOnly = true)
@@ -74,15 +74,16 @@ public class AdminService {
                         question.getChapter().getChapterCode(),
                         question.getQuestionText(),
                         question.getOptions(),
-                        question.getCorrectAnswer()
-                ))
+                        question.getCorrectAnswer()))
                 .collect(Collectors.toList());
     }
 
     /**
      * Deletes all progress records for a specific user.
+     * 
      * @param userId the ID of the user whose progress should be deleted
-     * @throws IllegalArgumentException if no progress records exist for the given userId
+     * @throws IllegalArgumentException if no progress records exist for the given
+     *                                  userId
      */
     @Transactional
     public void deleteUserProgress(String userId) {
@@ -97,7 +98,8 @@ public class AdminService {
     /**
      * Deletes progress/answers for a specific user and chapter only.
      *
-     * @throws IllegalArgumentException if no progress record exists for the given userId/chapterId
+     * @throws IllegalArgumentException if no progress record exists for the given
+     *                                  userId/chapterId
      */
     @Transactional
     public void deleteUserChapterProgress(String userId, String chapterId) {
@@ -115,6 +117,7 @@ public class AdminService {
 
     /**
      * Deletes all user progress records in the system.
+     * 
      * @return the number of records deleted
      */
     @Transactional
@@ -126,6 +129,7 @@ public class AdminService {
 
     /**
      * Creates a new question.
+     * 
      * @param question the question to create
      */
     @Transactional
@@ -135,6 +139,7 @@ public class AdminService {
 
     /**
      * Updates an existing question.
+     * 
      * @param question the question to update
      * @throws IllegalArgumentException if the question does not exist
      */
@@ -148,6 +153,7 @@ public class AdminService {
 
     /**
      * Deletes a question by ID.
+     * 
      * @param questionId the ID of the question to delete
      * @throws IllegalArgumentException if the question does not exist
      */
@@ -161,6 +167,7 @@ public class AdminService {
 
     /**
      * Retrieves all chapters.
+     * 
      * @return list of all chapters
      */
     public List<Chapter> getAllChapters() {
@@ -169,6 +176,7 @@ public class AdminService {
 
     /**
      * Creates a new chapter.
+     * 
      * @param chapter the chapter to create
      */
     @Transactional
@@ -178,6 +186,7 @@ public class AdminService {
 
     /**
      * Updates an existing chapter.
+     * 
      * @param chapter the chapter to update
      * @throws IllegalArgumentException if the chapter does not exist
      */
@@ -191,6 +200,7 @@ public class AdminService {
 
     /**
      * Deletes a chapter by ID.
+     * 
      * @param chapterId the ID of the chapter to delete
      * @throws IllegalArgumentException if the chapter does not exist
      */
@@ -204,6 +214,7 @@ public class AdminService {
 
     /**
      * Retrieves a chapter by ID.
+     * 
      * @param chapterId the chapter ID
      * @return the chapter
      */
@@ -234,8 +245,7 @@ public class AdminService {
                         answer.getSelectedAnswer(),
                         answer.getQuestion().getCorrectAnswer(),
                         answer.getIsCorrect(),
-                        answer.getAnsweredAt()
-                ))
+                        answer.getAnsweredAt()))
                 .collect(Collectors.toList());
     }
 
@@ -244,12 +254,13 @@ public class AdminService {
      * Returns one entry per user-chapter combination with score information.
      * 
      * @param date the date in format YYYY-MM-DD
-     * @return a list of users with their answer and score information from that date
+     * @return a list of users with their answer and score information from that
+     *         date
      */
     @Transactional(readOnly = true)
     public List<UserAnswerByDateDto> getUsersByAnswerDate(String date) {
         List<Map<String, Object>> results = userAnswerJdbcRepository.findUsersWithScoreByAnswerDate(date);
-        
+
         return results.stream()
                 .map(row -> {
                     LocalDateTime answeredAt = null;
@@ -259,7 +270,7 @@ public class AdminService {
                     } else if (answeredAtObj instanceof java.sql.Timestamp) {
                         answeredAt = ((java.sql.Timestamp) answeredAtObj).toLocalDateTime();
                     }
-                    
+
                     // Handle passed field which can be Integer (0/1) or Boolean
                     Boolean passed = null;
                     Object passedObj = row.get("passed");
@@ -270,7 +281,7 @@ public class AdminService {
                             passed = ((Number) passedObj).intValue() != 0;
                         }
                     }
-                    
+
                     // Handle score field
                     Integer score = null;
                     Object scoreObj = row.get("score");
@@ -279,7 +290,7 @@ public class AdminService {
                     } else if (scoreObj instanceof Number) {
                         score = ((Number) scoreObj).intValue();
                     }
-                    
+
                     return new UserAnswerByDateDto(
                             (String) row.get("user_id"),
                             (String) row.get("username"),
@@ -289,27 +300,52 @@ public class AdminService {
                             (String) row.get("chapter_title"),
                             score,
                             passed,
-                            answeredAt
-                    );
+                            answeredAt);
                 })
                 .collect(Collectors.toList());
     }
+
     @Transactional(readOnly = true)
     public int getMonthlyAttemptCount() {
-    // 1. 「今この瞬間」の時間を取得
-    LocalDateTime now = LocalDateTime.now();
-    
-    // 2. 「今月の1日 00:00:00」を自動計算
-    LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
-    
-    // 3. 「来月の1日の 00:00:00」より前、と指定（これで今月末までをカバー）
-    LocalDateTime startOfNextMonth = startOfMonth.plusMonths(1);
-    
-    // Repositoryのメソッドを呼び出す（endの部分を「来月の頭」に変えるのがコツ）
-    return userProgressJdbcRepository.countByLastAttemptedAtBetween(startOfMonth, startOfNextMonth.minusNanos(1));
+        // 1. 「今この瞬間」の時間を取得（以下AIと相談したコード）
+        LocalDateTime now = LocalDateTime.now();
+
+        // 2. 「今月の1日 00:00:00」を自動計算
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
+
+        // 3. 「来月の1日の 00:00:00」より前、と指定（これで今月末までをカバー）
+        LocalDateTime startOfNextMonth = startOfMonth.plusMonths(1);
+
+        // Repositoryのメソッドを呼び出す（endの部分を「来月の頭」に変えるのがコツ）
+        return userProgressJdbcRepository.countByLastAttemptedAtBetween(startOfMonth, startOfNextMonth.minusNanos(1));
     }
+
     public int getUserCount() {
-    return userJdbcRepository.countUsers();
+        return userJdbcRepository.countUsers();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getPassFailStats() {
+        // 1. まず全進捗データを取ってくる（AIと一緒に作業）
+        List<AllProgressDto> progressList = getAllUsersProgress();
+
+        int passCount = 0;
+        int failCount = 0;
+
+        // 2. 自分でが考えた if 文で一人ずつ数える
+        for (AllProgressDto progress : progressList) {
+            if (progress.getPassed()) {
+                passCount++;
+            } else {
+                failCount++;
+            }
+        }
+
+        // 3. Map（A案）に詰めて、Controllerに「はい、どうぞ」と渡す
+        Map<String, Integer> stats = new java.util.HashMap<>();
+        stats.put("pass", passCount);
+        stats.put("fail", failCount);
+
+        return stats;
     }
 }
-
