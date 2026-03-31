@@ -21,9 +21,9 @@
 
     <div class="container">
         <div class="mb-3">
-            <a href="/" class="btn btn-secondary">← ダッシュボードに戻る</a>
+            <a href="/admin/dashboard" class="btn btn-secondary">← 管理者メニューに戻る</a>
         </div>
-        
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">全ユーザーの回答状況</h2>
             <div>
@@ -71,40 +71,39 @@
                                 <td th:text="${progress.chapterCode}">chap1</td>
                                 <td th:text="${progress.title}">Chapter Title</td>
                                 <td>
-                                    <span class="badge" 
-                                          th:classappend="${progress.score >= 80} ? 'bg-success' : 'bg-warning'"
-                                          th:text="${progress.score} + '%'">0%</span>
+                                    <span class="badge"
+                                        th:classappend="${progress.score >= 80} ? 'bg-success' : 'bg-warning'"
+                                        th:text="${progress.score} + '%'">0%</span>
                                 </td>
                                 <td>
                                     <span th:if="${progress.passed}" class="badge bg-success">合格</span>
                                     <span th:unless="${progress.passed}" class="badge bg-danger">不合格</span>
                                 </td>
-                                <td th:text="${#temporals.format(progress.lastAttemptedAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 12:00</td>
+                                <td th:text="${#temporals.format(progress.lastAttemptedAt, 'yyyy-MM-dd HH:mm')}">
+                                    2024-01-01 12:00</td>
                                 <td>
                                     <a th:href="@{/admin/progress/detail/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}"
-                                       class="btn btn-sm btn-outline-info me-1"
-                                       title="このユーザーの回答詳細を表示">
+                                        class="btn btn-sm btn-outline-info me-1" title="このユーザーの回答詳細を表示">
                                         回答
                                     </a>
 
                                     <!-- Delete only this chapter (row-level) -->
-                                    <form th:action="@{/admin/progress/delete/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}"
-                                          method="post" style="display: inline;">
+                                    <form
+                                        th:action="@{/admin/progress/delete/{userId}/{chapterId}(userId=${progress.userId},chapterId=${progress.chapterId})}"
+                                        method="post" style="display: inline;">
                                         <button type="button" class="btn btn-sm btn-outline-danger me-1"
-                                                th:attr="data-username=${progress.username},data-chapter-code=${progress.chapterCode}"
-                                                onclick="confirmDeleteChapter(this)"
-                                                title="このユーザーのこのチャプターの回答状況を削除">
+                                            th:attr="data-username=${progress.username},data-chapter-code=${progress.chapterCode}"
+                                            onclick="confirmDeleteChapter(this)" title="このユーザーのこのチャプターの回答状況を削除">
                                             この章を削除
                                         </button>
                                     </form>
 
                                     <!-- Delete all chapters for this user (user-level) -->
                                     <form th:action="@{/admin/progress/delete/{userId}(userId=${progress.userId})}"
-                                          method="post" style="display: inline;">
+                                        method="post" style="display: inline;">
                                         <button type="button" class="btn btn-sm btn-outline-danger"
-                                                th:attr="data-username=${progress.username}"
-                                                onclick="confirmDeleteUserAll(this)"
-                                                title="このユーザーの全チャプターの回答状況を削除">
+                                            th:attr="data-username=${progress.username}"
+                                            onclick="confirmDeleteUserAll(this)" title="このユーザーの全チャプターの回答状況を削除">
                                             ユーザー全削除
                                         </button>
                                     </form>

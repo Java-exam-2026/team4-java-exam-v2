@@ -35,13 +35,13 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/quiz/**").hasRole("USER")
+                        .requestMatchers("/quiz/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated())
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**"))
                 .formLogin(form -> form
                 .loginPage("/login")
-                // ここから書き換え！
+                // AIと相談しつつ、ここから書き換え！
                 .successHandler((request, response, authentication) -> {
                     // ログインした人の権限（バッジ）を確認
                     boolean isAdmin = authentication.getAuthorities().stream()
