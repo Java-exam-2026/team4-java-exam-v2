@@ -56,4 +56,11 @@ public class UserJdbcRepository {
                 username);
         return count != null && count > 0;
     }
+
+    public void updatePassword(String userId, String newPassword) {
+        jdbcTemplate.update(
+            "UPDATE users SET password = ? WHERE id = ?",
+            newPassword, userId
+        );
+    }
 }
