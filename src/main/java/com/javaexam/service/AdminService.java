@@ -295,17 +295,8 @@ public class AdminService {
                     );
                 })
                 .collect(Collectors.toList());
-    }
-    /*chapterCodeをChapterIdに変換するメソッド */
+        }
     
-    public String resolveChapterIdByCode(String chapterCode) {
-    if (chapterCode == null || chapterCode.isBlank()) {
-        throw new IllegalArgumentException("chapterCode is empty");
-    }
-    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-            .orElseThrow(() -> new IllegalArgumentException("Chapter not found: " + chapterCode));
-
-    return chapter.getId();
-    }
 }
+
 

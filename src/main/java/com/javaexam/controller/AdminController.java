@@ -1,7 +1,7 @@
 package com.javaexam.controller;
 
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -33,10 +33,13 @@ import com.javaexam.entity.QuestionType;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
 import jakarta.validation.Valid;
+
 
 @Controller
 @RequestMapping("/admin")
@@ -45,13 +48,16 @@ public class AdminController {
     private final AdminService adminService;
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final QuestionJdbcRepository questionJdbcRepository;
+    private final ObjectMapper objectMapper;
 
     public AdminController(AdminService adminService,
             ChapterJdbcRepository chapterJdbcRepository,
-            QuestionJdbcRepository questionJdbcRepository) {
+            QuestionJdbcRepository questionJdbcRepository,
+            ObjectMapper objectMapper) {
         this.adminService = adminService;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/progress")
@@ -456,35 +462,57 @@ public class AdminController {
      * @return 問題一覧画面へリダイレクトするビュー名
      */
     @PostMapping("/import/csv")
-    public String importCsv(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
-        try (Reader reader = new java.io.InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)) {
-            CSVReader Reader = new CSVReader(reader);
+    public String importCsvForProblems(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))){
+            
             String[] row;
-            while ((row = Reader.readNext()) != null) {
+            while ((row = reader.readNext()) != null) {
                 String chapterCode =row[0];
                 String questionText = row[1];
                 String questionType= row[2];
                 String optionJson=row[3];
                 String correctAnswer=row[4];
+                
+                
                 Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
                     .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
+                
+                Map<String, String> options = ConvertOptionJsonToOptions(optionJson);
+                
                 Question question = new Question();
                 question.setChapter(chapter);
                 question.setQuestionText(questionText);
                 question.setQuestionType(QuestionType.valueOf(questionType));
-                question.setOptionsJson(optionJson);
+                question.setOptions(options);
                 question.setCorrectAnswer(correctAnswer);
+                
                 questionJdbcRepository.save(question);
+                
+                redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+
             }
         }
-        catch (CsvValidationException e) {
-            redirectAttributes.addFlashAttribute("error", "データが不正な型です");
+         catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (CsvValidationException e) {
+            redirectAttributes.addFlashAttribute("error", "CSVの形式が不正です");
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute("error", "IOエラー: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
+        }
+        return "redirect:/admin/questions";
     }
-    return "redirect:/admin/questions";
-
-}
+    
+    private Map<String,String> ConvertOptionJsonToOptions(String optionJson){
+        Map<String, String> options = new HashMap<>();
+        try {
+            options = objectMapper.readValue(optionJson, new TypeReference<Map<String, String>>() {});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return options;
+    }
 
     
 
