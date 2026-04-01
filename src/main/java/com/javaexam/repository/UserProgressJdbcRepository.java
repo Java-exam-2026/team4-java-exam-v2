@@ -23,8 +23,8 @@ public class UserProgressJdbcRepository {
     private final ChapterJdbcRepository chapterJdbcRepository;
 
     public UserProgressJdbcRepository(JdbcTemplate jdbcTemplate,
-                                      UserJdbcRepository userJdbcRepository,
-                                      ChapterJdbcRepository chapterJdbcRepository) {
+            UserJdbcRepository userJdbcRepository,
+            ChapterJdbcRepository chapterJdbcRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.userJdbcRepository = userJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
@@ -113,13 +113,13 @@ public class UserProgressJdbcRepository {
     public int deleteAll() {
         return jdbcTemplate.update("DELETE FROM user_progress");
     }
+
     public int countByLastAttemptedAtBetween(LocalDateTime start, LocalDateTime end) {
-    String sql = "SELECT COUNT(*) FROM user_progress WHERE last_attempted_at >= ? AND last_attempted_at <= ?";
-    return jdbcTemplate.queryForObject(
-            sql,
-            Integer.class,
-            toTimestamp(start),
-            toTimestamp(end)
-    );
-}
+        String sql = "SELECT COUNT(*) FROM user_progress WHERE last_attempted_at >= ? AND last_attempted_at <= ?";
+        return jdbcTemplate.queryForObject(
+                sql,
+                Integer.class,
+                toTimestamp(start),
+                toTimestamp(end));
+    }
 }
