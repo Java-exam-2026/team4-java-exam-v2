@@ -455,7 +455,7 @@ public class AdminController {
      * @param redirectAttributes リダイレクト属性
      * @return 問題一覧画面へリダイレクトするビュー名
      */
-    @PostMapping("/admin/import/csv")
+    @PostMapping("/import/csv")
     public String importCsv(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
         try (Reader reader = new java.io.InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)) {
             CSVReader Reader = new CSVReader(reader);
