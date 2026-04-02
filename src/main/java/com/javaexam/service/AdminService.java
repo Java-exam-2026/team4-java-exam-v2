@@ -305,7 +305,6 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     /**
      * 今月の全ユーザーの試験挑戦回数を取得します。
      * <p>
@@ -314,6 +313,7 @@ public class AdminService {
      * </p>
      * * @return 今月の総挑戦回数
      */
+    @Transactional(readOnly = true)
     public int getMonthlyAttemptCount() {
         // 1. 「今この瞬間」の時間を取得（以下AIと相談したコード）
         LocalDateTime now = LocalDateTime.now();
@@ -328,13 +328,10 @@ public class AdminService {
         return userProgressJdbcRepository.countByLastAttemptedAtBetween(startOfMonth, startOfNextMonth.minusNanos(1));
     }
 
-    
-    
     public int getUserCount() {
         return userJdbcRepository.countUsers();
     }
 
-    @Transactional(readOnly = true)
     /**
      * システム全体の合格・不合格の統計情報を取得します。
      * <p>
@@ -344,6 +341,7 @@ public class AdminService {
      * </p>
      * * @return "pass"（合格数）と "fail"（不合格数）を格納したMap
      */
+    @Transactional(readOnly = true)
     public Map<String, Integer> getPassFailStats() {
         // 1. まず全進捗データを取ってくる（AIと一緒に作業）
         List<AllProgressDto> progressList = getAllUsersProgress();
@@ -367,35 +365,37 @@ public class AdminService {
 
         return stats;
     }
-
-    @Transactional(readOnly = true)
+    
     /**
-     * チャプターごとの挑戦回数を集計します。
-     * 全ユーザーの進捗データを元に、チャプタータイトルをキー、
-     * そのチャプターが実施された総回数を値としたマップを返します。
-     * * @return チャプター名と挑戦回数のマップ
+     * チャプターごとの挑戦回数を集計し、挑戦者が多い順に並べて返します。
+     * <p>
+     * 全ユーザーの進捗データを集計し、チャプタータイトルをキー、
+     * 挑戦回数を値としたマップを作成します。結果は、回数が多い順にソートされた
+     * LinkedHashMapとして返されるため、そのままランキングとして利用可能です。
+     * </p>
+     * * @return 挑戦回数が多い順に並んだ、チャプター名と回数のマップ
      */
+    @Transactional(readOnly = true)
     public Map<String, Integer> getChapterStats() {
-    // 1. 全ユーザーの進捗データを取ってくる
-    List<AllProgressDto> progressList = getAllUsersProgress();
+        // 1. 全ユーザーの進捗データを取ってくる
+        List<AllProgressDto> progressList = getAllUsersProgress();
 
-    // 2. 集計用のMapを用意する（Key: チャプター名, Value: そのチャプターの挑戦回数）
-    Map<String, Integer> chapterCounts = new java.util.HashMap<>();
-
-    // 3. データを一つずつ見て、チャプター名ごとにカウントアップ！
-    for (AllProgressDto progress : progressList) {
-        String title = progress.getTitle(); // チャプター名を取得
-        
-        // すでにそのチャプターがMapにあるか確認
-        if (chapterCounts.containsKey(title)) {
-            // あれば、今の数に +1 して上書き保存
-            chapterCounts.put(title, chapterCounts.get(title) + 1);
-        } else {
-            // なければ、新しく「1」として登録
-            chapterCounts.put(title, 1);
+        // 2. いったん HashMap で集計する（ここも今まで通り）
+        Map<String, Integer> chapterCounts = new java.util.HashMap<>();
+        for (AllProgressDto progress : progressList) {
+            String title = progress.getTitle();
+            chapterCounts.put(title, chapterCounts.getOrDefault(title, 0) + 1);
         }
-    }
 
-    return chapterCounts;
-}
+        // 3.【今回の主役】多い順に並び替えて、順序を守る箱（LinkedHashMap）に詰め直す！
+        return chapterCounts.entrySet().stream()
+                // 数の多い順（reversed）に並び替える
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                // 並び順を維持したまま、LinkedHashMapに収集する
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue,
+                        java.util.LinkedHashMap::new));
+    }
 }

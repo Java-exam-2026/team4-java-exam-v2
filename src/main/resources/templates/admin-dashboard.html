@@ -47,89 +47,96 @@
                         </div>
                         <hr>
                         <div>
-                            <p class="text-muted mb-1">今月の累計受験数</p>
-                            <h3 th:text="${monthlyCount}">0</h3>
-                            <p class="small text-secondary">※当月の全ユーザーの解答回数</p>
+                            <div class="mb-4">
+                                <p class="text-muted mb-1">今月の累計受験数</p>
+                                <h3 th:text="${monthlyCount}">0</h3>
+                                <p class="small text-secondary">※当月の全ユーザーの解答回数</p>
+                            </div>
                         </div>
-                    </div>
-                    <h6 class="text-center mb-3">合格・不合格の比率</h6>
-                    <div style="height: 250px; width: 250px; margin: auto; position: relative;">
-                        <canvas id="passFailChart"></canvas>
-                    </div>
-                    <hr>
-                    <h6 class="text-center mb-3">チャプター別挑戦者数</h6>
-                    <div style="height: 400px; width: 100%; position: relative;">
-                        <canvas id="chapterChart"></canvas>
+
+                        <hr class="mx-3">
+                        <div class="pt-3">
+                            <h6 class="text-center mb-3">合格・不合格の比率</h6>
+                            <div style="height: 250px; width: 250px; margin: auto; position: relative;">
+                                <canvas id="passFailChart"></canvas>
+                            </div>
+                        </div>
+                        <hr>
+                        <h6 class="text-center mb-3">チャプター別挑戦者数（人気順）</h6>
+                        <div style="height: 400px; width: 100%; position: relative;">
+                            <canvas id="chapterChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
+            <hr>
+            <a href="/" class="btn btn-secondary">一般画面に戻る</a>
         </div>
-        <hr>
-        <a href="/" class="btn btn-secondary">一般画面に戻る</a>
-    </div>
-    <script th:inline="javascript">
-        // ThymeleafからJavaのMapデータを取得
-        const stats = /*[[${passFailStats}]]*/ { pass: 0, fail: 0 };
+        <script th:inline="javascript">
+            // ThymeleafからJavaのMapデータを取得
+            const stats = /*[[${passFailStats}]]*/ { pass: 0, fail: 0 };
 
-        const ctx = document.getElementById('passFailChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut', // ドーナツ型のグラフ
-            data: {
-                labels: ['合格', '不合格'],
-                datasets: [{
-                    data: [stats.pass, stats.fail],
-                    backgroundColor: ['#28a745', '#dc3545'], // 緑と赤
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // ← これを追加（サイズを維持する）
-                animation: false,           // ← いったん「すぅっ」を止めるためにオフ！
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+            const ctx = document.getElementById('passFailChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut', // ドーナツ型のグラフ
+                data: {
+                    labels: ['合格', '不合格'],
+                    datasets: [{
+                        data: [stats.pass, stats.fail],
+                        backgroundColor: ['#28a745', '#dc3545'], // 緑と赤
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // ← これを追加（サイズを維持する）
+                    animation: false,           // ← いったん「すぅっ」を止めるためにオフ！
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        // Javaから届いた chapterStats を受け取る
-        const chapterData = /*[[${chapterStats}]]*/ {};
 
-        // Chart.js で棒グラフを描く
-        // ★ここを追加！ id="chapterChart" を ctx2 として定義します
-        const ctx2 = document.getElementById('chapterChart').getContext('2d');
+            // 1. Javaから届いた chapterStats を受け取る
+            const chapterData = /*[[${chapterStats}]]*/ {};
 
-        // Chart.js で棒グラフを描く
-        new Chart(ctx2, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(chapterData),
-                datasets: [{
-                    label: '挑戦者数',
-                    data: Object.values(chapterData),
-                    backgroundColor: '#007bff'
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                // ★ scales という項目を作って、その中に x を入れます
-                scales: {
-                    x: {
-                        ticks: {
-                            stepSize: 1,      // 1目盛りを「1」刻みにする
-                            precision: 0      // 小数点以下は表示しない
-                        },
-                        beginAtZero: true     // 必ず0から始める
+            // 2. 【ここを修正！】Mapの順番をそのまま配列にする
+            const labels = Object.keys(chapterData);
+            const values = Object.values(chapterData);
+
+            // 3. Chart.js で棒グラフを描く
+            const ctx2 = document.getElementById('chapterChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels, // 保存した順番のラベルを使う
+                    datasets: [{
+                        label: '挑戦者数',
+                        data: values, // 保存した順番の値を使う
+                        backgroundColor: values.map((v) => v === values[0] ? '#ffc107' : '#007bff')
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // 横棒グラフ
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    // ★ scales という項目を作って、その中に x を入れます
+                    scales: {
+                        x: {
+                            ticks: {
+                                stepSize: 1,      // 1目盛りを「1」刻みにする
+                                precision: 0      // 小数点以下は表示しない
+                            },
+                            beginAtZero: true     // 必ず0から始める
+                        }
                     }
                 }
-            }
-        });
+            });
 
-    </script>
+        </script>
 </body>
 
 </html>
