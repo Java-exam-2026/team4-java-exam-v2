@@ -32,6 +32,11 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
+/**
+ * 管理者機能の画面制御を行うコントローラー。
+ * ダッシュボードの表示、問題やチャプターの管理、
+ * 受験結果の統計表示および外部ファイル（TSV）出力などを担当します。
+ */
 public class AdminController {
 
     private final AdminService adminService;
@@ -45,7 +50,13 @@ public class AdminController {
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
     }
-
+    /**
+     * 管理者用ダッシュボードを表示します。
+     * ユーザー総数、月間受験数、合格・不合格統計、チャプター別正答率などの
+     * 統計情報を画面に渡します。
+     * * @param model 画面にデータを渡すためのモデル
+     * @return 管理者ダッシュボードのHTMLパス
+     */
     @GetMapping("/dashboard") // これで /admin/dashboard になります
     public String adminDashboard(Model model) {
         // 管理者だけが使う「ユーザー数」をここで準備する
@@ -53,11 +64,11 @@ public class AdminController {
 
         // 2. ★ここを追加！「今月の受験数」をadminServiceから受け取ってHTMLに渡す
         model.addAttribute("monthlyCount", adminService.getMonthlyAttemptCount());
-
+        
         // --- ★ここを追加！ 合格・不合格の統計データを渡す ---
         // adminService.getPassFailStats() が { "pass": 10, "fail": 5 } のようなMapを返します
         model.addAttribute("passFailStats", adminService.getPassFailStats());
-
+        
         // ★ここを追加！ チャプターごとの正答率データをHTMLに渡す
         // adminServiceに「getChapterStats」というメソッドを作るイメージです
         model.addAttribute("chapterStats", adminService.getChapterStats());

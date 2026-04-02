@@ -29,9 +29,6 @@ public class HomeController {
         // 【修正ポイント】
         // isAdmin かどうかに関わらず、ログインしているなら進捗データを準備する
         model.addAttribute("progressMap", progressService.getProgressByUsername(principal.getName()));
-        
-        // 【削除ポイント】
-        // if (isAdmin) { return "redirect:/admin/dashboard"; } は消しちゃう！
     }
 
     model.addAttribute("chapters", chapterService.getAllChapters());

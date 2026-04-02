@@ -14,6 +14,11 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+
+/**
+ * アプリケーションのセキュリティ設定クラス。
+ * 認証・認可のルール、ログイン・ログアウトの挙動、パスワードの暗号化方式などを定義します。
+ */
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
@@ -41,17 +46,16 @@ public class SecurityConfig {
                         .ignoringRequestMatchers("/api/**"))
                 .formLogin(form -> form
                 .loginPage("/login")
-                // AIと相談しつつ、ここから書き換え！
+                /**
+                 * ログイン成功時の遷移先をユーザーの権限に基づいて制御します。
+                 * 管理者はダッシュボード、一般ユーザーはトップページへリダイレクトします。
+                 */
                 .successHandler((request, response, authentication) -> {
-                    // ログインした人の権限（バッジ）を確認
                     boolean isAdmin = authentication.getAuthorities().stream()
                         .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
                 if (isAdmin) {
-                    // 管理者なら、要件通り /admin/dashboard へ
                     response.sendRedirect("/admin/dashboard");
                 } else {
-                // 一般ユーザーなら、トップページ / へ
                     response.sendRedirect("/");
                 }
                 })

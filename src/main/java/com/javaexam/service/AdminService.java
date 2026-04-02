@@ -306,6 +306,14 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
+    /**
+     * 今月の全ユーザーの試験挑戦回数を取得します。
+     * <p>
+     * 実行時の日付から今月の開始日時（1日 00:00）と終了日時（末日 23:59）を算出し、
+     * その期間内に行われた進捗データの件数を集計します。
+     * </p>
+     * * @return 今月の総挑戦回数
+     */
     public int getMonthlyAttemptCount() {
         // 1. 「今この瞬間」の時間を取得（以下AIと相談したコード）
         LocalDateTime now = LocalDateTime.now();
@@ -320,11 +328,22 @@ public class AdminService {
         return userProgressJdbcRepository.countByLastAttemptedAtBetween(startOfMonth, startOfNextMonth.minusNanos(1));
     }
 
+    
+    
     public int getUserCount() {
         return userJdbcRepository.countUsers();
     }
 
     @Transactional(readOnly = true)
+    /**
+     * システム全体の合格・不合格の統計情報を取得します。
+     * <p>
+     * 全ユーザーの進捗データを取得し、それぞれの合格フラグ（passed）を確認して
+     * 合計件数を集計します。集計結果は "pass" および "fail" というキーを持つ
+     * マップ形式で返されます。
+     * </p>
+     * * @return "pass"（合格数）と "fail"（不合格数）を格納したMap
+     */
     public Map<String, Integer> getPassFailStats() {
         // 1. まず全進捗データを取ってくる（AIと一緒に作業）
         List<AllProgressDto> progressList = getAllUsersProgress();
@@ -332,7 +351,7 @@ public class AdminService {
         int passCount = 0;
         int failCount = 0;
 
-        // 2. 自分でが考えた if 文で一人ずつ数える
+        // 2. 自分で考えた if 文で一人ずつ数える
         for (AllProgressDto progress : progressList) {
             if (progress.getPassed()) {
                 passCount++;
@@ -341,7 +360,7 @@ public class AdminService {
             }
         }
 
-        // 3. Map（A案）に詰めて、Controllerに「はい、どうぞ」と渡す
+        // 3. Mapに詰めて、Controllerに「はい、どうぞ」と渡す
         Map<String, Integer> stats = new java.util.HashMap<>();
         stats.put("pass", passCount);
         stats.put("fail", failCount);
@@ -350,6 +369,12 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
+    /**
+     * チャプターごとの挑戦回数を集計します。
+     * 全ユーザーの進捗データを元に、チャプタータイトルをキー、
+     * そのチャプターが実施された総回数を値としたマップを返します。
+     * * @return チャプター名と挑戦回数のマップ
+     */
     public Map<String, Integer> getChapterStats() {
     // 1. 全ユーザーの進捗データを取ってくる
     List<AllProgressDto> progressList = getAllUsersProgress();

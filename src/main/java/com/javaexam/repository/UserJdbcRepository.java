@@ -58,10 +58,27 @@ public class UserJdbcRepository {
     }
 
     public int countUsers() {
-    Integer count = jdbcTemplate.queryForObject(
-        "SELECT COUNT(*) FROM users",
-        Integer.class
-    );
-    return count != null ? count : 0;
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users",
+                Integer.class);
+        return count != null ? count : 0;
+    }
+
+    // UserJdbcRepository.java に追記
+    public void save(User user) {
+        // IDが空なら新しく発行する（簡易版）
+        if (user.getId() == null) {
+            user.setId(java.util.UUID.randomUUID().toString());
+        }
+
+        jdbcTemplate.update(
+                "INSERT INTO users (id, username, password, display_name, role, created_at, updated_at) " +
+                        "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getDisplayName(),
+                "ROLE_USER" // デフォルトの権限
+        );
     }
 }
