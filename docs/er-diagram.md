@@ -8,21 +8,15 @@
 - `chapters`: 学習章情報
 - `questions`: 各章に属する問題
 - `user_progress`: ユーザーごとの章別進捗
-- `user_answers`: ユーザーごとの問題回答履歴
+- `user_answers`: ユーザーごとの問題解答履歴
 
-## Mermaid
+## ER Diagram (Mermaid) / ER図（Mermaid記法）
 
 ```mermaid
 erDiagram
-    USERS ||--o{ USER_PROGRESS : has
-    CHAPTERS ||--o{ USER_PROGRESS : tracked_in
-    CHAPTERS ||--o{ QUESTIONS : contains
-    USERS ||--o{ USER_ANSWERS : submits
-    CHAPTERS ||--o{ USER_ANSWERS : answered_in
-    QUESTIONS ||--o{ USER_ANSWERS : target
-
+    
     USERS {
-        VARCHAR id PK　 "NOT NULL,ユーザーID(最大36文字)"
+        VARCHAR id PK "NOT NULL,ユーザーID(最大36文字)"
         VARCHAR username UK "NOT NULL,ユーザー名(最大50文字)" 
         VARCHAR password "NOT NULL,ユーザーパスワード(最大255文字)"
         VARCHAR display_name "NOT NULL,ユーザー表示名(最大100文字)"
@@ -33,7 +27,7 @@ erDiagram
 
     CHAPTERS {
         VARCHAR id PK "チャプターID(最大36文字)"
-        VARCHAR chapter_code UK "NOT NULL,チャプターコード(最大20文字)"
+        VARCHAR chapter_code UK "NOT NULL,チャプター数(最大20文字)"
         VARCHAR title "NOT NULL,チャプタータイトル(最大200文字)"
         INTEGER sort_order "NOT NULL,表示順"
     }
@@ -44,13 +38,13 @@ erDiagram
         TEXT question_text "NOT NULL,問題文"
         TEXT options "NOT NULL,選択肢(JSON形式)"
         VARCHAR question_type "NOT NULL,問題形式(最大20文字)"
-        TEXT correct_answer "NOT NULL,正解"
+        TEXT correct_answer "NOT NULL,答え"
         TIMESTAMP created_at "問題作成日のタイムスタンプ"
         TIMESTAMP updated_at "問題情報アップデート時のタイムスタンプ"
     }
 
     USER_PROGRESS {
-        VARCHAR id PK "進捗ID(最大36文字)"
+        VARCHAR id PK "各ユーザーの進捗ID(最大36文字)"
         VARCHAR user_id FK "NOT NULL,ユーザーID(最大36文字)"
         VARCHAR chapter_id FK "NOT NULL,チャプターID(最大36文字)"
         INTEGER score "NOT NULL,スコア(0〜100)"
@@ -60,7 +54,7 @@ erDiagram
     }
 
     USER_ANSWERS {
-        VARCHAR id PK "回答ID(最大36文字)"
+        VARCHAR id PK "各ユーザーの解答ID(最大36文字)"
         VARCHAR user_id FK "NOT NULL,ユーザーID(最大36文字)"
         VARCHAR chapter_id FK "NOT NULL,チャプターID(最大36文字)"
         VARCHAR question_id FK "NOT NULL,問題ID(最大36文字)"
@@ -68,7 +62,29 @@ erDiagram
         BOOLEAN is_correct "NOT NULL,正誤判定"
         TIMESTAMP answered_at "回答日時のタイムスタンプ"
     }
+
+    CHAPTERS ||--o{ QUESTIONS : has
+    USERS ||--o{ USER_PROGRESS : has
+    CHAPTERS ||--o{ USER_PROGRESS : tracks
+    USERS ||--o{ USER_ANSWERS : answers
+    CHAPTERS ||--o{ USER_ANSWERS : in
+    QUESTIONS ||--o{ USER_ANSWERS : for
 ```
+## Relationship Details / リレーション詳細
+
+| Relation / 関連 | Type / 種別 | 説明 (日本語) |
+|---|---|---|   
+| CHAPTERS → QUESTIONS | 1 : N (One-to-Many) | 各章は0個以上の問題を持つ |
+| USERS → USER_PROGRESS | 1 : N (One-to-Many) | 各ユーザーは0以上の章の進捗を持つ |
+| CHAPTERS → USER_PROGRESS | 1 : N (One-to-Many) | 章は0個以上の章の進捗を持つ |
+| USERS → USER_ANSWERS | 1 : N (One-to-Many) | ユーザーはは0個以上の解答を持つ |
+| QUESTIONS → USER_ANSWERS | 1 : N (One-to-Many) | 問題は0個以上のUSER_ANSWERを持つ |
+
+## Constraints / 制約
+
+| Table / テーブル | Column / カラム | 制約 (日本語) |
+|---|---|---|
+
 
 ## Notes / 補足
 
