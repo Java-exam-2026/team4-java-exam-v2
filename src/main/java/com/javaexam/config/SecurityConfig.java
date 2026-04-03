@@ -54,8 +54,10 @@ public class SecurityConfig {
                     boolean isAdmin = authentication.getAuthorities().stream()
                         .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
                 if (isAdmin) {
+                    // 管理者なら、要件通り /admin/dashboard へ
                     response.sendRedirect("/admin/dashboard");
                 } else {
+                    // 一般ユーザーなら、トップページ / へ    
                     response.sendRedirect("/");
                 }
                 })
