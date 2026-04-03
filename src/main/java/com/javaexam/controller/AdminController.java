@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +40,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
 import jakarta.validation.Valid;
-
 
 @Controller
 @RequestMapping("/admin")
@@ -454,45 +454,47 @@ public class AdminController {
         }
         return "redirect:/admin/chapters";
     }
-     
+
     /**
      * 
-     * @param file 受け取ったCSVファイル 
+     * @param file               受け取ったCSVファイル
      * @param redirectAttributes リダイレクト属性
      * @return 問題一覧画面へリダイレクトするビュー名
      */
     @PostMapping("/import/csv")
-    public String importCsvForProblems(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
-        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))){
-            
+    @Transactional
+    public String importCsvForProblems(@RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
+        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
             String[] row;
             while ((row = reader.readNext()) != null) {
-                String chapterCode =row[0];
+                String chapterCode = row[0];
                 String questionText = row[1];
-                String questionType= row[2];
-                String optionJson=row[3];
-                String correctAnswer=row[4];
-                
-                
+                String questionType = row[2];
+                String optionJson = row[3];
+                String correctAnswer = row[4];
+
                 Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
-                
+                        .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
+
                 Map<String, String> options = ConvertOptionJsonToOptions(optionJson);
                 
-                Question question = new Question();
-                question.setChapter(chapter);
-                question.setQuestionText(questionText);
-                question.setQuestionType(QuestionType.valueOf(questionType));
-                question.setOptions(options);
-                question.setCorrectAnswer(correctAnswer);
-                
-                questionJdbcRepository.save(question);
-                
-                redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+                if (adminService.isDuplicateQuestion(chapter.getId(), questionText)){
+                    Question question = new Question();
+                    question.setChapter(chapter);
+                    question.setQuestionText(questionText);
+                    question.setQuestionType(QuestionType.valueOf(questionType));
+                    question.setOptions(options);
+                    question.setCorrectAnswer(correctAnswer);
 
+                    questionJdbcRepository.save(question);
+                }else{
+                    continue;
+                }
+            redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
             }
-        }
-         catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         } catch (CsvValidationException e) {
             redirectAttributes.addFlashAttribute("error", "CSVの形式が不正です");
@@ -503,17 +505,21 @@ public class AdminController {
         }
         return "redirect:/admin/questions";
     }
-    
-    private Map<String,String> ConvertOptionJsonToOptions(String optionJson){
+    /**
+     * JSON文字列で受け取ったオプションをMapに変換するメソッド
+     * @param optionJson JSON文字列(optionJson)
+     * @return Mapに変換されたオプション(options)
+     */
+
+    private Map<String, String> ConvertOptionJsonToOptions(String optionJson) {
         Map<String, String> options = new HashMap<>();
         try {
-            options = objectMapper.readValue(optionJson, new TypeReference<Map<String, String>>() {});
+            options = objectMapper.readValue(optionJson, new TypeReference<Map<String, String>>() {
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
         return options;
     }
-
-    
 
 }

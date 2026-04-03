@@ -296,7 +296,17 @@ public class AdminService {
                 })
                 .collect(Collectors.toList());
         }
+    /**
+     * 重複判定をリポジトリから受け取り、Controllerに渡すメソッド
+     * @param chapterId
+     * @param questionText
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */
     
+    public boolean isDuplicateQuestion(String chapterId, String questionText){
+        return questionJdbcRepository.existsByChapterIdAndQuestionText(chapterId, questionText);    
+    }
 }
+
 
 
