@@ -31,10 +31,10 @@ import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
 import com.javaexam.entity.QuestionType;
+import com.javaexam.entity.User;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -505,21 +505,47 @@ public class AdminController {
         }
         return "redirect:/admin/questions";
     }
+    
+
     /**
-     * JSON文字列で受け取ったオプションをMapに変換するメソッド
-     * @param optionJson JSON文字列(optionJson)
-     * @return Mapに変換されたオプション(options)
+     * 
+     * @param file               受け取ったCSVファイル
+     * @param redirectAttributes リダイレクト属性
+     * @return 問題一覧画面へリダイレクトするビュー名
      */
+    @PostMapping("/import/users/csv")
+    @Transactional
+    public String importCsvForUsers(@RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
+        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 
-    private Map<String, String> ConvertOptionJsonToOptions(String optionJson) {
-        Map<String, String> options = new HashMap<>();
-        try {
-            options = objectMapper.readValue(optionJson, new TypeReference<Map<String, String>>() {
-            });
+            String[] row;
+            while ((row = reader.readNext()) != null) {
+                String username = row[0];
+                String password = row[1]; //要ハッシュ化
+                String displayName = row[2];
+                String role = row[3];
+
+                //Userの重複処理
+                if (adminService.isDuplicateUser(username)){
+                    User user = new User();
+                    user.setUsername(username);
+                    user.setPassword(password);
+                    user.setDisplayName(displayName);
+                    user.setRole(role);
+                }else{
+                    continue;
+                }
+            redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+            }
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (CsvValidationException e) {
+            redirectAttributes.addFlashAttribute("error", "CSVの形式が不正です");
         } catch (IOException e) {
-            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
         }
-        return options;
-    }
-
+        return "redirect:/admin/dashboard";  //吉川さんのadmindashboardにリダイレクト先を変える
 }

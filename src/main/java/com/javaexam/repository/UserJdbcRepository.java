@@ -1,14 +1,15 @@
 package com.javaexam.repository;
 
-import com.javaexam.entity.User;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Repository;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
+
+import com.javaexam.entity.User;
 
 @Repository
 public class UserJdbcRepository {
@@ -48,7 +49,11 @@ public class UserJdbcRepository {
                 id);
         return users.stream().findFirst();
     }
-
+    /**
+     * userの重複チェックメソッド
+     * @param username
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */
     public boolean existsByUsername(String username) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE username = ?",

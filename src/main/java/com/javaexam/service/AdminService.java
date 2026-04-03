@@ -1,12 +1,17 @@
 package com.javaexam.service;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
@@ -14,12 +19,18 @@ import com.javaexam.dto.UserAnswerByDateDto;
 import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
+import com.javaexam.entity.QuestionType;
 import com.javaexam.entity.UserAnswer;
 import com.javaexam.entity.UserProgress;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserAnswerJdbcRepository;
+import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
+import com.opencsv.CSVReader;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class AdminService {
@@ -28,15 +39,19 @@ public class AdminService {
     private final QuestionJdbcRepository questionJdbcRepository;
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final UserAnswerJdbcRepository userAnswerJdbcRepository;
+    private final UserJdbcRepository userJdbcRepository;
+
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
                         QuestionJdbcRepository questionJdbcRepository,
                         ChapterJdbcRepository chapterJdbcRepository,
-                        UserAnswerJdbcRepository userAnswerJdbcRepository) {
+                        UserAnswerJdbcRepository userAnswerJdbcRepository,
+                        UserJdbcRepository userJdbcRepository) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.userAnswerJdbcRepository = userAnswerJdbcRepository;
+        this.userJdbcRepository = userJdbcRepository;
     }
 
     /**
@@ -296,7 +311,52 @@ public class AdminService {
                 })
                 .collect(Collectors.toList());
         }
+    public Question getCsvFromProblems(MultipartFile file){
+        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+
+        String[] row;
+            while ((row = reader.readNext()) != null) {
+                String chapterCode = row[0];
+                String questionText = row[1];
+                String questionType = row[2];
+                String optionJson = row[3];
+                String correctAnswer = row[4];
+
+                Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
+                        .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
+
+                Map<String, String> options = ConvertOptionJsonToOptions(optionJson);
+                
+                if (isDuplicateQuestion(chapter.getId(), questionText)){
+                    Question question = new Question();
+                    question.setChapter(chapter);
+                    question.setQuestionText(questionText);
+                    question.setQuestionType(QuestionType.valueOf(questionType));
+                    question.setOptions(options);
+                    question.setCorrectAnswer(correctAnswer); 
+                    return question;
+                }
+            }
+    
+
     /**
+     * JSON文字列で受け取ったオプションをMapに変換するメソッド
+     * @param optionJson JSON文字列(optionJson)
+     * @return Mapに変換されたオプション(options)
+     */
+
+    private Map<String, String> ConvertOptionJsonToOptions(String optionJson) {
+        Map<String, String> options = new HashMap<>();
+        try {
+            options = objectMapper.readValue(optionJson, new TypeReference<Map<String, String>>() {
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return options;
+    }
+        
+        /**
      * 重複判定をリポジトリから受け取り、Controllerに渡すメソッド
      * @param chapterId
      * @param questionText
@@ -305,6 +365,15 @@ public class AdminService {
     
     public boolean isDuplicateQuestion(String chapterId, String questionText){
         return questionJdbcRepository.existsByChapterIdAndQuestionText(chapterId, questionText);    
+    }
+
+    /*
+     * 重複判定をリポジトリから受け取り、Controllerに渡すメソッド
+     * @param username
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */
+    public boolean isDuplicateUser(String username){
+        return userJdbcRepository.existsByUsername(username);
     }
 }
 
