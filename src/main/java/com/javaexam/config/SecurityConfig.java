@@ -22,10 +22,10 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
-    
+
     @Value("${spring.security.remember-me.key}")
     private String rememberMeKey;
-    
+
     @Value("${spring.security.remember-me.token-validity-seconds}")
     private int rememberMeTokenValiditySeconds;
 
@@ -45,23 +45,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**"))
                 .formLogin(form -> form
-                .loginPage("/login")
-                /**
-                 * ログイン成功時の遷移先をユーザーの権限に基づいて制御します。
-                 * 管理者はダッシュボード、一般ユーザーはトップページへリダイレクトします。
-                 */
-                .successHandler((request, response, authentication) -> {
-                    boolean isAdmin = authentication.getAuthorities().stream()
-                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-                if (isAdmin) {
-                    // 管理者なら、要件通り /admin/dashboard へ
-                    response.sendRedirect("/admin/dashboard");
-                } else {
-                    // 一般ユーザーなら、トップページ / へ    
-                    response.sendRedirect("/");
-                }
-                })
-                .permitAll())
+                        .loginPage("/login")
+                        /**
+                         * ログイン成功時の遷移先をユーザーの権限に基づいて制御します。
+                         * 管理者はダッシュボード、一般ユーザーはトップページへリダイレクトします。
+                         */
+                        .successHandler((request, response, authentication) -> {
+                            boolean isAdmin = authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                            if (isAdmin) {
+                                // 管理者なら、要件通り /admin/dashboard へ
+                                response.sendRedirect("/admin/dashboard");
+                            } else {
+                                // 一般ユーザーなら、トップページ / へ
+                                response.sendRedirect("/");
+                            }
+                        })
+                        .permitAll())
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")
                         .permitAll())
@@ -84,5 +84,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
 }

@@ -40,7 +40,7 @@ class AdminServiceTest {
     private JdbcTemplate jdbcTemplate;
 
     @Test
-    void 合格2人と不合格1人の時に統計が正しく計算されること() {
+    void shouldCalculateStatsCorrectlyWithTwoPassesAndOneFail() {
         // Repositoryを直すのが面倒なときは、直接SQLで消すのが早いです！
         jdbcTemplate.execute("DELETE FROM user_progress");
         jdbcTemplate.execute("DELETE FROM users");

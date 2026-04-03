@@ -15,7 +15,7 @@ public class HomeController {
 
     private final ChapterService chapterService;
     private final ProgressService progressService;
-    //private final AdminService adminService;
+    // private final AdminService adminService;
 
     public HomeController(ChapterService chapterService,
             ProgressService progressService) {
@@ -25,13 +25,11 @@ public class HomeController {
 
     @GetMapping("/")
     public String dashboard(Model model, Principal principal, Authentication authentication) {
-    if (principal != null && authentication != null) {
-        // 【修正ポイント】
-        // isAdmin かどうかに関わらず、ログインしているなら進捗データを準備する
-        model.addAttribute("progressMap", progressService.getProgressByUsername(principal.getName()));
-    }
+        if (principal != null && authentication != null) {
+            model.addAttribute("progressMap", progressService.getProgressByUsername(principal.getName()));
+        }
 
-    model.addAttribute("chapters", chapterService.getAllChapters());
-    return "dashboard"; // 全員「一般画面」に到着！
+        model.addAttribute("chapters", chapterService.getAllChapters());
+        return "dashboard";
     }
 }
