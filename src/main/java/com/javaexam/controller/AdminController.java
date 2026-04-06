@@ -1,7 +1,6 @@
 package com.javaexam.controller;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
 import com.javaexam.dto.ChapterFormDto;
@@ -31,12 +31,9 @@ import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
 import com.javaexam.entity.QuestionType;
-import com.javaexam.entity.User;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
 import jakarta.validation.Valid;
@@ -461,39 +458,13 @@ public class AdminController {
      * @param redirectAttributes リダイレクト属性
      * @return 問題一覧画面へリダイレクトするビュー名
      */
-    @PostMapping("/import/csv")
+    @PostMapping("/import/csv/problems")
     @Transactional
-    public String importCsvForProblems(@RequestParam("file") MultipartFile file,
+    public String importProblemsCsv(@RequestParam("file") MultipartFile file,
             RedirectAttributes redirectAttributes) {
-        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-
-            String[] row;
-            while ((row = reader.readNext()) != null) {
-                String chapterCode = row[0];
-                String questionText = row[1];
-                String questionType = row[2];
-                String optionJson = row[3];
-                String correctAnswer = row[4];
-
-                Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-                        .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
-
-                Map<String, String> options = ConvertOptionJsonToOptions(optionJson);
-                
-                if (adminService.isDuplicateQuestion(chapter.getId(), questionText)){
-                    Question question = new Question();
-                    question.setChapter(chapter);
-                    question.setQuestionText(questionText);
-                    question.setQuestionType(QuestionType.valueOf(questionType));
-                    question.setOptions(options);
-                    question.setCorrectAnswer(correctAnswer);
-
-                    questionJdbcRepository.save(question);
-                }else{
-                    continue;
-                }
+        try {
+            adminService.importProblemsFromCsv(file);
             redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
-            }
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         } catch (CsvValidationException e) {
@@ -506,6 +477,7 @@ public class AdminController {
         return "redirect:/admin/questions";
     }
     
+    
 
     /**
      * 
@@ -513,29 +485,11 @@ public class AdminController {
      * @param redirectAttributes リダイレクト属性
      * @return 問題一覧画面へリダイレクトするビュー名
      */
-    @PostMapping("/import/users/csv")
-    @Transactional
-    public String importCsvForUsers(@RequestParam("file") MultipartFile file,
-            RedirectAttributes redirectAttributes) {
-        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-
-            String[] row;
-            while ((row = reader.readNext()) != null) {
-                String username = row[0];
-                String password = row[1]; //要ハッシュ化
-                String displayName = row[2];
-                String role = row[3];
-
-                //Userの重複処理
-                if (adminService.isDuplicateUser(username)){
-                    User user = new User();
-                    user.setUsername(username);
-                    user.setPassword(password);
-                    user.setDisplayName(displayName);
-                    user.setRole(role);
-                }else{
-                    continue;
-                }
+    @PostMapping("/import/csv/users")
+    public String importCsvForUsers(@RequestParam("file") MultipartFile file,RedirectAttributes redirectAttributes) {
+        try {
+            if (!file.isEmpty()) {
+            adminService.importUsersFromCsv(file);
             redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
             }
         } catch (IllegalArgumentException e) {
@@ -548,4 +502,5 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
         }
         return "redirect:/admin/dashboard";  //吉川さんのadmindashboardにリダイレクト先を変える
+    }
 }

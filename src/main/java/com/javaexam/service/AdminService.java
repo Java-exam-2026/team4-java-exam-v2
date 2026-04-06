@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
@@ -22,15 +23,18 @@ import com.javaexam.entity.Question;
 import com.javaexam.entity.QuestionType;
 import com.javaexam.entity.UserAnswer;
 import com.javaexam.entity.UserProgress;
+import com.javaexam.entity.User;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserAnswerJdbcRepository;
 import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
-import com.opencsv.CSVReader;
 
+import com.opencsv.CSVReader;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.exceptions.CsvValidationException;
+
 
 @Service
 public class AdminService {
@@ -40,18 +44,25 @@ public class AdminService {
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final UserAnswerJdbcRepository userAnswerJdbcRepository;
     private final UserJdbcRepository userJdbcRepository;
+    private final ObjectMapper objectMapper;
+    private final PasswordEncoder passwordEncoder;
+
 
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
                         QuestionJdbcRepository questionJdbcRepository,
                         ChapterJdbcRepository chapterJdbcRepository,
                         UserAnswerJdbcRepository userAnswerJdbcRepository,
-                        UserJdbcRepository userJdbcRepository) {
+                        UserJdbcRepository userJdbcRepository,
+                        ObjectMapper objectMapper,
+                        PasswordEncoder passwordEncoder) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.userAnswerJdbcRepository = userAnswerJdbcRepository;
         this.userJdbcRepository = userJdbcRepository;
+        this.objectMapper = new ObjectMapper();
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -311,7 +322,15 @@ public class AdminService {
                 })
                 .collect(Collectors.toList());
         }
-    public Question getCsvFromProblems(MultipartFile file){
+    
+    /**
+     *      
+     * @param file
+     * @throws IOException
+     * @throws CsvValidationException
+     */
+    @Transactional
+    public void importProblemsFromCsv(MultipartFile file) throws IOException,CsvValidationException{
         CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
 
         String[] row;
@@ -334,10 +353,42 @@ public class AdminService {
                     question.setQuestionType(QuestionType.valueOf(questionType));
                     question.setOptions(options);
                     question.setCorrectAnswer(correctAnswer); 
-                    return question;
+                    
+                    questionJdbcRepository.save(question);
                 }
             }
+        }
     
+    /**
+     *  
+     * @param file
+     * @throws IOException
+     * @throws CsvValidationException
+     */
+    
+    @Transactional
+    public void importUsersFromCsv(MultipartFile file) throws IOException,CsvValidationException{
+        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+
+        String[] row;
+        while ((row = reader.readNext()) != null) {
+                String username = row[0];
+                String password = row[1]; //要ハッシュ化
+                String displayName = row[2];
+                String role = row[3];
+
+                //Userの重複処理
+                if (isDuplicateUser(username)){
+                    User user = new User();
+                    user.setUsername(username);
+                    user.setPassword(passwordEncoder.encode(password));
+                    user.setDisplayName(displayName);
+                    user.setRole(role);
+                    
+                    userJdbcRepository.save(user);
+                }
+            }
+        }
 
     /**
      * JSON文字列で受け取ったオプションをMapに変換するメソッド
