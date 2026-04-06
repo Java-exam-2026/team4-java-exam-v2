@@ -24,8 +24,11 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String dashboard(Model model, Principal principal, Authentication authentication) {
-        if (principal != null && authentication != null) {
+    public String dashboard(Model model, Principal principal) {
+        // 1. Principal（名札）があれば、そこから名前を取って進捗を取得
+        if (principal != null) {
+            // principal.getName() で「アオイ」というIDが取れるので、
+            // それを使って自分の進捗だけをDBから持ってくる
             model.addAttribute("progressMap", progressService.getProgressByUsername(principal.getName()));
         }
 
