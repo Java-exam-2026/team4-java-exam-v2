@@ -501,6 +501,6 @@ public class AdminController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
         }
-        return "redirect:/admin/dashboard";  //吉川さんのadmindashboardにリダイレクト先を変える
+        return "redirect:/";  //吉川さんのadmindashboardにリダイレクト先を変える
     }
 }

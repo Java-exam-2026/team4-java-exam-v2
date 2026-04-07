@@ -18,7 +18,6 @@ public class UserJdbcRepository {
 
     private final RowMapper<User> userRowMapper = (rs, rowNum) -> mapUser(rs);
 
-
     public UserJdbcRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -50,8 +49,10 @@ public class UserJdbcRepository {
                 id);
         return users.stream().findFirst();
     }
+
     /**
      * userの重複チェックメソッド
+     * 
      * @param username
      * @return 重複しているかどうか(true=重複あり、false=重複なし)
      */
@@ -62,43 +63,30 @@ public class UserJdbcRepository {
                 username);
         return count != null && count > 0;
     }
-    
+
     /*
-    * UserをDBにセーブするメソッド
-    * @param user
-    * @return 行の割り当て番号
-    */
+     * UserをDBにセーブするメソッド
+     * 
+     * @param user
+     * 
+     * @return 行の割り当て番号
+     */
 
     public int save(User user) {
-        try {
-            
-            if (user.getId() == null || user.getId().isEmpty()) {
-                // Insert new question
-                user.setId(java.util.UUID.randomUUID().toString());
-                return jdbcTemplate.update(
-                        "INSERT INTO user (id, username, password, display_name, role,created_at, updated_at) " +
-                        "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-                        user.getId(),
-                        user.getUsername(),
-                        user.getPassword(),
-                        user.getDisplayName(),
-                        user.getRole()
-                );
-            } else {
-                // Update existing question
-                return jdbcTemplate.update(
-                        "UPDATE user SET username = ?, password = ?, display_name = ?, role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-                        "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
-                        user.getId(),
-                        user.getUsername(),
-                        user.getPassword(),
-                        user.getDisplayName(),
-                        user.getRole()
-                );
-            }
-        } catch (IllegalMonitorStateException e){
-            throw new IllegalStateException("不適切な引数です", e);           
-        }
         
+        if (user.getId() == null || user.getId().isEmpty()) {
+            // Insert new user
+            user.setId(java.util.UUID.randomUUID().toString());
+            return jdbcTemplate.update(
+                "INSERT INTO users (id, username, password, display_name, role,created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getDisplayName(),
+                user.getRole());
+        }
+        throw new IllegalArgumentException("データの型が不正です");
+
     }
 }

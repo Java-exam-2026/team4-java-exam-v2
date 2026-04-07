@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
+    <meta charset="UTF-8">
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
@@ -27,12 +28,21 @@
                 <div class="col-md-6 mb-3">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">全ユーザーの回答状況</h5>
-                            <p class="card-text">全てのユーザーの進捗状況とスコアを確認できます。</p>
-                            <a href="/admin/progress" class="btn btn-primary">回答状況を見る</a>
+                            <h5 class="card-title">全ユーザーの進捗確認</h5>
+                            <p class="card-text">全てのユーザーの回答履歴とスコアを確認できます。</p>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="/admin/progress" class="btn btn-primary">進捗を確認する</a>
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#csvImportModal">
+                                    + CSVからユーザーをインポートする
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-6 mb-3">
                     <div class="card">
                         <div class="card-body">
@@ -43,6 +53,44 @@
                     </div>
                 </div>
             </div>
+
+            <div class="modal fade" id="csvImportModal" tabindex="-1" aria-labelledby="csvImportModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form th:action="@{/admin/import/csv/users}" method="post" enctype="multipart/form-data">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="csvImportModalLabel">CSVからユーザーをインポートする</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="csvFile" class="form-label">CSVファイルを選択</label>
+                                    <input class="form-control"
+                                           type="file"
+                                           id="csvFile"
+                                           name="file"
+                                           accept=".csv"
+                                           required>
+                                </div>
+
+                                <div class="small text-muted mb-3" id="selectedFileName">
+                                    ファイルが選択されていません
+                                </div>
+
+                                <div class="alert alert-info mb-0" role="alert">
+                                    CSVを選択して「完了」を押すとインポートが実行されます。
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                                <button type="submit" class="btn btn-primary" id="csvImportSubmit" disabled>完了</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- User Chapters (only for non-admin users) -->
@@ -50,7 +98,7 @@
             <h2 class="mb-4">Available Chapters</h2>
             <div class="row">
                 <div class="col-md-4 mb-4" th:each="chapter : ${chapters}">
-                    <div class="card h-100">
+                    <div class="card">
                         <div class="card-body">
                             <h5 class="card-title" th:text="${chapter.title}">Chapter Title</h5>
                             <p class="card-text text-muted">Chapter overview coming soon.</p>
@@ -74,6 +122,29 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const fileInput = document.getElementById("csvFile");
+            const fileNameText = document.getElementById("selectedFileName");
+            const submitButton = document.getElementById("csvImportSubmit");
+
+            if (!fileInput || !fileNameText || !submitButton) {
+                return;
+            }
+
+            fileInput.addEventListener("change", function () {
+                if (fileInput.files && fileInput.files.length > 0) {
+                    fileNameText.textContent = "選択中: " + fileInput.files[0].name;
+                    submitButton.disabled = false;
+                } else {
+                    fileNameText.textContent = "ファイルが選択されていません";
+                    submitButton.disabled = true;
+                }
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
