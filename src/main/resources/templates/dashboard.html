@@ -21,6 +21,16 @@
     </nav>
 
     <div class="container">
+        <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <!-- Admin Menu -->
         <div sec:authorize="hasRole('ADMIN')" class="mb-4">
             <h2 class="mb-3">管理者メニュー</h2>
