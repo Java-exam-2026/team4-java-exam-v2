@@ -84,6 +84,43 @@ erDiagram
 
 | Table / テーブル | Column / カラム | 制約 (日本語) |
 |---|---|---|
+| users | id | PK / NOT NULL / ユーザーID(最大36文字) |
+| users | username | UK / NOT NULL / ユーザー名(最大50文字) |
+| users | password | NOT NULL / パスワード(最大255文字) |
+| users | display_name | NOT NULL / 表示名(最大100文字) |
+| users | role | NOT NULL / ROLE_USER / ROLE_ADMIN |
+| users | created_at | NOT NULL / 作成日時 |
+| users | updated_at | NOT NULL / 更新日時 |
+| chapters | id | PK /  NOT NULL / チャプターID(最大36文字) |
+| chapters | chapter_code | UK / NOT NULL / チャプターコード(最大20文字) |
+| chapters | title | NOT NULL / チャプタータイトル(最大200文字) |
+| chapters | sort_order |  NOT NULL / 表示順 |
+| questions | id | PK / NOT NULL / 問題ID(最大36文字) |
+| questions | chapter_id | FK / NOT NULL / ユーザーID(最大36文字) |
+| questions | question_text | NOT NULL / 問題文 |
+| questions | options | NOT NULL / 選択肢(JSON形式) |
+| questions | question_type | NOT NULL / 問題形式(最大20文字) |
+| questions | correct_answer | NOT NULL / 正解 |
+| questions | created_at | NOT NULL / 作成日時 |
+| questions | updated_at | NOT NULL / 更新日時 |
+| user_progress | id | PK / 各ユーザーの進捗ID(最大36文字) |
+| user_progress | user_id | FK(→ users.id) / NOT NULL / ユーザーID(最大36文字) |
+| user_progress | chapter_id | FK(→ chapters.id) / NOT NULL / チャプターID(最大36文字) |
+| user_progress | score | NOT NULL / スコア(0〜100) |
+| user_progress | passed | NOT NULL / 合否 |
+| user_progress | has_submitted | NOT NULL / 提出済みフラグ |
+| user_progress | last_attempted_at | 最終受験日 |
+| user_progress |  (user_id, chapter_id) | UNIQUE |
+| user_answers | id | PK / NOT NULL / 解答ID(最大36文字) |
+| user_answers | user_id | FK(→ users.id) / NOT NULL / ユーザーID(最大36文字) |
+| user_answers | chapter_id | FK(→ chapters.id) / NOT NULL / チャプターID(最大36文字) |
+| user_answers | question_id | FK(→ questions.id) / NOT NULL / 問題ID(最大36文字) |
+| user_answers | selected_answer | NOT NULL / 選択した回答 |
+| user_answers | is_correct | NOT NULL / 正誤判定 |
+| user_answers | answered_at | 回答日時 |
+| user_answers | (user_id, chapter_id, question_id) | UNIQUE |
+| users / chapters / questions / user_progress / user_answers | id | PK / NOT NULL |
+| 各テーブル | 外部キー（user_id / chapter_id / question_id） | ON DELETE CASCADE |
 
 
 ## Notes / 補足
