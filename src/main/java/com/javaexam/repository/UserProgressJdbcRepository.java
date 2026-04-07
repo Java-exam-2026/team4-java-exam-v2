@@ -67,14 +67,13 @@ public class UserProgressJdbcRepository {
     private final RowMapper<UserProgress> rowMapper = (rs, rowNum) -> mapUserProgress(rs);
 
     /**
-     * 全ユーザーの進捗データを、ユーザー名やチャプター名も含めて一括取得します。
-     * JOINを使用して1つのクエリで全ての関連データを取得することで、
-     * ループ内で個別にデータを取り直す「N+1問題」を回避し、高速に動作します。
-     *
-     * @return 関連データがすべて結合された UserProgress のリスト
+     * 全ユーザーの学習進捗データを、ユーザー情報およびチャプター情報を含めて一括取得します。
+     * * @return ユーザー情報とチャプター情報がセットされた UserProgress エンティティのリスト
      */
     public List<UserProgress> findAll() {
-        // SQLで「進捗」「ユーザー」「チャプター」の3つのテーブルをガッチャンコする
+        // 【修正ポイント】具体的な実装の詳細（N+1問題の回避など）はここに書く
+        // JOINを使用して1つのクエリで全ての関連データを取得することで、
+        // ループ内で個別にデータを取り直す「N+1問題」を回避し、高速に動作させています。
         String sql = "SELECT up.*, u.username, u.display_name, c.chapter_code, c.title " +
                 "FROM user_progress up " +
                 "JOIN users u ON up.user_id = u.id " +

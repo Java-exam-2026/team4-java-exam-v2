@@ -56,7 +56,13 @@ public class UserJdbcRepository {
                 username);
         return count != null && count > 0;
     }
-
+    
+    /**
+     * システムに登録されている全ユーザーの総数を取得します。
+     * データベースのusersテーブルに対してCOUNTクエリを実行し、
+     * 登録済みのユーザーが何人いるかを数値（int）で返します。
+     * * @return ユーザーの総数。データが存在しない場合は0を返します。
+     */
     public int countUsers() {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM users",
@@ -64,7 +70,12 @@ public class UserJdbcRepository {
         return count != null ? count : 0;
     }
 
-    // UserJdbcRepository.java に追記
+    /**
+     * 新しいユーザー情報をデータベース（usersテーブル）に保存します。
+     * IDが設定されていない場合は、UUID（重複しないランダムな文字列）を自動で発行して割り当てます。
+     * パスワードや表示名などの基本情報に加え、権限はデフォルトで「ROLE_USER」として登録されます。
+     * * @param user 保存したいユーザー情報のエンティティ。ID、ユーザー名、パスワード、表示名を含める必要があります。
+     */
     public void save(User user) {
         // IDが空なら新しく発行する（簡易版）
         if (user.getId() == null) {
