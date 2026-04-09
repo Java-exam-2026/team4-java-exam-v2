@@ -343,6 +343,10 @@ public class AdminService {
 
         String[] row;
         while ((row = reader.readNext()) != null) {
+            if (row.length != 5){
+                throw new IllegalArgumentException("データの型が不正です");
+            }
+            
             String chapterCode = row[0];
             String questionText = row[1];
             String questionType = row[2];

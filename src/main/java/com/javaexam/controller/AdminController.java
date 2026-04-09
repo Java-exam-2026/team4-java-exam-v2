@@ -453,7 +453,7 @@ public class AdminController {
     }
 
     /**
-     * 
+     * 問題をCSVから取り込むエンドポイントメソッド
      * @param file               受け取ったCSVファイル
      * @param redirectAttributes リダイレクト属性
      * @return 問題一覧画面へリダイレクトするビュー名
@@ -465,8 +465,6 @@ public class AdminController {
         try {
             adminService.importProblemsFromCsv(file);
             redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
         } catch (CsvValidationException e) {
             redirectAttributes.addFlashAttribute("error", "CSVの形式が不正です");
         } catch (IOException e) {
@@ -480,7 +478,7 @@ public class AdminController {
     
 
     /**
-     * 
+     * ユーザーデータをCSVから取り込むエンドポイントメソッド
      * @param file               受け取ったCSVファイル
      * @param redirectAttributes リダイレクト属性
      * @return 問題一覧画面へリダイレクトするビュー名
@@ -492,8 +490,6 @@ public class AdminController {
             adminService.importUsersFromCsv(file);
             redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
             }
-        } catch (IllegalArgumentException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
         } catch (CsvValidationException e) {
             redirectAttributes.addFlashAttribute("error", "CSVの形式が不正です");
         } catch (IOException e) {
@@ -501,6 +497,6 @@ public class AdminController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
         }
-        return "redirect:/";  //吉川さんのadmindashboardにリダイレクト先を変える
+        return "redirect:/dashboard";  //吉川さんのadmindashboardにリダイレクト先を変える
     }
 }
