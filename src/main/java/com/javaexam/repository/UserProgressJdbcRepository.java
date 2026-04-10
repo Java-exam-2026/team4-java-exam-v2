@@ -35,6 +35,7 @@ public class UserProgressJdbcRepository {
                 .orElseThrow(() -> new IllegalStateException("User not found"));
         Chapter chapter = chapterJdbcRepository.findById(rs.getString("chapter_id"))
                 .orElseThrow(() -> new IllegalStateException("Chapter not found"));
+
         UserProgress progress = new UserProgress();
         progress.setId(rs.getString("id"));
         progress.setUser(user);
@@ -42,8 +43,16 @@ public class UserProgressJdbcRepository {
         progress.setScore(rs.getInt("score"));
         progress.setPassed(rs.getBoolean("passed"));
         progress.setHasSubmitted(rs.getBoolean("has_submitted"));
-        Timestamp timestamp = rs.getTimestamp("last_attempted_at");
-        progress.setLastAttemptedAt(timestamp != null ? timestamp.toLocalDateTime() : null);
+        
+        // ★ status (String) を Enum に変換してセット
+        String statusStr = rs.getString("status");
+        if (statusStr != null) {
+            progress.setStatus(UserProgress.ProgressStatus.valueOf(statusStr));
+        }
+
+        progress.setLastAttemptedAt(toLocalDateTime(rs.getTimestamp("last_attempted_at")));
+        progress.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at"))); // ★ 追加
+        
         return progress;
     }
 
@@ -65,29 +74,44 @@ public class UserProgressJdbcRepository {
         return progressList.stream().findFirst();
     }
 
+    /**
+     * 進捗状況を保存（挿入または更新）します。
+     */
     public void save(UserProgress progress) {
-        int updated = jdbcTemplate.update(
-                "UPDATE user_progress SET score = ?, passed = ?, has_submitted = ?, last_attempted_at = ? WHERE id = ?",
+        String sql = """
+            INSERT INTO user_progress (
+                id, user_id, chapter_id, score, passed, has_submitted, status, last_attempted_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, chapter_id) 
+            DO UPDATE SET 
+                score = EXCLUDED.score,
+                passed = EXCLUDED.passed,
+                has_submitted = EXCLUDED.has_submitted,
+                status = EXCLUDED.status,
+                last_attempted_at = EXCLUDED.last_attempted_at,
+                updated_at = EXCLUDED.updated_at
+            """;
+
+        jdbcTemplate.update(
+                sql,
+                progress.getId(),
+                progress.getUser().getId(),
+                progress.getChapter().getId(),
                 progress.getScore(),
                 progress.getPassed(),
                 progress.getHasSubmitted(),
+                progress.getStatus().name(), // ★ Enumを文字列に
                 toTimestamp(progress.getLastAttemptedAt()),
-                progress.getId());
-        if (updated == 0) {
-            jdbcTemplate.update(
-                    "INSERT INTO user_progress (id, user_id, chapter_id, score, passed, has_submitted, last_attempted_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    progress.getId(),
-                    progress.getUser().getId(),
-                    progress.getChapter().getId(),
-                    progress.getScore(),
-                    progress.getPassed(),
-                    progress.getHasSubmitted(),
-                    toTimestamp(progress.getLastAttemptedAt()));
-        }
+                toTimestamp(progress.getUpdatedAt()) // ★ 追加
+        );
     }
 
     private Timestamp toTimestamp(LocalDateTime dateTime) {
         return dateTime != null ? Timestamp.valueOf(dateTime.truncatedTo(ChronoUnit.MILLIS)) : null;
+    }
+
+    private LocalDateTime toLocalDateTime(Timestamp timestamp) {
+        return timestamp != null ? timestamp.toLocalDateTime() : null;
     }
 
     public List<UserProgress> findAll() {
@@ -98,11 +122,6 @@ public class UserProgressJdbcRepository {
         return jdbcTemplate.update("DELETE FROM user_progress WHERE user_id = ?", userId);
     }
 
-    /**
-     * Deletes a single progress record for a specific user and chapter.
-     *
-     * @return number of rows deleted (0 or 1)
-     */
     public int deleteByUserIdAndChapterId(String userId, String chapterId) {
         return jdbcTemplate.update(
                 "DELETE FROM user_progress WHERE user_id = ? AND chapter_id = ?",

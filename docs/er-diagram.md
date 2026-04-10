@@ -1,66 +1,52 @@
-# ER Diagram / ER図
-
-## Overview / 概要
-
-このER図は `src/main/resources/schema.sql` をもとに、`team4-java-exam-v2` の主要テーブル構成とリレーションを Mermaid 記法で表したものです。
-
-- `users`: ログインユーザー情報
-- `chapters`: 学習章情報
-- `questions`: 各章に属する問題
-- `user_progress`: ユーザーごとの章別進捗
-- `user_answers`: ユーザーごとの問題解答履歴
-
-## ER Diagram (Mermaid) / ER図（Mermaid記法）
-
-```mermaid
 erDiagram
     
     USERS {
-        VARCHAR id PK "NOT NULL,ユーザーID(最大36文字)"
-        VARCHAR username UK "NOT NULL,ユーザー名(最大50文字)" 
-        VARCHAR password "NOT NULL,ユーザーパスワード(最大255文字)"
-        VARCHAR display_name "NOT NULL,ユーザー表示名(最大100文字)"
-        VARCHAR role "NOT NULL,ユーザー権限(ROLE_USER(一般ユーザー),ROLE_ADMIN(管理者))"
-        TIMESTAMP created_at "ユーザー作成日のタイムスタンプ"
-        TIMESTAMP updated_at "ユーザー情報アップデート時のタイムスタンプ"
+        VARCHAR id PK "NOT NULL,ユーザーID"
+        VARCHAR username UK "NOT NULL,ユーザー名" 
+        VARCHAR password "NOT NULL,パスワード"
+        VARCHAR display_name "NOT NULL,表示名"
+        VARCHAR role "NOT NULL,権限"
+        TIMESTAMP created_at "作成日"
+        TIMESTAMP updated_at "更新日"
     }
 
     CHAPTERS {
-        VARCHAR id PK "チャプターID(最大36文字)"
-        VARCHAR chapter_code UK "NOT NULL,チャプター数(最大20文字)"
-        VARCHAR title "NOT NULL,チャプタータイトル(最大200文字)"
+        VARCHAR id PK "チャプターID"
+        VARCHAR chapter_code UK "NOT NULL,コード"
+        VARCHAR title "NOT NULL,タイトル"
         INTEGER sort_order "NOT NULL,表示順"
     }
 
     QUESTIONS {
-        VARCHAR id PK "問題ID(最大36文字)"
-        VARCHAR chapter_id FK "NOT NULL,所属チャプターID(最大36文字)"
+        VARCHAR id PK "問題ID"
+        VARCHAR chapter_id FK "NOT NULL,チャプターID"
         TEXT question_text "NOT NULL,問題文"
-        TEXT options "NOT NULL,選択肢(JSON形式)"
-        VARCHAR question_type "NOT NULL,問題形式(最大20文字)"
+        TEXT options "NOT NULL,選択肢(JSON)"
+        VARCHAR question_type "NOT NULL,形式"
         TEXT correct_answer "NOT NULL,答え"
-        TIMESTAMP created_at "問題作成日のタイムスタンプ"
-        TIMESTAMP updated_at "問題情報アップデート時のタイムスタンプ"
+        TIMESTAMP created_at "作成日"
+        TIMESTAMP updated_at "更新日"
     }
 
     USER_PROGRESS {
-        VARCHAR id PK "各ユーザーの進捗ID(最大36文字)"
-        VARCHAR user_id FK "NOT NULL,ユーザーID(最大36文字)"
-        VARCHAR chapter_id FK "NOT NULL,チャプターID(最大36文字)"
-        INTEGER score "NOT NULL,スコア(0〜100)"
+        VARCHAR id PK "進捗ID"
+        VARCHAR user_id FK "NOT NULL,ユーザーID"
+        VARCHAR chapter_id FK "NOT NULL,チャプターID"
+        INTEGER score "NOT NULL,スコア"
         BOOLEAN passed "NOT NULL,合否"
-        BOOLEAN has_submitted "NOT NULL,提出済みフラグ"
-        TIMESTAMP last_attempted_at "最終受験日時のタイムスタンプ"
+        VARCHAR status "NOT NULL,状態(IN_PROGRESS/COMPLETED)" %% 追加
+        TIMESTAMP last_attempted_at "最終受験日時"
     }
 
     USER_ANSWERS {
-        VARCHAR id PK "各ユーザーの解答ID(最大36文字)"
-        VARCHAR user_id FK "NOT NULL,ユーザーID(最大36文字)"
-        VARCHAR chapter_id FK "NOT NULL,チャプターID(最大36文字)"
-        VARCHAR question_id FK "NOT NULL,問題ID(最大36文字)"
-        TEXT selected_answer "NOT NULL,選択した回答"
-        BOOLEAN is_correct "NOT NULL,正誤判定"
-        TIMESTAMP answered_at "回答日時のタイムスタンプ"
+        VARCHAR id PK "解答ID"
+        VARCHAR user_id FK "NOT NULL,ユーザーID"
+        VARCHAR chapter_id FK "NOT NULL,チャプターID"
+        VARCHAR question_id FK "NOT NULL,問題ID"
+        TEXT selected_answer "NOT NULL,回答"
+        BOOLEAN is_correct "NOT NULL,正誤"
+        BOOLEAN has_submitted "NOT NULL,提出済みフラグ" %% 追加
+        TIMESTAMP answered_at "回答日時"
     }
 
     CHAPTERS ||--o{ QUESTIONS : has
@@ -69,28 +55,3 @@ erDiagram
     USERS ||--o{ USER_ANSWERS : answers
     CHAPTERS ||--o{ USER_ANSWERS : in
     QUESTIONS ||--o{ USER_ANSWERS : for
-```
-## Relationship Details / リレーション詳細
-
-| Relation / 関連 | Type / 種別 | 説明 (日本語) |
-|---|---|---|   
-| CHAPTERS → QUESTIONS | 1 : N (One-to-Many) | 各章は0個以上の問題を持つ |
-| USERS → USER_PROGRESS | 1 : N (One-to-Many) | 各ユーザーは0以上の章の進捗を持つ |
-| CHAPTERS → USER_PROGRESS | 1 : N (One-to-Many) | 章は0個以上の章の進捗を持つ |
-| USERS → USER_ANSWERS | 1 : N (One-to-Many) | ユーザーはは0個以上の解答を持つ |
-| QUESTIONS → USER_ANSWERS | 1 : N (One-to-Many) | 問題は0個以上のUSER_ANSWERを持つ |
-
-## Constraints / 制約
-
-| Table / テーブル | Column / カラム | 制約 (日本語) |
-|---|---|---|
-
-
-## Notes / 補足
-
-- `user_progress` には `UNIQUE(user_id, chapter_id)` 制約があります。
-- `user_answers` には `UNIQUE(user_id, chapter_id, question_id)` 制約があります。
-- `questions.chapter_id` は `chapters.id` を参照します。
-- `user_progress.user_id` は `users.id`、`user_progress.chapter_id` は `chapters.id` を参照します。
-- `user_answers.user_id` は `users.id`、`user_answers.chapter_id` は `chapters.id`、`user_answers.question_id` は `questions.id` を参照します。
-- 外部キーはいずれも `ON DELETE CASCADE` です。

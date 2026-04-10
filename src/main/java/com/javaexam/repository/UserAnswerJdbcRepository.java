@@ -40,21 +40,21 @@ public class UserAnswerJdbcRepository {
     }
 
     private UserAnswer mapUserAnswerWithJoin(ResultSet rs) throws SQLException {
-        // Map User
+        // User のマッピング
         User user = new User();
         user.setId(rs.getString("user_id"));
         user.setUsername(rs.getString("username"));
         user.setDisplayName(rs.getString("display_name"));
         user.setRole(rs.getString("role"));
         
-        // Map Chapter
+        // Chapter のマッピング
         Chapter chapter = new Chapter();
         chapter.setId(rs.getString("chapter_id"));
         chapter.setChapterCode(rs.getString("chapter_code"));
         chapter.setTitle(rs.getString("chapter_title"));
         chapter.setSortOrder(rs.getInt("chapter_sort_order"));
         
-        // Map Question
+        // Question のマッピング
         Question question = new Question();
         question.setId(rs.getString("question_id"));
         question.setChapter(chapter);
@@ -64,7 +64,7 @@ public class UserAnswerJdbcRepository {
         question.setOptions(readOptions(optionsJson));
         question.setCorrectAnswer(rs.getString("correct_answer"));
         
-        // Map UserAnswer
+        // UserAnswer のマッピング
         UserAnswer userAnswer = new UserAnswer();
         userAnswer.setId(rs.getString("id"));
         userAnswer.setUser(user);
@@ -72,6 +72,10 @@ public class UserAnswerJdbcRepository {
         userAnswer.setQuestion(question);
         userAnswer.setSelectedAnswer(rs.getString("selected_answer"));
         userAnswer.setIsCorrect(rs.getBoolean("is_correct"));
+        
+        // ★ has_submitted を追加
+        userAnswer.setHasSubmitted(rs.getBoolean("has_submitted"));
+        
         Timestamp timestamp = rs.getTimestamp("answered_at");
         userAnswer.setAnsweredAt(timestamp != null ? timestamp.toLocalDateTime() : null);
         return userAnswer;
@@ -84,6 +88,7 @@ public class UserAnswerJdbcRepository {
             SELECT 
                 ua.id, ua.user_id, ua.chapter_id, ua.question_id, 
                 ua.selected_answer, ua.is_correct, ua.answered_at,
+                ua.has_submitted, -- ★ ここを追加
                 u.username, u.display_name, u.role,
                 c.chapter_code, c.title as chapter_title, c.sort_order as chapter_sort_order,
                 q.question_text, q.options AS options_json, q.correct_answer
@@ -97,27 +102,40 @@ public class UserAnswerJdbcRepository {
         return jdbcTemplate.query(sql, joinRowMapper, userId, chapterId);
     }
 
+    /**
+     * 回答を保存します。
+     * 同一のユーザー、章、設問の組み合わせが既に存在する場合は、内容を更新（UPSERT）します。
+     */
     public void save(UserAnswer userAnswer) {
+        String sql = """
+            INSERT INTO user_answers (
+                id, user_id, chapter_id, question_id, selected_answer, is_correct, has_submitted, answered_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, chapter_id, question_id) 
+            DO UPDATE SET 
+                selected_answer = EXCLUDED.selected_answer,
+                is_correct = EXCLUDED.is_correct,
+                has_submitted = EXCLUDED.has_submitted,
+                answered_at = EXCLUDED.answered_at
+            """;
+
         jdbcTemplate.update(
-                "INSERT INTO user_answers (id, user_id, chapter_id, question_id, selected_answer, is_correct, answered_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                sql,
                 userAnswer.getId(),
                 userAnswer.getUser().getId(),
                 userAnswer.getChapter().getId(),
                 userAnswer.getQuestion().getId(),
                 userAnswer.getSelectedAnswer(),
                 userAnswer.getIsCorrect(),
-                userAnswer.getAnsweredAt() != null ? Timestamp.valueOf(userAnswer.getAnsweredAt().truncatedTo(ChronoUnit.MILLIS)) : null);
+                userAnswer.getHasSubmitted(), // ★ 追加
+                userAnswer.getAnsweredAt() != null ? Timestamp.valueOf(userAnswer.getAnsweredAt().truncatedTo(ChronoUnit.MILLIS)) : null
+        );
     }
 
     public int deleteByUserId(String userId) {
         return jdbcTemplate.update("DELETE FROM user_answers WHERE user_id = ?", userId);
     }
 
-    /**
-     * Deletes all answers for a specific user and chapter.
-     *
-     * @return number of rows deleted
-     */
     public int deleteByUserIdAndChapterId(String userId, String chapterId) {
         return jdbcTemplate.update(
                 "DELETE FROM user_answers WHERE user_id = ? AND chapter_id = ?",
@@ -129,13 +147,6 @@ public class UserAnswerJdbcRepository {
         return jdbcTemplate.update("DELETE FROM user_answers");
     }
 
-    /**
-     * Find users with their progress/scores who answered questions on a specific date.
-     * Groups by user and chapter to get distinct user-chapter combinations.
-     * 
-     * @param date The date to search for (format: YYYY-MM-DD)
-     * @return List of user answer data with score information
-     */
     public List<Map<String, Object>> findUsersWithScoreByAnswerDate(String date) {
         String sql = """
             SELECT 

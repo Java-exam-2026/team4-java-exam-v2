@@ -1,206 +1,163 @@
 package com.javaexam.service;
 
-import com.javaexam.dto.*;
 import com.javaexam.entity.*;
-import com.javaexam.exception.AlreadySubmittedException;
-import com.javaexam.repository.ChapterJdbcRepository;
-import com.javaexam.repository.QuestionJdbcRepository;
-import com.javaexam.repository.UserAnswerJdbcRepository;
-import com.javaexam.repository.UserJdbcRepository;
-import com.javaexam.repository.UserProgressJdbcRepository;
+import com.javaexam.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class QuizService {
 
-  @Autowired
-  private QuestionJdbcRepository questionJdbcRepository;
+    @Autowired
+    private UserAnswerJdbcRepository userAnswerRepository;
 
-  @Autowired
-  private ChapterJdbcRepository chapterJdbcRepository;
+    @Autowired
+    private UserProgressJdbcRepository userProgressRepository;
 
-  @Autowired
-  private UserProgressJdbcRepository userProgressJdbcRepository;
+    @Autowired
+    private QuestionJdbcRepository questionRepository;
 
-  @Autowired
-  private UserJdbcRepository userJdbcRepository;
-
-  @Autowired
-  private UserAnswerJdbcRepository userAnswerJdbcRepository;
-
-  @Transactional(readOnly = true)
-  public Map<String, Object> getQuizForChapter(String chapterCode) {
-    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-        .orElseThrow(() -> new RuntimeException("Chapter not found"));
-
-    List<Question> questions = questionJdbcRepository.findRandomByChapterId(chapter.getId(), 20);
-
-    List<QuestionDto> questionDtos = questions.stream()
-        .map(this::convertToDto)
-        .collect(Collectors.toList());
-
-    Map<String, Object> response = new HashMap<>();
-    response.put("chapterTitle", chapter.getTitle());
-    response.put("questions", questionDtos);
-
-    return response;
-  }
-
-  @Transactional(readOnly = true)
-  public boolean hasUserSubmitted(String username, String chapterCode) {
-    User user = userJdbcRepository.findByUsername(username)
-        .orElseThrow(() -> new RuntimeException("User not found"));
-
-    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-        .orElseThrow(() -> new RuntimeException("Chapter not found"));
-
-    UserProgress progress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
-        .orElse(null);
-
-    return progress != null && Boolean.TRUE.equals(progress.getHasSubmitted());
-  }
-
-  @Transactional
-  public SubmissionResultDto submitQuiz(String username, String chapterCode, SubmissionRequestDto submission) {
-    User user = userJdbcRepository.findByUsername(username)
-        .orElseThrow(() -> new RuntimeException("User not found"));
-
-    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-        .orElseThrow(() -> new RuntimeException("Chapter not found"));
-
-    // Check if user has already submitted for this chapter
-    UserProgress existingProgress = userProgressJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId())
-        .orElse(null);
-    
-    if (existingProgress != null && Boolean.TRUE.equals(existingProgress.getHasSubmitted())) {
-      throw new AlreadySubmittedException("You have already submitted answers for this chapter");
+    /**
+     * 章に紐づくクイズ一覧を取得
+     * ※QuestionJdbcRepositoryにfindByChapterIdがない場合はfindAllからフィルタリング
+     */
+    public List<Question> getQuizForChapter(String chapterId) {
+        return questionRepository.findAll().stream()
+                .filter(q -> q.getChapter() != null && chapterId.equals(q.getChapter().getId()))
+                .collect(Collectors.toList());
     }
 
-    int totalQuestions = submission.getAnswers().size();
-    int correctCount = 0;
-    java.time.LocalDateTime answeredAt = java.time.LocalDateTime.now();
+    /**
+     * 保存済みの回答を取得（再開用）
+     */
+    public List<UserAnswer> getSavedAnswers(String userId, String chapterId) {
+        return userAnswerRepository.findByUserAndChapter(userId, chapterId);
+    }
 
-    for (AnswerSubmissionDto answerDto : submission.getAnswers()) {
-      Question question = questionJdbcRepository.findById(answerDto.getQuestionId().toString())
-          .orElse(null);
+    /**
+     * 一時保存
+     * 回答を保存し、進捗を IN_PROGRESS にする
+     */
+    @Transactional
+    public void saveTemporary(String userId, String chapterId, List<AnswerRequest> answerRequests) {
+        checkIfAlreadyCompleted(userId, chapterId);
 
-      if (question != null) {
-        boolean isCorrect = checkAnswer(question, answerDto.getSelectedAnswer());
-        if (isCorrect) {
-          correctCount++;
+        for (AnswerRequest req : answerRequests) {
+            UserAnswer ua = mapToEntity(userId, chapterId, req);
+            // エラー修正: 命名規則を Java の標準（setHasSubmitted）に合わせる
+            ua.setHasSubmitted(false); 
+            userAnswerRepository.save(ua);
+        }
+
+        updateUserProgress(userId, chapterId, UserProgress.ProgressStatus.IN_PROGRESS, null, false);
+    }
+
+    /**
+     * 正式提出
+     * 採点を行い、進捗を COMPLETED にする
+     */
+    @Transactional
+    public void submitQuiz(String userId, String chapterId, List<AnswerRequest> answerRequests) {
+        checkIfAlreadyCompleted(userId, chapterId);
+
+        int correctCount = 0;
+        for (AnswerRequest req : answerRequests) {
+            UserAnswer ua = mapToEntity(userId, chapterId, req);
+            
+            // 正誤判定
+            boolean isCorrect = checkAnswer(req.getQuestionId(), req.getSelectedAnswer());
+            ua.setIsCorrect(isCorrect);
+            ua.setHasSubmitted(true); // 提出済みに設定
+            
+            if (isCorrect) correctCount++;
+            userAnswerRepository.save(ua);
+        }
+
+        double score = (answerRequests.isEmpty()) ? 0 : ((double) correctCount / answerRequests.size()) * 100;
+        boolean isPassed = score >= 80;
+
+        updateUserProgress(userId, chapterId, UserProgress.ProgressStatus.COMPLETED, (int)score, isPassed);
+    }
+
+    /**
+     * 提出済みかどうかを確認
+     */
+    public boolean hasUserSubmitted(String userId, String chapterId) {
+        return userProgressRepository.findByUserAndChapter(userId, chapterId)
+                .map(p -> p.getStatus() == UserProgress.ProgressStatus.COMPLETED)
+                .orElse(false);
+    }
+
+    /**
+     * 回答詳細の取得
+     */
+    public List<UserAnswer> getUserAnswerDetails(String userId, String chapterId) {
+        return userAnswerRepository.findByUserAndChapter(userId, chapterId);
+    }
+
+    // --- Private Helper Methods ---
+
+    private void checkIfAlreadyCompleted(String userId, String chapterId) {
+        userProgressRepository.findByUserAndChapter(userId, chapterId).ifPresent(p -> {
+            if (p.getStatus() == UserProgress.ProgressStatus.COMPLETED) {
+                throw new IllegalStateException("このチャプターは既に提出済みのため、変更できません。");
+            }
+        });
+    }
+
+    private boolean checkAnswer(String questionId, String selectedAnswer) {
+        return questionRepository.findById(questionId)
+                .map(q -> q.getCorrectAnswer() != null && q.getCorrectAnswer().equals(selectedAnswer))
+                .orElse(false);
+    }
+
+    private UserAnswer mapToEntity(String userId, String chapterId, AnswerRequest req) {
+        UserAnswer ua = new UserAnswer();
+        ua.setId(req.getId() != null ? req.getId() : UUID.randomUUID().toString());
+        
+        User user = new User(); user.setId(userId);
+        ua.setUser(user);
+        
+        Chapter chapter = new Chapter(); chapter.setId(chapterId);
+        ua.setChapter(chapter);
+        
+        Question question = new Question(); question.setId(req.getQuestionId());
+        ua.setQuestion(question);
+        
+        ua.setSelectedAnswer(req.getSelectedAnswer());
+        ua.setAnsweredAt(LocalDateTime.now());
+        return ua;
+    }
+
+    private void updateUserProgress(String userId, String chapterId, UserProgress.ProgressStatus status, Integer score, boolean isPassed) {
+        UserProgress progress = userProgressRepository.findByUserAndChapter(userId, chapterId)
+                .orElseGet(() -> {
+                    UserProgress newProgress = new UserProgress();
+                    newProgress.setId(UUID.randomUUID().toString());
+                    User u = new User(); u.setId(userId);
+                    Chapter c = new Chapter(); c.setId(chapterId);
+                    newProgress.setUser(u);
+                    newProgress.setChapter(c);
+                    return newProgress;
+                });
+        
+        progress.setStatus(status);
+        if (score != null) progress.setScore(score);
+        progress.setPassed(isPassed);
+        progress.setUpdatedAt(LocalDateTime.now());
+        progress.setLastAttemptedAt(LocalDateTime.now());
+        
+        // COMPLETED の場合は Entity の hasSubmitted フラグも同期させる
+        if (status == UserProgress.ProgressStatus.COMPLETED) {
+            progress.setHasSubmitted(true);
         }
         
-        // Save individual answer
-        UserAnswer userAnswer = new UserAnswer();
-        userAnswer.setId(UUID.randomUUID().toString());
-        userAnswer.setUser(user);
-        userAnswer.setChapter(chapter);
-        userAnswer.setQuestion(question);
-        userAnswer.setSelectedAnswer(answerDto.getSelectedAnswer());
-        userAnswer.setIsCorrect(isCorrect);
-        userAnswer.setAnsweredAt(answeredAt);
-        userAnswerJdbcRepository.save(userAnswer);
-      }
+        userProgressRepository.save(progress);
     }
-
-    int score = totalQuestions > 0 ? (int) (((double) correctCount / totalQuestions) * 100) : 0;
-    boolean passed = score >= 80; // Assuming 80% pass rate
-
-    // Update progress
-    UserProgress progress = existingProgress != null ? existingProgress : new UserProgress();
-
-    if (progress.getId() == null) {
-      progress.setId(UUID.randomUUID().toString());
-      progress.setUser(user);
-      progress.setChapter(chapter);
-      progress.setPassed(false);
-      progress.setScore(0);
-    }
-
-    progress.setScore(score);
-    progress.setPassed(passed);
-    progress.setHasSubmitted(true);
-    progress.setLastAttemptedAt(java.time.LocalDateTime.now());
-
-    try {
-      userProgressJdbcRepository.save(progress);
-    } catch (DataIntegrityViolationException e) {
-      // Race condition: Another request already submitted for this user/chapter
-      // The UNIQUE(user_id, chapter_id) constraint prevents duplicate submissions
-      String message = e.getMessage();
-      if (message != null && (message.contains("user_id") || message.contains("chapter_id") || message.contains("UNIQUE"))) {
-        throw new AlreadySubmittedException("You have already submitted answers for this chapter");
-      }
-      // If it's a different constraint violation, rethrow the original exception
-      throw e;
-    }
-
-    return new SubmissionResultDto(chapterCode, score, passed, correctCount, totalQuestions);
-  }
-
-  private boolean checkAnswer(Question question, String userAnswer) {
-    if (userAnswer == null)
-      return false;
-
-    String correct = question.getCorrectAnswer();
-
-    if (question.getQuestionType() == QuestionType.MULTIPLE_CHOICE) {
-      // Sort both and compare
-      // Assuming comma separated
-      List<String> userParts = Arrays.asList(userAnswer.split(","));
-      List<String> correctParts = Arrays.asList(correct.split(","));
-      Collections.sort(userParts);
-      Collections.sort(correctParts);
-      return userParts.equals(correctParts);
-    } else if (question.getQuestionType() == QuestionType.FILL_IN_THE_BLANK) {
-      return correct.trim().equalsIgnoreCase(userAnswer.trim());
-    } else {
-      // Single choice
-      return correct.equals(userAnswer);
-    }
-  }
-
-  private QuestionDto convertToDto(Question question) {
-    return new QuestionDto(
-        UUID.fromString(question.getId()),
-        question.getChapter().getChapterCode(),
-        question.getQuestionText(),
-        question.getQuestionType(),
-        question.getOptions());
-  }
-
-  @Transactional(readOnly = true)
-  public List<UserAnswerDetailDto> getUserAnswerDetails(String username, String chapterCode) {
-    User user = userJdbcRepository.findByUsername(username)
-        .orElseThrow(() -> new RuntimeException("User not found"));
-
-    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-        .orElseThrow(() -> new RuntimeException("Chapter not found"));
-
-    List<UserAnswer> userAnswers = userAnswerJdbcRepository.findByUserAndChapter(user.getId(), chapter.getId());
-    return userAnswers.stream()
-        .map(answer -> new UserAnswerDetailDto(
-            answer.getQuestion().getId(),
-            answer.getQuestion().getQuestionText(),
-            answer.getQuestion().getOptions(),
-            answer.getSelectedAnswer(),
-            answer.getQuestion().getCorrectAnswer(),
-            answer.getIsCorrect(),
-            answer.getAnsweredAt()
-        ))
-        .collect(Collectors.toList());
-  }
-
-  @Transactional(readOnly = true)
-  public String getChapterTitle(String chapterCode) {
-    Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-        .orElseThrow(() -> new RuntimeException("Chapter not found"));
-    return chapter.getTitle();
-  }
 }
