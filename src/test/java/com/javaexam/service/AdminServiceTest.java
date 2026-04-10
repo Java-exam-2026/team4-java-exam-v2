@@ -41,7 +41,7 @@ class AdminServiceTest {
 
     @Test
     void shouldCalculateStatsCorrectlyWithTwoPassesAndOneFail() {
-        // Repositoryを直すのが面倒なときは、直接SQLで消すのが早いです！
+        // テスト間の独立性を保つため、既存データをクリーンアップする
         jdbcTemplate.execute("DELETE FROM user_progress");
         jdbcTemplate.execute("DELETE FROM users");
         jdbcTemplate.execute("DELETE FROM chapters");

@@ -68,7 +68,8 @@ public class UserProgressJdbcRepository {
 
     /**
      * 全ユーザーの学習進捗データを、ユーザー情報およびチャプター情報を含めて一括取得します。
-     * * @return ユーザー情報とチャプター情報がセットされた UserProgress エンティティのリスト
+     * 
+     * @return ユーザー情報とチャプター情報がセットされた UserProgress エンティティのリスト
      */
     public List<UserProgress> findAll() {
         // 【修正ポイント】具体的な実装の詳細（N+1問題の回避など）はここに書く
@@ -183,10 +184,13 @@ public class UserProgressJdbcRepository {
      * @return チャプタータイトルと件数のマップリスト
      */
     public List<Map<String, Object>> countAttemptsByChapter() {
+        // 文字列を「"」と「+」で繋いで、一つの文章にします
         String sql = "SELECT c.title, COUNT(up.id) as attempt_count " +
                 "FROM user_progress up " +
                 "JOIN chapters c ON up.chapter_id = c.id " +
-                "GROUP BY c.title";
+                "GROUP BY c.title " + // ← ここに半角スペースを入れて繋ぐのがコツです！
+                "ORDER BY attempt_count DESC"; // ← 最後に足します
+
         return jdbcTemplate.queryForList(sql);
     }
 }

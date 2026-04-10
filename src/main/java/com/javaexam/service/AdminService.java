@@ -357,29 +357,24 @@ public class AdminService {
     /**
      * チャプターごとの挑戦回数を集計し、挑戦者が多い順に並べて返します。
      * <p>
-     * DB側で集計済みのデータを取得し、Java側ではランキングのためのソートのみを行います。
+     * SQL側でソート（ORDER BY）済みのデータを取得するため、
+     * Java側では順序を維持したままMapへ変換するのみとしています。
      * </p>
      *
      * @return 挑戦回数が多い順に並んだ、チャプター名と回数のマップ
      */
     @Transactional(readOnly = true)
     public Map<String, Integer> getChapterStats() {
-        // 1. DBから集計済みのリスト [{title: "Java基礎", attempt_count: 10}, ...] を取ってくる
+        // 1. DBから「多い順」に並んだ状態でリストを取ってくる
         List<Map<String, Object>> rawStats = userProgressJdbcRepository.countAttemptsByChapter();
 
-        // 2. 取り出したデータを Map<String, Integer> の形に変換しながら、多い順に並べる
+        // 2. SQLの並び順（LinkedHashMap）を壊さずにMapに変換する
         return rawStats.stream()
                 .collect(Collectors.toMap(
                         row -> (String) row.get("title"),
                         row -> ((Number) row.get("attempt_count")).intValue(),
                         (oldValue, newValue) -> oldValue,
-                        java.util.LinkedHashMap::new
-                )).entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (oldValue, newValue) -> oldValue,
-                        java.util.LinkedHashMap::new));
+                        java.util.LinkedHashMap::new // ←ここが順番を守るポイント！
+                ));
     }
 }

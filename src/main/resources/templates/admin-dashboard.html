@@ -76,11 +76,16 @@
             // ThymeleafからJavaのMapデータを取得
             const stats = /*[[${passFailStats}]]*/ { pass: 0, fail: 0 };
 
+            // ★追加：合格率を計算する
+            const total = stats.pass + stats.fail;
+            const passRate = total > 0 ? Math.round((stats.pass / total) * 100) : 0;
+
             const ctx = document.getElementById('passFailChart').getContext('2d');
+            // グラフの描画設定
             new Chart(ctx, {
                 type: 'doughnut', // ドーナツ型のグラフ
                 data: {
-                    labels: ['合格', '不合格'],
+                    labels: ['合格 (' + passRate + '%)', '不合格'],
                     datasets: [{
                         data: [stats.pass, stats.fail],
                         backgroundColor: ['#28a745', '#dc3545'], // 緑と赤
@@ -89,11 +94,18 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // ← これを追加（サイズを維持する）
-                    animation: false,           // ← いったん「すぅっ」を止めるためにオフ！
+                    maintainAspectRatio: false,
+                    animation: false,
                     plugins: {
                         legend: {
                             position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: '全体合格率: ' + passRate + '%',
+                            font: {
+                                size: 16
+                            }
                         }
                     }
                 }
