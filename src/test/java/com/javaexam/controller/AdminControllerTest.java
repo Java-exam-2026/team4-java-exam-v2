@@ -29,6 +29,9 @@ import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
 import com.opencsv.exceptions.CsvValidationException;
 
+/**
+ * 管理者画面の CSV インポート処理に関するコントローラテスト。
+ */
 @WebMvcTest(AdminController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AdminControllerTest {
@@ -48,6 +51,11 @@ class AdminControllerTest {
     @MockBean
     private ObjectMapper objectMapper;
 
+    /**
+     * 問題 CSV の読み取り成功時に、問題一覧画面へリダイレクトすること、成功のメッセージがでることをを確認する。
+     *
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importProblemsCsv_shouldRedirectToQuestionsPage_whenSuccess() throws Exception {
@@ -61,6 +69,11 @@ class AdminControllerTest {
         verify(adminService).importProblemsFromCsv(any(MultipartFile.class));
     }
 
+    /**
+     * 問題 CSV 読み取り時に不正な引数が渡された場合、正しいエラーメッセージが出ることを確認する。
+     *
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importProblemsCsv_shouldSetErrorMessage_whenIllegalArgumentException() throws Exception {
@@ -76,6 +89,11 @@ class AdminControllerTest {
                 .andExpect(flash().attribute("error", "CSVの形式が不正です"));
     }
 
+    /**
+     * 問題 CSV の形式が不正な場合、正しいエラーメッセージが出ることを確認する。
+     * CsvValidationException のテスト
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importProblemsCsv_shouldSetErrorMessage_whenCsvValidationException() throws Exception {
@@ -91,6 +109,11 @@ class AdminControllerTest {
                 .andExpect(flash().attribute("error", "CSVの形式が不正です"));
     }
 
+    /**
+     * 問題 CSV の読込時に入出力エラーが発生した場合、正しいエラーメッセージが出ることを確認する。
+     * IOExceptionのテスト
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importProblemsCsv_shouldSetErrorMessage_whenIOException() throws Exception {
@@ -106,6 +129,11 @@ class AdminControllerTest {
                 .andExpect(flash().attribute("error", "ファイル読み込みに失敗しました"));
     }
 
+    /**
+     * 問題 CSV 読取時に想定外の例外が発生した場合、汎用エラーメッセージを設定することを確認する。
+     * Exceptionのテスト
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importProblemsCsv_shouldSetErrorMessage_whenUnexpectedException() throws Exception {
@@ -121,6 +149,11 @@ class AdminControllerTest {
                 .andExpect(flash().attribute("error", "CSV取込中にエラーが発生しました"));
     }
 
+    /**
+     * ユーザー CSV の取込成功時に、ホーム画面へリダイレクトすることを確認する。
+     *
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importUsersCsv_shouldRedirectToHomePage_whenSuccess() throws Exception {
@@ -134,6 +167,11 @@ class AdminControllerTest {
         verify(adminService).importUsersFromCsv(any(MultipartFile.class));
     }
 
+    /**
+     * ユーザー CSV 読み取り時に不正な引数が渡された場合、正しいエラーメッセージが出ることを確認する。
+     *
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importUsersCsv_shouldSetErrorMessage_whenIllegalArgumentException() throws Exception {
@@ -149,6 +187,11 @@ class AdminControllerTest {
                 .andExpect(flash().attribute("error", "CSVの形式が不正です"));
     }
 
+    /**
+     * ユーザー CSV の形式が不正な場合、正しいエラーメッセージが出ることを確認する。
+     *
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importUsersCsv_shouldSetErrorMessage_whenCsvValidationException() throws Exception {
@@ -164,6 +207,10 @@ class AdminControllerTest {
                 .andExpect(flash().attribute("error", "CSVの形式が不正です"));
     }
 
+    /**
+     * ユーザー CSV の読込時に入出力エラーが発生した場合、正しいエラーメッセージが出ることを確認する。
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importUsersCsv_shouldSetErrorMessage_whenIOException() throws Exception {
@@ -179,6 +226,11 @@ class AdminControllerTest {
                 .andExpect(flash().attribute("error", "ファイル読み込みに失敗しました"));
     }
 
+    /**
+     * ユーザー CSV 取込中に想定外の例外が発生した場合、正しいエラーメッセージが出ることを確認する。
+     *
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importUsersCsv_shouldSetErrorMessage_whenUnexpectedException() throws Exception {
@@ -194,6 +246,11 @@ class AdminControllerTest {
                 .andExpect(flash().attribute("error", "CSV取込中にエラーが発生しました"));
     }
 
+    /**
+     * ユーザー CSV が空ファイルの場合、サービスを呼び出さずにホームへ戻ることを確認する。
+     *
+     * @throws Exception MockMvc 実行時の例外
+     */
     @Test
     @WithMockUser(roles = "ADMIN")
     void importUsersCsv_shouldNotCallService_whenFileIsEmpty() throws Exception {

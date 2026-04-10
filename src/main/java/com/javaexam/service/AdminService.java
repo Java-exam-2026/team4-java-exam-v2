@@ -338,7 +338,7 @@ public class AdminService {
      * @throws CsvValidationException
      */
     @Transactional
-    public void importProblemsFromCsv(MultipartFile file) throws IOException, CsvValidationException {
+    public void importProblemsFromCsv(MultipartssFile file) throws IOException, CsvValidationException {
         CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
 
         String[] row;
