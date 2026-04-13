@@ -338,15 +338,15 @@ public class AdminService {
      * @throws CsvValidationException
      */
     @Transactional
-    public void importProblemsFromCsv(MultipartssFile file) throws IOException, CsvValidationException {
+    public void importQuestionsFromCsv(MultipartFile file) throws IOException, CsvValidationException {
         CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
 
         String[] row;
         while ((row = reader.readNext()) != null) {
-            if (row.length != 5){
+            if (row.length != 5) {
                 throw new IllegalArgumentException("データの型が不正です");
             }
-            
+
             String chapterCode = row[0];
             String questionText = row[1];
             String questionType = row[2];
@@ -374,13 +374,13 @@ public class AdminService {
     /**
      * 
      * @param file
-     * @throw IllegalArgument 
-     * @throw Exception 
+     * @throw IllegalArgument
+     * @throw Exception
      */
 
     @Transactional
     public void importUsersFromCsv(MultipartFile file) throws IOException, CsvValidationException {
-        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 
             String[] row;
             while ((row = reader.readNext()) != null) {
@@ -406,8 +406,6 @@ public class AdminService {
                     }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
     }

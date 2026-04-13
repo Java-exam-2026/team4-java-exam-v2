@@ -65,7 +65,7 @@ public class UserJdbcRepository {
     }
 
     /*
-     * UserをDBにセーブするメソッド3
+     * UserをDBにセーブするメソッド
      * @param user
      * @return 行の割り当て番号
      */

@@ -66,7 +66,7 @@ class AdminControllerTest {
                 .andExpect(redirectedUrl("/admin/questions"))
                 .andExpect(flash().attribute("message", "CSV取り込みが完了しました"));
 
-        verify(adminService).importProblemsFromCsv(any(MultipartFile.class));
+        verify(adminService).importQuestionsFromCsv(any(MultipartFile.class));
     }
 
     /**
@@ -81,7 +81,7 @@ class AdminControllerTest {
 
         doThrow(new IllegalArgumentException("CSVの形式が不正です"))
                 .when(adminService)
-                .importProblemsFromCsv(any(MultipartFile.class));
+                .importQuestionsFromCsv(any(MultipartFile.class));
 
         mockMvc.perform(multipart("/admin/import/csv/problems").file(file).with(csrf()))
                 .andExpect(status().is3xxRedirection())
@@ -101,7 +101,7 @@ class AdminControllerTest {
 
         doThrow(new CsvValidationException("csv error"))
                 .when(adminService)
-                .importProblemsFromCsv(any(MultipartFile.class));
+                .importQuestionsFromCsv(any(MultipartFile.class));
 
         mockMvc.perform(multipart("/admin/import/csv/problems").file(file).with(csrf()))
                 .andExpect(status().is3xxRedirection())
@@ -121,7 +121,7 @@ class AdminControllerTest {
 
         doThrow(new IOException("read error"))
                 .when(adminService)
-                .importProblemsFromCsv(any(MultipartFile.class));
+                .importQuestionsFromCsv(any(MultipartFile.class));
 
         mockMvc.perform(multipart("/admin/import/csv/problems").file(file).with(csrf()))
                 .andExpect(status().is3xxRedirection())
@@ -141,7 +141,7 @@ class AdminControllerTest {
 
         doThrow(new RuntimeException("unexpected error"))
                 .when(adminService)
-                .importProblemsFromCsv(any(MultipartFile.class));
+                .importQuestionsFromCsv(any(MultipartFile.class));
 
         mockMvc.perform(multipart("/admin/import/csv/problems").file(file).with(csrf()))
                 .andExpect(status().is3xxRedirection())
