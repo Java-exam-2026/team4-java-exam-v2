@@ -1,0 +1,9 @@
+com.javaexam
+com.javaexam.config
+com.javaexam.controller
+com.javaexam.dto
+com.javaexam.entity
+com.javaexam.exception
+com.javaexam.repository
+com.javaexam.security
+com.javaexam.service

@@ -112,7 +112,23 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version> <!-- 最新バージョンを使用してください -->
+                <configuration>
+                    <!-- ★ここで指定されたフォルダに出力されます★ -->
+                    <outputDirectory>${project.basedir}/docs/javadoc</outputDirectory>
+                    <charset>UTF-8</charset>
+                    <docencoding>UTF-8</docencoding>
+                    <encoding>UTF-8</encoding>
+                    <locale>ja_JP</locale>
+                    <failOnError>false</failOnError>
+                    <doclint>none</doclint>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
 </project>
+
