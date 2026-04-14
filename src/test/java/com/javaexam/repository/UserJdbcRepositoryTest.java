@@ -1,46 +1,52 @@
 package com.javaexam.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.verify;
-
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.javaexam.entity.User;
 
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
-
-
-@ExtendWith(MockitoExtension.class)
-@SpringBootTest
+@JdbcTest
 
 
 public class UserJdbcRepositoryTest {
-    private final UserJdbcRepository userJdbcRepository;
+    @Autowired
+    private UserJdbcRepository userJdbcRepository;
 
-    public UserJdbcRepositoryTest(UserJdbcRepository userJdbcRepository) {
-        this.userJdbcRepository = userJdbcRepository;
+    @Autowired
+    private JdbcTemplate JdbcTemplate;
+
+    
+
+    @BeforeEach
+    void setUp() {
+        JdbcTemplate.execute("DELETE FROM users");
+        JdbcTemplate.execute("ALTER TABLE users ALTER COLUMN id RESTART WITH 1");
+        JdbcTemplate.execute("ALTER TABLE user_answers ALTER COLUMN id RESTART WITH 1");
+        JdbcTemplate.execute("ALTER TABLE user_progress ALTER COLUMN id RESTART WITH 1");
     }
 
+    /**
+     * UserをDBにセーブするメソッドのテストメソッド。
+     * 正しくセーブされることを確認する。
+     */
     @Test
     void testSave() {
         User user = new User();
         user.setUsername("user1");
         user.setDisplayName("ユーザー1");
-        user.setPassword("encoded-password");
+        user.setPassword("hashed-password");
         user.setRole("ROLE_USER");
 
         userJdbcRepository.save(user);
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userJdbcRepository).save(captor.capture());
 
-        User savedUser = captor.getValue();
+        User savedUser = userJdbcRepository.findByUsername("user1").orElseThrow();
         assertEquals("user1", savedUser.getUsername());
         assertEquals("ユーザー1", savedUser.getDisplayName());
-        assertEquals("encoded-password", savedUser.getPassword());
+        assertEquals("hashed-password", savedUser.getPassword());
         assertEquals("ROLE_USER", savedUser.getRole());
     }
 }
