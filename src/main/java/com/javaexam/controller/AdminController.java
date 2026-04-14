@@ -34,7 +34,6 @@ import com.javaexam.entity.QuestionType;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
-import com.opencsv.exceptions.CsvValidationException;
 
 import jakarta.validation.Valid;
 
@@ -454,19 +453,18 @@ public class AdminController {
 
     /**
      * 問題をCSVから取り込むエンドポイントメソッド
+     * 
      * @param file               受け取ったCSVファイル
      * @param redirectAttributes リダイレクト属性
      * @return 問題一覧画面へリダイレクトするビュー名
      */
-    @PostMapping("/import/csv/problems")
+    @PostMapping("/import/csv/questions")
     @Transactional
-    public String importProblemsCsv(@RequestParam("file") MultipartFile file,
+    public String importCsvForQuestions(@RequestParam("file") MultipartFile file,
             RedirectAttributes redirectAttributes) {
         try {
-            adminService.importProblemsFromCsv(file);
+            adminService.importQuestionsFromCsv(file);
             redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
-        } catch (CsvValidationException e) {
-            redirectAttributes.addFlashAttribute("error", "CSVの形式が不正です");
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
         } catch (Exception e) {
@@ -474,29 +472,26 @@ public class AdminController {
         }
         return "redirect:/admin/questions";
     }
-    
-    
 
     /**
      * ユーザーデータをCSVから取り込むエンドポイントメソッド
+     * 
      * @param file               受け取ったCSVファイル
      * @param redirectAttributes リダイレクト属性
      * @return 問題一覧画面へリダイレクトするビュー名
      */
     @PostMapping("/import/csv/users")
-    public String importCsvForUsers(@RequestParam("file") MultipartFile file,RedirectAttributes redirectAttributes) {
+    public String importCsvForUsers(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
         try {
             if (!file.isEmpty()) {
-            adminService.importUsersFromCsv(file);
-            redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+                adminService.importUsersFromCsv(file);
+                redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
             }
-        } catch (CsvValidationException e) {
-            redirectAttributes.addFlashAttribute("error", "CSVの形式が不正です");
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
         }
-        return "redirect:/dashboard";  //吉川さんのadmindashboardにリダイレクト先を変える
+        return "redirect:/dashboard"; // 吉川さんのadmindashboardにリダイレクト先を変える
     }
 }

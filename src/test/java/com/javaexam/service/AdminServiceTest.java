@@ -5,16 +5,15 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -53,8 +52,8 @@ public class AdminServiceTest {
      * 問題CSVの取り込み成功時に正しい値であることをテストする。
      */
     @Test
-    void testImportQuesitonsFromCsv_whenSuccess() throws Exception {
-        MockMultipartFile file = createQuesitonsCsvFile();
+    void testImportQuestionsFromCsv_whenSuccess() throws Exception {
+        MockMultipartFile file = createQuestionsCsvFile();
 
         Chapter chapter = new Chapter();
         chapter.setId("test-chapter-id");
@@ -63,7 +62,7 @@ public class AdminServiceTest {
 
         when(chapterJdbcRepository.findByChapterCode("chap3"))
                 .thenReturn(Optional.of(chapter));
-        when(questionJdbcRepository.existsByChapterIdAndQuestionText("test-chaptSer-id", "問題文"))
+        when(questionJdbcRepository.existsByChapterIdAndQuestionText("test-chapter-id", "問題文"))
                 .thenReturn(false);
 
         adminService.importQuestionsFromCsv(file);
@@ -86,7 +85,7 @@ public class AdminServiceTest {
      * @throws Exception
      */
     @Test
-    void testImportQuesitonsFromCsv_whenIllegalArgumentsException() throws Exception {
+    void testImportQuestionsFromCsv_whenIllegalArgumentsException() throws Exception {
         MockMultipartFile file = createQuestionsCsvFile_whenLineIsShort();
         assertThrows(IllegalArgumentException.class, () -> {
             adminService.importQuestionsFromCsv(file);
@@ -100,7 +99,7 @@ public class AdminServiceTest {
      */
     @Test
     void testImportQuestionsFromCsv_whenChapterNotFound() throws Exception {
-        MockMultipartFile file = createQuesitonsCsvFile_whenChapterNotFound();
+        MockMultipartFile file = createQuestionsCsvFile_whenChapterNotFound();
         when(chapterJdbcRepository.findByChapterCode("NOT_EXIST_CHAPTER"))
                 .thenReturn(Optional.empty());
 
@@ -174,8 +173,7 @@ public class AdminServiceTest {
                 .thenReturn(true);
 
         boolean result = adminService.isDuplicateQuestion("chapter-1", "問題文");
-
-        assertEquals(true, result);
+        assertTrue(result);
     }
 
     /**
@@ -191,10 +189,10 @@ public class AdminServiceTest {
 
         boolean result = adminService.isDuplicateUser("user1");
 
-        assertEquals(true, result);
+         assertTrue(result);
     }
 
-    private MockMultipartFile createQuesitonsCsvFile() {
+    private MockMultipartFile createQuestionsCsvFile() {
         String csv = "chap3,問題文,SINGLE_CHOICE,\"{\"\"A\"\":\"\"aaa\"\",\"\"B\"\":\"\"bbb\"\",\"\"C\"\":\"\"ccc\"\",\"\"D\"\":\"\"ddd\"\"}\",A";
         return new MockMultipartFile(
                 "file",
@@ -212,7 +210,7 @@ public class AdminServiceTest {
                 csv.getBytes(StandardCharsets.UTF_8));
     }
 
-    private MockMultipartFile createQuesitonsCsvFile_whenChapterNotFound() {
+    private MockMultipartFile createQuestionsCsvFile_whenChapterNotFound() {
         String csv = "NOT_EXIST_CHAPTER,問題文,SINGLE_CHOICE,\"{\"\"A\"\":\"\"aaa\"\",\"\"B\"\":\"\"bbb\"\",\"\"C\"\":\"\"ccc\"\",\"\"D\"\":\"\"ddd\"\"}\",A";
         return new MockMultipartFile(
                 "file",

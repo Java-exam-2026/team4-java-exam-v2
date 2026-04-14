@@ -332,10 +332,13 @@ public class AdminService {
     }
 
     /**
-     * 
-     * @param file
+     * 問題をCSVから受け取るメソッド
+     *
+     * @param file 問題情報を格納したCSVファイル(file)
      * @throws IOException
      * @throws CsvValidationException
+     * @throw IllegalArgument
+     * @throw Exception
      */
     @Transactional
     public void importQuestionsFromCsv(MultipartFile file) throws IOException, CsvValidationException {
@@ -358,7 +361,7 @@ public class AdminService {
 
             Map<String, String> options = ConvertOptionJsonToOptions(optionJson);
 
-            if (isDuplicateQuestion(chapter.getId(), questionText)) {
+            if (!isDuplicateQuestion(chapter.getId(), questionText)) {
                 Question question = new Question();
                 question.setChapter(chapter);
                 question.setQuestionText(questionText);
@@ -372,19 +375,22 @@ public class AdminService {
     }
 
     /**
-     * 
-     * @param file
+     * USERSをCSVから受け取るメソッド
+     * @param file ユーザー情報を格納したCSVファイル(file)
+     * @throws IOException
+     * @throws CsvValidationException
      * @throw IllegalArgument
      * @throw Exception
      */
 
     @Transactional
     public void importUsersFromCsv(MultipartFile file) throws IOException, CsvValidationException {
-        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)); 
+        
 
             String[] row;
             while ((row = reader.readNext()) != null) {
-                if (row.length != 4) {
+                if (row.length != 4 ) {
                     throw new IllegalArgumentException("データの型が不正です");
                 } else {
                     String username = row[0];
@@ -408,7 +414,6 @@ public class AdminService {
             }
         }
 
-    }
 
     /**
      * JSON文字列で受け取ったオプションをMapに変換するメソッド

@@ -4,30 +4,31 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.javaexam.entity.User;
 
 @JdbcTest
-
-
-public class UserJdbcRepositoryTest {
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(UserJdbcRepository.class)
+class UserJdbcRepositoryTest {
     @Autowired
     private UserJdbcRepository userJdbcRepository;
 
     @Autowired
-    private JdbcTemplate JdbcTemplate;
-
-    
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setUp() {
-        JdbcTemplate.execute("DELETE FROM users");
-        JdbcTemplate.execute("ALTER TABLE users ALTER COLUMN id RESTART WITH 1");
-        JdbcTemplate.execute("ALTER TABLE user_answers ALTER COLUMN id RESTART WITH 1");
-        JdbcTemplate.execute("ALTER TABLE user_progress ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("DELETE FROM user_answers");
+        jdbcTemplate.execute("DELETE FROM user_progress");
+        jdbcTemplate.execute("DELETE FROM users");
     }
+
+    
 
     /**
      * UserをDBにセーブするメソッドのテストメソッド。
