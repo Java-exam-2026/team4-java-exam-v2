@@ -48,9 +48,55 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-3 d-flex gap-2">
             <a href="/admin/questions/new" class="btn btn-primary">+ 新しい問題を作成</a>
+
+            <button type="button"
+                    class="btn btn-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#csvImportModal">
+                + CSVから問題をインポートする
+            </button>
         </div>
+
+    <div class="modal fade" id="csvImportModal" tabindex="-1" aria-labelledby="csvImportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/admin/import/csv}" method="post" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="csvImportModalLabel">CSVから問題をインポートする</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="csvFile" class="form-label">CSVファイルを選択</label>
+                            <input class="form-control"
+                                type="file"
+                                id="csvFile"
+                                name="file"
+                                accept=".csv"
+                                required>
+                        </div>
+
+                        <div class="small text-muted mb-3" id="selectedFileName">
+                            ファイルが選択されていません
+                        </div>
+
+                        <div class="alert alert-info mb-0" role="alert">
+                            CSVを選択して「完了」を押すとインポートが実行されます。
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                        <button type="submit" class="btn btn-primary" id="csvImportSubmit" disabled>完了</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+        
 
         <div th:if="${#lists.isEmpty(questions)}" class="alert alert-info">
             まだ問題がありません
@@ -90,7 +136,30 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const fileInput = document.getElementById("csvFile");
+            const fileNameText = document.getElementById("selectedFileName");
+            const submitButton = document.getElementById("csvImportSubmit");
+
+            if (!fileInput || !fileNameText || !submitButton) {
+                return;
+            }
+
+            fileInput.addEventListener("change", function () {
+                if (fileInput.files && fileInput.files.length > 0) {
+                    fileNameText.textContent = "選択中: " + fileInput.files[0].name;
+                    submitButton.disabled = false;
+                } else {
+                    fileNameText.textContent = "ファイルが選択されていません";
+                    submitButton.disabled = true;
+                }
+            });
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
 </body>
 
 </html>

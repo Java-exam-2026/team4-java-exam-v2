@@ -1,7 +1,30 @@
 package com.javaexam.controller;
 
-import com.javaexam.dto.AllProgressDto;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.dto.AdminQuestionDto;
+import com.javaexam.dto.AllProgressDto;
 import com.javaexam.dto.ChapterFormDto;
 import com.javaexam.dto.QuestionFormDto;
 import com.javaexam.dto.UserAnswerDetailDto;
@@ -11,24 +34,8 @@ import com.javaexam.entity.QuestionType;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin")
@@ -37,13 +44,16 @@ public class AdminController {
     private final AdminService adminService;
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final QuestionJdbcRepository questionJdbcRepository;
+    private final ObjectMapper objectMapper;
 
-    public AdminController(AdminService adminService, 
-                           ChapterJdbcRepository chapterJdbcRepository,
-                           QuestionJdbcRepository questionJdbcRepository) {
+    public AdminController(AdminService adminService,
+            ChapterJdbcRepository chapterJdbcRepository,
+            QuestionJdbcRepository questionJdbcRepository,
+            ObjectMapper objectMapper) {
         this.adminService = adminService;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/progress")
@@ -54,19 +64,19 @@ public class AdminController {
     }
 
     @GetMapping("/progress/detail/{userId}/{chapterId}")
-    public String viewUserAnswerDetail(@PathVariable String userId, 
-                                       @PathVariable String chapterId, 
-                                       Model model,
-                                       RedirectAttributes redirectAttributes) {
+    public String viewUserAnswerDetail(@PathVariable String userId,
+            @PathVariable String chapterId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
             List<UserAnswerDetailDto> answerDetails = adminService.getUserAnswerDetails(userId, chapterId);
             Chapter chapter = adminService.getChapterById(chapterId);
-            
+
             model.addAttribute("answerDetails", answerDetails);
             model.addAttribute("chapterTitle", chapter.getTitle());
             model.addAttribute("userId", userId);
             model.addAttribute("chapterId", chapterId);
-            
+
             return "admin-answer-detail";
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("error", "指定されたデータが見つかりませんでした");
@@ -87,7 +97,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "無効なユーザーIDです");
             return "redirect:/admin/progress";
         }
-        
+
         try {
             adminService.deleteUserProgress(userId);
             redirectAttributes.addFlashAttribute("message", "ユーザーの解答状況を削除しました");
@@ -99,8 +109,8 @@ public class AdminController {
 
     @PostMapping("/progress/delete/{userId}/{chapterId}")
     public String deleteUserChapterProgress(@PathVariable String userId,
-                                           @PathVariable String chapterId,
-                                           RedirectAttributes redirectAttributes) {
+            @PathVariable String chapterId,
+            RedirectAttributes redirectAttributes) {
         if (userId == null || userId.trim().isEmpty() || chapterId == null || chapterId.trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "無効なユーザーID/チャプターIDです");
             return "redirect:/admin/progress";
@@ -129,12 +139,12 @@ public class AdminController {
     @GetMapping("/progress/export/tsv")
     public ResponseEntity<byte[]> exportProgressAsTsv() {
         List<AllProgressDto> progressList = adminService.getAllUsersProgress();
-        
+
         // Create TSV content
         StringBuilder tsv = new StringBuilder();
         // Add header row
         tsv.append("ユーザー名\t表示名\tチャプターコード\tチャプタータイトル\tスコア\t合格\t最終受験日時\n");
-        
+
         // Add data rows
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         for (AllProgressDto progress : progressList) {
@@ -144,28 +154,30 @@ public class AdminController {
             tsv.append(escapeTsvValue(progress.getTitle())).append("\t");
             tsv.append(progress.getScore()).append("%\t");
             tsv.append(progress.getPassed() ? "合格" : "不合格").append("\t");
-            tsv.append(progress.getLastAttemptedAt() != null ? progress.getLastAttemptedAt().format(formatter) : "").append("\n");
+            tsv.append(progress.getLastAttemptedAt() != null ? progress.getLastAttemptedAt().format(formatter) : "")
+                    .append("\n");
         }
-        
+
         // Convert to bytes with UTF-8 encoding (with BOM for Excel compatibility)
-        byte[] bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        byte[] bom = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
         byte[] content = tsv.toString().getBytes(StandardCharsets.UTF_8);
         byte[] result = new byte[bom.length + content.length];
         System.arraycopy(bom, 0, result, 0, bom.length);
         System.arraycopy(content, 0, result, bom.length, content.length);
-        
+
         // Set headers for file download
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/tab-separated-values"));
         headers.setContentDispositionFormData("attachment", "answer-status.tsv");
-        
+
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(result);
     }
-    
+
     /**
-     * Escapes special characters in TSV values to prevent injection and formatting issues.
+     * Escapes special characters in TSV values to prevent injection and formatting
+     * issues.
      * Replaces tabs with spaces and removes newlines and carriage returns.
      */
     private String escapeTsvValue(String value) {
@@ -174,8 +186,8 @@ public class AdminController {
         }
         // Replace tabs with spaces and remove newlines/carriage returns
         return value.replace("\t", " ")
-                    .replace("\n", " ")
-                    .replace("\r", "");
+                .replace("\n", " ")
+                .replace("\r", "");
     }
 
     @GetMapping("/questions/new")
@@ -187,9 +199,9 @@ public class AdminController {
 
     @PostMapping("/questions/new")
     public String createQuestion(@Valid QuestionFormDto questionForm,
-                                  BindingResult bindingResult,
-                                  Model model,
-                                  RedirectAttributes redirectAttributes) {
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateFormAttributes(model, false);
             return "admin-question-form";
@@ -217,7 +229,7 @@ public class AdminController {
             questionForm.setChapterId(question.getChapter().getId());
             questionForm.setQuestionText(question.getQuestionText());
             questionForm.setQuestionType(question.getQuestionType());
-            
+
             // Safely extract options with null check
             Map<String, String> options = question.getOptions();
             if (options != null) {
@@ -226,7 +238,7 @@ public class AdminController {
                 questionForm.setOptionC(options.get("C"));
                 questionForm.setOptionD(options.get("D"));
             }
-            
+
             questionForm.setCorrectAnswer(question.getCorrectAnswer());
 
             populateFormAttributes(model, true);
@@ -243,10 +255,10 @@ public class AdminController {
 
     @PostMapping("/questions/edit/{id}")
     public String updateQuestion(@PathVariable String id,
-                                  @Valid QuestionFormDto questionForm,
-                                  BindingResult bindingResult,
-                                  Model model,
-                                  RedirectAttributes redirectAttributes) {
+            @Valid QuestionFormDto questionForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateFormAttributes(model, true);
             return "admin-question-form";
@@ -278,7 +290,7 @@ public class AdminController {
         }
         return "redirect:/admin/questions";
     }
-    
+
     /**
      * Populates model attributes needed for the question form.
      */
@@ -286,10 +298,10 @@ public class AdminController {
         List<Chapter> chapters = chapterJdbcRepository.findAllOrdered();
         model.addAttribute("chapters", chapters);
         // Only allow SINGLE_CHOICE questions
-        model.addAttribute("questionTypes", new QuestionType[]{QuestionType.SINGLE_CHOICE});
+        model.addAttribute("questionTypes", new QuestionType[] { QuestionType.SINGLE_CHOICE });
         model.addAttribute("isEdit", isEdit);
     }
-    
+
     /**
      * Builds a Question entity from form data.
      */
@@ -308,10 +320,10 @@ public class AdminController {
         question.setQuestionType(questionForm.getQuestionType());
         question.setOptions(options);
         question.setCorrectAnswer(questionForm.getCorrectAnswer());
-        
+
         return question;
     }
-    
+
     /**
      * Builds options map from form fields.
      */
@@ -350,9 +362,9 @@ public class AdminController {
 
     @PostMapping("/chapters/new")
     public String createChapter(@Valid ChapterFormDto chapterForm,
-                                 BindingResult bindingResult,
-                                 Model model,
-                                 RedirectAttributes redirectAttributes) {
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("isEdit", false);
             return "admin-chapter-form";
@@ -363,7 +375,7 @@ public class AdminController {
             chapter.setChapterCode(chapterForm.getChapterCode());
             chapter.setTitle(chapterForm.getTitle());
             chapter.setSortOrder(chapterForm.getSortOrder());
-            
+
             adminService.createChapter(chapter);
             redirectAttributes.addFlashAttribute("message", "チャプターを作成しました");
             return "redirect:/admin/chapters";
@@ -398,10 +410,10 @@ public class AdminController {
 
     @PostMapping("/chapters/edit/{id}")
     public String updateChapter(@PathVariable String id,
-                                 @Valid ChapterFormDto chapterForm,
-                                 BindingResult bindingResult,
-                                 Model model,
-                                 RedirectAttributes redirectAttributes) {
+            @Valid ChapterFormDto chapterForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("isEdit", true);
             return "admin-chapter-form";
@@ -413,7 +425,7 @@ public class AdminController {
             chapter.setChapterCode(chapterForm.getChapterCode());
             chapter.setTitle(chapterForm.getTitle());
             chapter.setSortOrder(chapterForm.getSortOrder());
-            
+
             adminService.updateChapter(chapter);
             redirectAttributes.addFlashAttribute("message", "チャプターを更新しました");
             return "redirect:/admin/chapters";
@@ -437,5 +449,49 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "チャプターの削除に失敗しました");
         }
         return "redirect:/admin/chapters";
+    }
+
+    /**
+     * 問題をCSVから取り込むエンドポイントメソッド
+     * 
+     * @param file               受け取ったCSVファイル
+     * @param redirectAttributes リダイレクト属性
+     * @return 問題一覧画面へリダイレクトするビュー名
+     */
+    @PostMapping("/import/csv/questions")
+    @Transactional
+    public String importCsvForQuestions(@RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
+        try {
+            adminService.importQuestionsFromCsv(file);
+            redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
+        }
+        return "redirect:/admin/questions";
+    }
+
+    /**
+     * ユーザーデータをCSVから取り込むエンドポイントメソッド
+     * 
+     * @param file               受け取ったCSVファイル
+     * @param redirectAttributes リダイレクト属性
+     * @return 問題一覧画面へリダイレクトするビュー名
+     */
+    @PostMapping("/import/csv/users")
+    public String importCsvForUsers(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        try {
+            if (!file.isEmpty()) {
+                adminService.importUsersFromCsv(file);
+                redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+            }
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
+        }
+        return "redirect:/dashboard"; // 吉川さんのadmindashboardにリダイレクト先を変える
     }
 }

@@ -1,24 +1,39 @@
 package com.javaexam.service;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
 import com.javaexam.dto.UserAnswerByDateDto;
 import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
+import com.javaexam.entity.QuestionType;
 import com.javaexam.entity.UserAnswer;
 import com.javaexam.entity.UserProgress;
+import com.javaexam.entity.User;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserAnswerJdbcRepository;
+import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.opencsv.CSVReader;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.exceptions.CsvValidationException;
 
 @Service
 public class AdminService {
@@ -27,20 +42,30 @@ public class AdminService {
     private final QuestionJdbcRepository questionJdbcRepository;
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final UserAnswerJdbcRepository userAnswerJdbcRepository;
+    private final UserJdbcRepository userJdbcRepository;
+    private final ObjectMapper objectMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
-                        QuestionJdbcRepository questionJdbcRepository,
-                        ChapterJdbcRepository chapterJdbcRepository,
-                        UserAnswerJdbcRepository userAnswerJdbcRepository) {
+            QuestionJdbcRepository questionJdbcRepository,
+            ChapterJdbcRepository chapterJdbcRepository,
+            UserAnswerJdbcRepository userAnswerJdbcRepository,
+            UserJdbcRepository userJdbcRepository,
+            ObjectMapper objectMapper,
+            PasswordEncoder passwordEncoder) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.userAnswerJdbcRepository = userAnswerJdbcRepository;
+        this.userJdbcRepository = userJdbcRepository;
+        this.objectMapper = new ObjectMapper();
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
      * Retrieves all user progress records for admin review.
-     * Note: Currently loads all records without pagination. For production systems with large datasets,
+     * Note: Currently loads all records without pagination. For production systems
+     * with large datasets,
      * consider implementing pagination or filtering.
      */
     @Transactional(readOnly = true)
@@ -56,14 +81,14 @@ public class AdminService {
                         progress.getChapter().getTitle(),
                         progress.getScore(),
                         progress.getPassed(),
-                        progress.getLastAttemptedAt()
-                ))
+                        progress.getLastAttemptedAt()))
                 .collect(Collectors.toList());
     }
 
     /**
      * Retrieves all questions with their correct answers for admin review.
-     * Note: Currently loads all records without pagination. For production systems with large datasets,
+     * Note: Currently loads all records without pagination. For production systems
+     * with large datasets,
      * consider implementing pagination or filtering by chapter.
      */
     @Transactional(readOnly = true)
@@ -75,15 +100,16 @@ public class AdminService {
                         question.getChapter().getChapterCode(),
                         question.getQuestionText(),
                         question.getOptions(),
-                        question.getCorrectAnswer()
-                ))
+                        question.getCorrectAnswer()))
                 .collect(Collectors.toList());
     }
 
     /**
      * Deletes all progress records for a specific user.
+     * 
      * @param userId the ID of the user whose progress should be deleted
-     * @throws IllegalArgumentException if no progress records exist for the given userId
+     * @throws IllegalArgumentException if no progress records exist for the given
+     *                                  userId
      */
     @Transactional
     public void deleteUserProgress(String userId) {
@@ -98,7 +124,8 @@ public class AdminService {
     /**
      * Deletes progress/answers for a specific user and chapter only.
      *
-     * @throws IllegalArgumentException if no progress record exists for the given userId/chapterId
+     * @throws IllegalArgumentException if no progress record exists for the given
+     *                                  userId/chapterId
      */
     @Transactional
     public void deleteUserChapterProgress(String userId, String chapterId) {
@@ -116,6 +143,7 @@ public class AdminService {
 
     /**
      * Deletes all user progress records in the system.
+     * 
      * @return the number of records deleted
      */
     @Transactional
@@ -127,6 +155,7 @@ public class AdminService {
 
     /**
      * Creates a new question.
+     * 
      * @param question the question to create
      */
     @Transactional
@@ -136,6 +165,7 @@ public class AdminService {
 
     /**
      * Updates an existing question.
+     * 
      * @param question the question to update
      * @throws IllegalArgumentException if the question does not exist
      */
@@ -149,6 +179,7 @@ public class AdminService {
 
     /**
      * Deletes a question by ID.
+     * 
      * @param questionId the ID of the question to delete
      * @throws IllegalArgumentException if the question does not exist
      */
@@ -162,6 +193,7 @@ public class AdminService {
 
     /**
      * Retrieves all chapters.
+     * 
      * @return list of all chapters
      */
     public List<Chapter> getAllChapters() {
@@ -170,6 +202,7 @@ public class AdminService {
 
     /**
      * Creates a new chapter.
+     * 
      * @param chapter the chapter to create
      */
     @Transactional
@@ -179,6 +212,7 @@ public class AdminService {
 
     /**
      * Updates an existing chapter.
+     * 
      * @param chapter the chapter to update
      * @throws IllegalArgumentException if the chapter does not exist
      */
@@ -192,6 +226,7 @@ public class AdminService {
 
     /**
      * Deletes a chapter by ID.
+     * 
      * @param chapterId the ID of the chapter to delete
      * @throws IllegalArgumentException if the chapter does not exist
      */
@@ -205,6 +240,7 @@ public class AdminService {
 
     /**
      * Retrieves a chapter by ID.
+     * 
      * @param chapterId the chapter ID
      * @return the chapter
      */
@@ -235,8 +271,7 @@ public class AdminService {
                         answer.getSelectedAnswer(),
                         answer.getQuestion().getCorrectAnswer(),
                         answer.getIsCorrect(),
-                        answer.getAnsweredAt()
-                ))
+                        answer.getAnsweredAt()))
                 .collect(Collectors.toList());
     }
 
@@ -245,12 +280,13 @@ public class AdminService {
      * Returns one entry per user-chapter combination with score information.
      * 
      * @param date the date in format YYYY-MM-DD
-     * @return a list of users with their answer and score information from that date
+     * @return a list of users with their answer and score information from that
+     *         date
      */
     @Transactional(readOnly = true)
     public List<UserAnswerByDateDto> getUsersByAnswerDate(String date) {
         List<Map<String, Object>> results = userAnswerJdbcRepository.findUsersWithScoreByAnswerDate(date);
-        
+
         return results.stream()
                 .map(row -> {
                     LocalDateTime answeredAt = null;
@@ -260,7 +296,7 @@ public class AdminService {
                     } else if (answeredAtObj instanceof java.sql.Timestamp) {
                         answeredAt = ((java.sql.Timestamp) answeredAtObj).toLocalDateTime();
                     }
-                    
+
                     // Handle passed field which can be Integer (0/1) or Boolean
                     Boolean passed = null;
                     Object passedObj = row.get("passed");
@@ -271,7 +307,7 @@ public class AdminService {
                             passed = ((Number) passedObj).intValue() != 0;
                         }
                     }
-                    
+
                     // Handle score field
                     Integer score = null;
                     Object scoreObj = row.get("score");
@@ -280,7 +316,7 @@ public class AdminService {
                     } else if (scoreObj instanceof Number) {
                         score = ((Number) scoreObj).intValue();
                     }
-                    
+
                     return new UserAnswerByDateDto(
                             (String) row.get("user_id"),
                             (String) row.get("username"),
@@ -290,9 +326,133 @@ public class AdminService {
                             (String) row.get("chapter_title"),
                             score,
                             passed,
-                            answeredAt
-                    );
+                            answeredAt);
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 問題をCSVから受け取るメソッド
+     *
+     * @param file 問題情報を格納したCSVファイル(file)
+     * @throws IOException
+     * @throws CsvValidationException
+     * @throw IllegalArgument
+     * @throw Exception
+     */
+    @Transactional
+    public void importQuestionsFromCsv(MultipartFile file) throws IOException, CsvValidationException {
+        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+
+        String[] row;
+        while ((row = reader.readNext()) != null) {
+            if (row.length != 5) {
+                throw new IllegalArgumentException("データの型が不正です");
+            }
+
+            String chapterCode = row[0];
+            String questionText = row[1];
+            String questionType = row[2];
+            String optionJson = row[3];
+            String correctAnswer = row[4];
+
+            Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
+                    .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
+
+            Map<String, String> options = ConvertOptionJsonToOptions(optionJson);
+
+            if (!isDuplicateQuestion(chapter.getId(), questionText)) {
+                Question question = new Question();
+                question.setChapter(chapter);
+                question.setQuestionText(questionText);
+                question.setQuestionType(QuestionType.valueOf(questionType));
+                question.setOptions(options);
+                question.setCorrectAnswer(correctAnswer);
+
+                questionJdbcRepository.save(question);
+            }
+        }
+    }
+
+    /**
+     * USERSをCSVから受け取るメソッド
+     * @param file ユーザー情報を格納したCSVファイル(file)
+     * @throws IOException
+     * @throws CsvValidationException
+     * @throw IllegalArgument
+     * @throw Exception
+     */
+
+    @Transactional
+    public void importUsersFromCsv(MultipartFile file) throws IOException, CsvValidationException {
+        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)); 
+        
+
+            String[] row;
+            while ((row = reader.readNext()) != null) {
+                if (row.length != 4 ) {
+                    throw new IllegalArgumentException("データの型が不正です");
+                } else {
+                    String username = row[0];
+                    String password = row[1];
+                    String displayName = row[2];
+                    String role = row[3];
+
+                    if (!((role.equals("ROLE_ADMIN") || (role.equals("ROLE_USER"))))) {
+                        throw new IllegalArgumentException("ロールが不正です");
+                    }
+
+                    if (!isDuplicateUser(username)) {
+                        User user = new User();
+                        user.setUsername(username);
+                        user.setPassword(passwordEncoder.encode(password));
+                        user.setDisplayName(displayName);
+                        user.setRole(role);
+                        userJdbcRepository.save(user);
+                    }
+                }
+            }
+        }
+
+
+    /**
+     * JSON文字列で受け取ったオプションをMapに変換するメソッド
+     * 
+     * @param optionJson JSON文字列(optionJson)
+     * @return Mapに変換されたオプション(options)
+     */
+
+    private Map<String, String> ConvertOptionJsonToOptions(String optionJson) {
+        Map<String, String> options = new HashMap<>();
+        try {
+            options = objectMapper.readValue(optionJson, new TypeReference<Map<String, String>>() {
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return options;
+    }
+
+    /**
+     * 重複判定をリポジトリから受け取り、Controllerに渡すメソッド
+     * 
+     * @param chapterId
+     * @param questionText
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */
+
+    public boolean isDuplicateQuestion(String chapterId, String questionText) {
+        return questionJdbcRepository.existsByChapterIdAndQuestionText(chapterId, questionText);
+    }
+
+    /*
+     * 重複判定をリポジトリから受け取り、Controllerに渡すメソッド
+     * 
+     * @param username
+     * 
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */
+    public boolean isDuplicateUser(String username) {
+        return userJdbcRepository.existsByUsername(username);
     }
 }

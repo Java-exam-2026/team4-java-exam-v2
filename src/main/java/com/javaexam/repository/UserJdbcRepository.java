@@ -1,14 +1,15 @@
 package com.javaexam.repository;
 
-import com.javaexam.entity.User;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Repository;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
+
+import com.javaexam.entity.User;
 
 @Repository
 public class UserJdbcRepository {
@@ -49,11 +50,41 @@ public class UserJdbcRepository {
         return users.stream().findFirst();
     }
 
+    /**
+     * userの重複チェックメソッド
+     * 
+     * @param username
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */
     public boolean existsByUsername(String username) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE username = ?",
                 Integer.class,
                 username);
         return count != null && count > 0;
+    }
+
+    /*
+     * UserをDBにセーブするメソッド
+     * @param user
+     * @return 行の割り当て番号
+     */
+
+    public int save(User user) {
+        
+        if (user.getId() == null || user.getId().isEmpty()) {
+            // Insert new user
+            user.setId(java.util.UUID.randomUUID().toString());
+            return jdbcTemplate.update(
+                "INSERT INTO users (id, username, password, display_name, role,created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getDisplayName(),
+                user.getRole());
+        }
+        throw new IllegalArgumentException("データの型が不正です");
+
     }
 }
