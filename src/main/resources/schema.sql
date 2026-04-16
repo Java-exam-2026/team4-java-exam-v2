@@ -69,5 +69,20 @@ CREATE TABLE IF NOT EXISTS user_answers (
     UNIQUE(user_id, chapter_id, question_id)
 );
 
+--Log管理用 テーブル
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id VARCHAR(36) PRIMARY KEY,
+    actor_user_id VARCHAR(36) NOT NULL,
+    actor_username VARCHAR(50) NOT NULL,
+    actor_display_name VARCHAR(100) NOT NULL,
+    target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('USER', 'QUESTION')),
+    target_id VARCHAR(36) NOT NULL,
+    target_name TEXT NOT NULL,
+    action_type VARCHAR(20) NOT NULL CHECK (action_type IN ('CREATE', 'UPDATE', 'DELETE')),
+    action_status BOOLEAN NOT NULL,
+    changes_json TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_user_answers_user_chapter ON user_answers(user_id, chapter_id);
 CREATE INDEX IF NOT EXISTS idx_user_answers_question ON user_answers(question_id);

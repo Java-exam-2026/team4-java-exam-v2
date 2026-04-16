@@ -63,6 +63,20 @@ erDiagram
         TIMESTAMP answered_at "回答日時のタイムスタンプ"
     }
 
+    AUDIT_LOGS {
+        VARCHAR id PK "ログID(最大36文字)"
+        VARCHAR actor_user_id  "NOT NULL,操作者のユーザーID(最大36文字)"
+        VARCHAR actor_username "NOT NULL,操作者のユーザー名(最大50文字)"
+        VARCHAR actor_user_display_name "NOT NULL,操作者のユーザー表示名(最大100文字)"
+        VARCHAR target_type "NOT NULL,操作対象(USER,QUESTION)"
+        VARCHAR target_id "NOT NULL,操作対象のID(最大36文字)"
+        TEXT target_name "NOT NULL,操作対象の名前" 
+        VARCHAR action_type "NOT NULL 操作の種類(作成:CREATE,編集:UPDATE,削除:DELETE)"
+        BOOLEAN action_status "NOT NULL,操作の成功失敗を表すフラグ"
+        TEXT changes_json "NULL,変更内容(JSON形式)"
+        TIMESTAMP created_at "ログ作成日のタイムスタンプ"
+    }
+
     CHAPTERS ||--o{ QUESTIONS : has
     USERS ||--o{ USER_PROGRESS : has
     CHAPTERS ||--o{ USER_PROGRESS : tracks
