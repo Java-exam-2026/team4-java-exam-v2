@@ -14,13 +14,18 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+
+/**
+ * アプリケーションのセキュリティ設定クラス。
+ * 認証・認可のルール、ログイン・ログアウトの挙動、パスワードの暗号化方式などを定義します。
+ */
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
-    
+
     @Value("${spring.security.remember-me.key}")
     private String rememberMeKey;
-    
+
     @Value("${spring.security.remember-me.token-validity-seconds}")
     private int rememberMeTokenValiditySeconds;
 
@@ -35,13 +40,27 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/quiz/**").hasRole("USER")
+                        .requestMatchers("/quiz/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated())
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**"))
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
+                        /**
+                         * ログイン成功時の遷移先をユーザーの権限に基づいて制御します。
+                         * 管理者はダッシュボード、一般ユーザーはトップページへリダイレクトします。
+                         */
+                        .successHandler((request, response, authentication) -> {
+                            boolean isAdmin = authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                            if (isAdmin) {
+                                // 管理者なら、要件通り /admin/dashboard へ
+                                response.sendRedirect("/admin/dashboard");
+                            } else {
+                                // 一般ユーザーなら、トップページ / へ
+                                response.sendRedirect("/");
+                            }
+                        })
                         .permitAll())
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")

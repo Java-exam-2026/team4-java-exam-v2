@@ -11,6 +11,7 @@ import com.javaexam.entity.UserProgress;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserAnswerJdbcRepository;
+import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,22 +28,20 @@ public class AdminService {
     private final QuestionJdbcRepository questionJdbcRepository;
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final UserAnswerJdbcRepository userAnswerJdbcRepository;
+    private final UserJdbcRepository userJdbcRepository;
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
-                        QuestionJdbcRepository questionJdbcRepository,
-                        ChapterJdbcRepository chapterJdbcRepository,
-                        UserAnswerJdbcRepository userAnswerJdbcRepository) {
+            QuestionJdbcRepository questionJdbcRepository,
+            ChapterJdbcRepository chapterJdbcRepository,
+            UserAnswerJdbcRepository userAnswerJdbcRepository,
+            UserJdbcRepository userJdbcRepository) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.userAnswerJdbcRepository = userAnswerJdbcRepository;
+        this.userJdbcRepository = userJdbcRepository;
     }
 
-    /**
-     * Retrieves all user progress records for admin review.
-     * Note: Currently loads all records without pagination. For production systems with large datasets,
-     * consider implementing pagination or filtering.
-     */
     @Transactional(readOnly = true)
     public List<AllProgressDto> getAllUsersProgress() {
         List<UserProgress> allProgress = userProgressJdbcRepository.findAll();
@@ -56,14 +55,14 @@ public class AdminService {
                         progress.getChapter().getTitle(),
                         progress.getScore(),
                         progress.getPassed(),
-                        progress.getLastAttemptedAt()
-                ))
+                        progress.getLastAttemptedAt()))
                 .collect(Collectors.toList());
     }
 
     /**
      * Retrieves all questions with their correct answers for admin review.
-     * Note: Currently loads all records without pagination. For production systems with large datasets,
+     * Note: Currently loads all records without pagination. For production systems
+     * with large datasets,
      * consider implementing pagination or filtering by chapter.
      */
     @Transactional(readOnly = true)
@@ -75,15 +74,16 @@ public class AdminService {
                         question.getChapter().getChapterCode(),
                         question.getQuestionText(),
                         question.getOptions(),
-                        question.getCorrectAnswer()
-                ))
+                        question.getCorrectAnswer()))
                 .collect(Collectors.toList());
     }
 
     /**
      * Deletes all progress records for a specific user.
+     * 
      * @param userId the ID of the user whose progress should be deleted
-     * @throws IllegalArgumentException if no progress records exist for the given userId
+     * @throws IllegalArgumentException if no progress records exist for the given
+     *                                  userId
      */
     @Transactional
     public void deleteUserProgress(String userId) {
@@ -98,7 +98,8 @@ public class AdminService {
     /**
      * Deletes progress/answers for a specific user and chapter only.
      *
-     * @throws IllegalArgumentException if no progress record exists for the given userId/chapterId
+     * @throws IllegalArgumentException if no progress record exists for the given
+     *                                  userId/chapterId
      */
     @Transactional
     public void deleteUserChapterProgress(String userId, String chapterId) {
@@ -116,6 +117,7 @@ public class AdminService {
 
     /**
      * Deletes all user progress records in the system.
+     * 
      * @return the number of records deleted
      */
     @Transactional
@@ -127,6 +129,7 @@ public class AdminService {
 
     /**
      * Creates a new question.
+     * 
      * @param question the question to create
      */
     @Transactional
@@ -136,6 +139,7 @@ public class AdminService {
 
     /**
      * Updates an existing question.
+     * 
      * @param question the question to update
      * @throws IllegalArgumentException if the question does not exist
      */
@@ -149,6 +153,7 @@ public class AdminService {
 
     /**
      * Deletes a question by ID.
+     * 
      * @param questionId the ID of the question to delete
      * @throws IllegalArgumentException if the question does not exist
      */
@@ -162,6 +167,7 @@ public class AdminService {
 
     /**
      * Retrieves all chapters.
+     * 
      * @return list of all chapters
      */
     public List<Chapter> getAllChapters() {
@@ -170,6 +176,7 @@ public class AdminService {
 
     /**
      * Creates a new chapter.
+     * 
      * @param chapter the chapter to create
      */
     @Transactional
@@ -179,6 +186,7 @@ public class AdminService {
 
     /**
      * Updates an existing chapter.
+     * 
      * @param chapter the chapter to update
      * @throws IllegalArgumentException if the chapter does not exist
      */
@@ -192,6 +200,7 @@ public class AdminService {
 
     /**
      * Deletes a chapter by ID.
+     * 
      * @param chapterId the ID of the chapter to delete
      * @throws IllegalArgumentException if the chapter does not exist
      */
@@ -205,6 +214,7 @@ public class AdminService {
 
     /**
      * Retrieves a chapter by ID.
+     * 
      * @param chapterId the chapter ID
      * @return the chapter
      */
@@ -235,8 +245,7 @@ public class AdminService {
                         answer.getSelectedAnswer(),
                         answer.getQuestion().getCorrectAnswer(),
                         answer.getIsCorrect(),
-                        answer.getAnsweredAt()
-                ))
+                        answer.getAnsweredAt()))
                 .collect(Collectors.toList());
     }
 
@@ -245,12 +254,13 @@ public class AdminService {
      * Returns one entry per user-chapter combination with score information.
      * 
      * @param date the date in format YYYY-MM-DD
-     * @return a list of users with their answer and score information from that date
+     * @return a list of users with their answer and score information from that
+     *         date
      */
     @Transactional(readOnly = true)
     public List<UserAnswerByDateDto> getUsersByAnswerDate(String date) {
         List<Map<String, Object>> results = userAnswerJdbcRepository.findUsersWithScoreByAnswerDate(date);
-        
+
         return results.stream()
                 .map(row -> {
                     LocalDateTime answeredAt = null;
@@ -260,7 +270,7 @@ public class AdminService {
                     } else if (answeredAtObj instanceof java.sql.Timestamp) {
                         answeredAt = ((java.sql.Timestamp) answeredAtObj).toLocalDateTime();
                     }
-                    
+
                     // Handle passed field which can be Integer (0/1) or Boolean
                     Boolean passed = null;
                     Object passedObj = row.get("passed");
@@ -271,7 +281,7 @@ public class AdminService {
                             passed = ((Number) passedObj).intValue() != 0;
                         }
                     }
-                    
+
                     // Handle score field
                     Integer score = null;
                     Object scoreObj = row.get("score");
@@ -280,7 +290,7 @@ public class AdminService {
                     } else if (scoreObj instanceof Number) {
                         score = ((Number) scoreObj).intValue();
                     }
-                    
+
                     return new UserAnswerByDateDto(
                             (String) row.get("user_id"),
                             (String) row.get("username"),
@@ -290,9 +300,81 @@ public class AdminService {
                             (String) row.get("chapter_title"),
                             score,
                             passed,
-                            answeredAt
-                    );
+                            answeredAt);
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 今月の全ユーザーの試験挑戦回数を取得します。
+     * <p>
+     * 実行時の日付から今月の開始日時（1日 00:00）と終了日時（末日 23:59）を算出し、
+     * その期間内に行われた進捗データの件数を集計します。
+     * </p>
+     * * @return 今月の総挑戦回数
+     */
+    @Transactional(readOnly = true)
+    public int getMonthlyAttemptCount() {
+        // 1. 「今この瞬間」の時間を取得（以下AIと相談したコード）
+        LocalDateTime now = LocalDateTime.now();
+
+        // 2. 「今月の1日 00:00:00」を自動計算
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
+
+        // 3. 「来月の1日の 00:00:00」より前、と指定（これで今月末までをカバー）
+        LocalDateTime startOfNextMonth = startOfMonth.plusMonths(1);
+
+        // Repositoryのメソッドを呼び出す（endの部分を「来月の頭」に変えるのがコツ）
+        return userProgressJdbcRepository.countByLastAttemptedAtBetween(startOfMonth, startOfNextMonth.minusNanos(1));
+    }
+
+    public int getUserCount() {
+        return userJdbcRepository.countUsers();
+    }
+
+    /**
+     * システム全体の合格・不合格の統計情報を取得します。
+     * <p>
+     * 以前は全データをメモリに読み込んで集計していましたが、
+     * DB側で COUNT を行うメソッドに切り替え、パフォーマンスを向上させました。
+     * </p>
+     *
+     * @return "pass"（合格数）と "fail"（不合格数）を格納したMap
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getPassFailStats() {
+        // DBに直接「合格は何人？」「不合格は何人？」と聞いて数字だけをもらう
+        int passCount = userProgressJdbcRepository.countByPassed(true);
+        int failCount = userProgressJdbcRepository.countByPassed(false);
+
+        Map<String, Integer> stats = new java.util.HashMap<>();
+        stats.put("pass", passCount);
+        stats.put("fail", failCount);
+
+        return stats;
+    }
+    
+    /**
+     * チャプターごとの挑戦回数を集計し、挑戦者が多い順に並べて返します。
+     * <p>
+     * SQL側でソート（ORDER BY）済みのデータを取得するため、
+     * Java側では順序を維持したままMapへ変換するのみとしています。
+     * </p>
+     *
+     * @return 挑戦回数が多い順に並んだ、チャプター名と回数のマップ
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getChapterStats() {
+        // 1. DBから「多い順」に並んだ状態でリストを取ってくる
+        List<Map<String, Object>> rawStats = userProgressJdbcRepository.countAttemptsByChapter();
+
+        // 2. SQLの並び順（LinkedHashMap）を壊さずにMapに変換する
+        return rawStats.stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row.get("title"),
+                        row -> ((Number) row.get("attempt_count")).intValue(),
+                        (oldValue, newValue) -> oldValue,
+                        java.util.LinkedHashMap::new // ←ここが順番を守るポイント！
+                ));
     }
 }

@@ -1,0 +1,125 @@
+[33m7c70507[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/dashboard[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/feature/dashboard[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Merge remote-tracking branch 'base/main'
+[33m9148710[m Initial commit
+[33m5d40cf9[m Update README with certificate creation wait time
+[33m8b0899c[m Add instructions for initial docker-compose setup
+[33m7b7f14c[m Update DOMAINS environment variable in docker-compose
+[33md830fb1[m 修正
+[33m4673397[m 修正
+[33mf04f733[m 修正
+[33m91c2d06[m 修正
+[33m41c9345[m Merge branch 'main' of github.com:NPO-Everyone-Engineer/java-exam-v2
+[33mcef4fc6[m 修正
+[33m33962fe[m Update README with Docker logs command
+[33m54ac5d5[m Change directory name placeholder in README
+[33m7692b10[m 修正
+[33m132cbdb[m 修正
+[33m74593d5[m 修正
+[33ma9a2ece[m 修正
+[33m5b3fa33[m 修正
+[33m96bab45[m 修正
+[33m03ec5c8[m 修正
+[33me3fecc1[m 修正
+[33mac764d0[m 修正
+[33mbbf0df2[m 修正
+[33mae72bd5[m 修正
+[33m512f093[m 修正
+[33mbedaa7c[m 修正
+[33md616ebd[m Change STAGE environment variable to 'staging'
+[33md2dbc47[m Modify Docker Compose for HTTPS portal settings
+[33m2b35c34[m Merge pull request #25 from NPO-Everyone-Engineer/copilot/add-basic-authentication
+[33mc7a4c88[m Remove unused conf.d/server.conf (nginx service removed)
+[33me5d9b84[m Use https-portal built-in basic auth via CUSTOM_NGINX_SERVER_CONFIG_BLOCK
+[33m39cdf34[m Initial plan
+[33m9dab1eb[m Merge pull request #24 from NPO-Everyone-Engineer/copilot/add-result-view-for-user
+[33m551c55f[m Display timestamps in JST instead of UTC
+[33m4564e13[m Fix duplicate import in QuizService
+[33m1b3ff65[m Merge pull request #23 from NPO-Everyone-Engineer/copilot/update-login-session-duration
+[33mdb92f1b[m Add user result detail view functionality
+[33m95d6646[m Change to extend Remember Me cookie to 3 months instead of session timeout
+[33mc09d631[m Initial plan
+[33m262f958[m Extend login session timeout to 3 months (90 days)
+[33m7769bd2[m Initial plan
+[33mde8e279[m Merge pull request #21 from NPO-Everyone-Engineer/copilot/check-login-lifetime
+[33m51fff45[m Use environment variable for remember-me key with fallback
+[33m4f2817b[m Refactor Remember Me configuration to use properties file
+[33md563e92[m Add session timeout and Remember Me functionality for persistent login
+[33m157e929[m Initial plan
+[33m9c64349[m Merge pull request #18 from NPO-Everyone-Engineer/copilot/add-api-endpoint-for-date
+[33mca3c636[m Remove authentication requirement for API endpoints
+[33m25e5a6c[m Clean up unused imports and use proper class imports
+[33me661210[m Improve type safety for database result mapping
+[33m9ee78af[m Add score and chapter info to user answer date API response
+[33m06e9aa9[m Improve date validation using LocalDate.parse and simplify service logic
+[33mc0074a0[m Add input validation and improve error handling for date API
+[33m24a733b[m Add API endpoint to get users who answered on specific date
+[33m61e2487[m Initial plan
+[33m08fab35[m Merge pull request #17 from NPO-Everyone-Engineer/feature/add-delete-capture
+[33m8070b30[m 修正
+[33m43da800[m Merge pull request #15 from NPO-Everyone-Engineer/copilot/add-admin-response-review-page-another-one
+[33me0a805a[m 修正
+[33m61057bc[m Refactor ObjectMapper initialization to match existing pattern
+[33m985072a[m Fix options JSON parsing in UserAnswerJdbcRepository
+[33mcd57a58[m Fix N+1 query problem, add unique constraint, improve documentation, and fix endpoint link
+[33m79ce718[m Add link to detailed answer page and accessibility attributes
+[33m89d64b0[m Add detailed user answer tracking and admin review page
+[33m2f0df1a[m Initial plan
+[33m2cd4987[m Merge pull request #11 from NPO-Everyone-Engineer/copilot/add-edit-delete-problems
+[33m42bec0d[m Fix question sort order to ASC (oldest first, newest last)
+[33m67191ee[m Change chapter questions order to creation date (newest first)
+[33m4eb6ee6[m Add chapter management (create, edit, delete) and change question sort order
+[33m05116e0[m Restrict question type to SINGLE_CHOICE only
+[33m717930e[m Fix code review issues: Remove unused variable and prevent info disclosure
+[33m9b73526[m Refactor: Extract helper methods and add validation improvements
+[33m45bdad2[m Add question management features (create, edit, delete)
+[33m786ba1e[m Initial plan
+[33meedbf81[m Merge pull request #10 from NPO-Everyone-Engineer/copilot/fix-admin-issues
+[33m971b33d[m Add null check for lastAttemptedAt field in TSV export
+[33m9529476[m Add TSV export functionality for admin answer status
+[33m51fd7ce[m Initial plan
+[33md0bbdae[m Merge pull request #9 from NPO-Everyone-Engineer/copilot/add-answer-management-functionality
+[33m686ef1a[m Add validation and proper error handling for delete operations
+[33m7bf2cb1[m Fix security vulnerabilities: XSS and path traversal
+[33m781e08a[m Add delete functionality for user progress in admin panel
+[33m18622cc[m Initial plan
+[33mf95618b[m Merge pull request #8 from NPO-Everyone-Engineer/copilot/add-admin-user-response-view
+[33mb0bb2f3[m merge
+[33mdfbd701[m Merge pull request #7 from NPO-Everyone-Engineer/copilot/limit-response-to-one
+[33ma78866c[m Revert Java version back to 25 for local environment compatibility
+[33m25f2676[m Fix type mismatch: Change AdminQuestionDto.id from UUID to String to match Question entity
+[33m2380729[m Improve exception handling specificity
+[33mc5ea392[m Fix race condition and provide safe migration path
+[33mea5bc53[m Add admin functionality to view all users' progress and questions with answers
+[33m9cd38b5[m Address code review feedback
+[33m2f79741[m Fix Java version in pom.xml to support build
+[33m9b274d6[m Implement one-time answer submission feature
+[33m51dd44e[m Initial plan
+[33me5046eb[m Fix Java version to 17 for compatibility
+[33m2589ec7[m Initial plan
+[33m92e04cc[m Merge pull request #6 from NPO-Everyone-Engineer/copilot/split-etc1-and-etc2
+[33ma1ed004[m Update README with data deletion and server restart steps
+[33m563ad93[m Revert chapter_id in ON CONFLICT clauses (database was rebuilt)
+[33ma0c9ab9[m Add chapter_id to all ON CONFLICT clauses for better data consistency
+[33m1ddebb3[m Merge branch 'main' of https://github.com/NPO-Everyone-Engineer/java-exam-v2
+[33m9232dcb[m 修正
+[33m1167b45[m Fix misleading option and improve question clarity
+[33mf7a7f74[m Add questions to etc1 and etc2 chapters (10 questions each)
+[33m3f8d349[m Split etc chapter into etc1 (Linux Commands) and etc2 (Process Basics)
+[33mdb3392a[m Initial plan
+[33m3df1dd6[m Update README.md
+[33m5cb9a07[m Merge pull request #4 from NPO-Everyone-Engineer/update-questions260108
+[33m42c9c10[m 質問の選択肢を日本語に翻訳し、内容を明確化
+[33md628d4a[m nginx追加
+[33m4331cc4[m Merge pull request #3 from NPO-Everyone-Engineer/naka-sho-patch-1
+[33mcdee152[m Update print statement from 'Hello' to 'Goodbye'
+[33mb5fc9d2[m Merge pull request #2 from NPO-Everyone-Engineer/feature/add-ReadMe
+[33m667989a[m README.mdにWindowsでのコマンドエラー時の対処法を追加
+[33maefe1fc[m Merge pull request #1 from NPO-Everyone-Engineer/copilot/translate-readme-to-japanese
+[33mc57f6a6[m Translate README.md to Japanese
+[33m4bfcd60[m Initial plan
+[33mdaaa3f8[m 起動時にDBinitあり
+[33m671a0ad[m Update README with running instructions for Windows
+[33m810a20b[m Update README.md
+[33md521584[m init処理を削除
+[33m877d226[m error fix
+[33m86d702d[m 削除
+[33m95e1c05[m first commit
