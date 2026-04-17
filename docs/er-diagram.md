@@ -71,7 +71,7 @@ erDiagram
         VARCHAR target_type "NOT NULL,操作対象(USER,QUESTION)"
         VARCHAR target_id "NOT NULL,操作対象のID(最大36文字)"
         TEXT target_name "NOT NULL,操作対象の名前" 
-        VARCHAR action_type "NOT NULL 操作の種類(作成:CREATE,編集:UPDATE,削除:DELETE)"
+        VARCHAR action_type "NOT NULL 操作の種類(作成:CREATE,編集:EDIT,削除:DELETE)"
         BOOLEAN action_status "NOT NULL,操作の成功失敗を表すフラグ"
         TEXT changes_json "NULL,変更内容(JSON形式)"
         TIMESTAMP created_at "ログ作成日のタイムスタンプ"

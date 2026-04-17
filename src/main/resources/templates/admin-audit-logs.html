@@ -98,26 +98,35 @@
         font-size: 0.9rem;
       }
 
-      .type-badge,
-      .action-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 88px;
-        padding: 0.45rem 0.8rem;
-        border-radius: 999px;
-        font-size: 0.82rem;
+      .plain-meta {
+        color: #44516c;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      .filter-group-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #44516c;
+        font-size: 0.9rem;
         font-weight: 700;
       }
 
-      .type-badge {
-        background-color: #eef2ff;
-        color: #4a57c5;
+      .action-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1rem;
       }
 
-      .action-badge {
-        background-color: #ecfdf3;
-        color: #1f7a45;
+      .date-range {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .date-range span {
+        color: #6c7a96;
+        font-size: 0.9rem;
       }
 
       .parameters-cell {
@@ -150,6 +159,12 @@
         .search-label {
           min-width: auto;
         }
+
+        .date-range {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.5rem;
+        }
       }
     </style>
   </head>
@@ -177,7 +192,7 @@
       <div class="mb-4">
         <h1 class="page-title">監査ログ</h1>
         <p class="page-subtitle">
-          管理操作の履歴を時系列で確認できます。キーワードで対象名や操作内容を絞り込みできます。
+          管理操作の履歴を時系列で確認できます。ユーザーID、操作種別、期間で絞り込みできます。
         </p>
       </div>
 
@@ -212,23 +227,79 @@
       <section class="card logs-card">
         <div class="card-body">
           <form th:action="@{/admin/audit-logs}" method="get" class="search-panel">
-            <div class="row align-items-center g-3">
-              <div class="col-12 col-md-auto">
-                <span class="search-label">ログ検索</span>
-              </div>
-              <div class="col-12 col-md">
+            <div class="row g-3">
+              <div class="col-12 col-lg-6">
+                <label for="actorUserId" class="filter-group-label">ユーザーID</label>
                 <input
                   type="text"
-                  name="keyword"
-                  th:value="${keyword}"
+                  id="actorUserId"
+                  name="actorUserId"
+                  th:value="${actorUserId}"
                   class="form-control"
-                  placeholder="対象名、操作、実行者などで検索"
+                  placeholder="実行したユーザーIDで検索"
                 />
               </div>
-              <div class="col-12 col-md-auto">
-                <button type="submit" class="btn btn-primary search-button">
-                  検索
-                </button>
+
+              <div class="col-12 col-lg-6">
+                <span class="filter-group-label">操作種別</span>
+                <div class="action-filters">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="actionCreate"
+                      name="actionTypes"
+                      value="CREATE"
+                      th:checked="${selectedActionTypes != null and #lists.contains(selectedActionTypes, 'CREATE')}"
+                    />
+                    <label class="form-check-label" for="actionCreate">作成</label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="actionUpdate"
+                      name="actionTypes"
+                      value="UPDATE"
+                      th:checked="${selectedActionTypes != null and #lists.contains(selectedActionTypes, 'UPDATE')}"
+                    />
+                    <label class="form-check-label" for="actionUpdate">更新</label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="actionDelete"
+                      name="actionTypes"
+                      value="DELETE"
+                      th:checked="${selectedActionTypes != null and #lists.contains(selectedActionTypes, 'DELETE')}"
+                    />
+                    <label class="form-check-label" for="actionDelete">削除</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12 col-lg-8">
+                <span class="filter-group-label">期間</span>
+                <div class="date-range">
+                  <input
+                    type="date"
+                    name="startDate"
+                    th:value="${startDate}"
+                    class="form-control"
+                  />
+                  <span>～</span>
+                  <input
+                    type="date"
+                    name="endDate"
+                    th:value="${endDate}"
+                    class="form-control"
+                  />
+                </div>
+              </div>
+
+              <div class="col-12 col-lg-4 d-flex align-items-end justify-content-lg-end">
+                <button type="submit" class="btn btn-primary search-button">検索</button>
               </div>
             </div>
           </form>
@@ -256,10 +327,10 @@
                     </div>
                   </td>
                   <td>
-                    <span class="type-badge" th:text="${log.resourceType}">USER</span>
+                    <span class="plain-meta" th:text="${log.resourceType}">USER</span>
                   </td>
                   <td>
-                    <span class="action-badge" th:text="${log.action}">UPDATE</span>
+                    <span class="plain-meta" th:text="${log.action}">UPDATE</span>
                   </td>
                   <td class="meta-text" th:text="${log.performedBy}">admin</td>
                   <td class="parameters-cell" th:text="${log.parameters}">
