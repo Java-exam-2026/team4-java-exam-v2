@@ -1,17 +1,11 @@
 package com.javaexam.controller;
 
-import com.javaexam.dto.AllProgressDto;
-import com.javaexam.dto.AdminQuestionDto;
-import com.javaexam.dto.ChapterFormDto;
-import com.javaexam.dto.QuestionFormDto;
-import com.javaexam.dto.UserAnswerDetailDto;
-import com.javaexam.entity.Chapter;
-import com.javaexam.entity.Question;
-import com.javaexam.entity.QuestionType;
-import com.javaexam.repository.ChapterJdbcRepository;
-import com.javaexam.repository.QuestionJdbcRepository;
-import com.javaexam.service.AdminService;
-import jakarta.validation.Valid;
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +18,24 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.javaexam.annotation.Log;
+import com.javaexam.dto.AdminQuestionDto;
+import com.javaexam.dto.AllProgressDto;
+import com.javaexam.dto.ChapterFormDto;
+import com.javaexam.dto.QuestionFormDto;
+import com.javaexam.dto.UserAnswerDetailDto;
+import com.javaexam.entity.ActionType;
+import com.javaexam.entity.AuditLog;
+import com.javaexam.entity.Chapter;
+import com.javaexam.entity.Question;
+import com.javaexam.entity.QuestionType;
+import com.javaexam.entity.TargetType;
+import com.javaexam.repository.AuditLogJdbcRepository;
+import com.javaexam.repository.ChapterJdbcRepository;
+import com.javaexam.repository.QuestionJdbcRepository;
+import com.javaexam.service.AdminService;
+
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin")
@@ -42,13 +49,16 @@ public class AdminController {
     private final AdminService adminService;
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final QuestionJdbcRepository questionJdbcRepository;
+    private final AuditLogJdbcRepository auditLogJdbcRepository;
 
     public AdminController(AdminService adminService,
-            ChapterJdbcRepository chapterJdbcRepository,
-            QuestionJdbcRepository questionJdbcRepository) {
+                           ChapterJdbcRepository chapterJdbcRepository,
+                           QuestionJdbcRepository questionJdbcRepository,
+                           AuditLogJdbcRepository auditLogJdbcRepository) {
         this.adminService = adminService;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
+        this.auditLogJdbcRepository = auditLogJdbcRepository;
     }
     /**
      * 管理者用ダッシュボードを表示します。
@@ -211,6 +221,7 @@ public class AdminController {
         return "admin-question-form";
     }
 
+    @Log(action = ActionType.CREATE, target = TargetType.QUESTION)
     @PostMapping("/questions/new")
     public String createQuestion(@Valid QuestionFormDto questionForm,
             BindingResult bindingResult,
@@ -265,8 +276,9 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "問題の読み込みに失敗しました");
             return "redirect:/admin/questions";
         }
-    }
+    }S
 
+    @Log(action = ActionType.EDIT, target = TargetType.QUESTION)
     @PostMapping("/questions/edit/{id}")
     public String updateQuestion(@PathVariable String id,
             @Valid QuestionFormDto questionForm,
@@ -292,6 +304,7 @@ public class AdminController {
         }
     }
 
+    @Log(action = ActionType.DELETE, target = TargetType.QUESTION)
     @PostMapping("/questions/delete/{id}")
     public String deleteQuestion(@PathVariable String id, RedirectAttributes redirectAttributes) {
         try {
@@ -339,7 +352,7 @@ public class AdminController {
     }
 
     /**
-     * Builds options map from form fields.
+     * Map<>形式のoptionを作成するメソッド
      */
     private Map<String, String> buildOptionsMap(QuestionFormDto questionForm) {
         Map<String, String> options = new HashMap<>();
@@ -473,5 +486,14 @@ public class AdminController {
 
         // admin-progress.html を呼び出す
         return "admin-progress";
+    }
+
+    // Audit logs endpoint
+
+    @GetMapping("/audit-logs")
+    public String viewAuditLogs(Model model) {
+        List<AuditLog> auditLogs = auditLogJdbcRepository.findAll();
+        model.addAttribute("auditLogs", auditLogs);
+        return "admin-audit-logs";
     }
 }
