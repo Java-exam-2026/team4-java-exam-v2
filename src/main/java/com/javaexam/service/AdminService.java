@@ -58,7 +58,7 @@ public class AdminService {
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.userAnswerJdbcRepository = userAnswerJdbcRepository;
         this.userJdbcRepository = userJdbcRepository;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -454,5 +454,77 @@ public class AdminService {
      */
     public boolean isDuplicateUser(String username) {
         return userJdbcRepository.existsByUsername(username);
+    }
+     
+     /* 今月の全ユーザーの試験挑戦回数を取得します。
+     * <p>
+     * 実行時の日付から今月の開始日時（1日 00:00）と終了日時（末日 23:59）を算出し、
+     * その期間内に行われた進捗データの件数を集計します。
+     * </p>
+     *  @return 今月の総挑戦回数
+     */
+    @Transactional(readOnly = true)
+    public int getMonthlyAttemptCount() {
+        // 1. 「今この瞬間」の時間を取得（以下AIと相談したコード）
+        LocalDateTime now = LocalDateTime.now();
+
+        // 2. 「今月の1日 00:00:00」を自動計算
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
+
+        // 3. 「来月の1日の 00:00:00」より前、と指定（これで今月末までをカバー）
+        LocalDateTime startOfNextMonth = startOfMonth.plusMonths(1);
+
+        // Repositoryのメソッドを呼び出す（endの部分を「来月の頭」に変えるのがコツ）
+        return userProgressJdbcRepository.countByLastAttemptedAtBetween(startOfMonth, startOfNextMonth.minusNanos(1));
+    }
+
+    public int getUserCount() {
+        return userJdbcRepository.countUsers();
+    }
+
+    /**
+     * システム全体の合格・不合格の統計情報を取得します。
+     * <p>
+     * 以前は全データをメモリに読み込んで集計していましたが、
+     * DB側で COUNT を行うメソッドに切り替え、パフォーマンスを向上させました。
+     * </p>
+     *
+     * @return "pass"（合格数）と "fail"（不合格数）を格納したMap
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getPassFailStats() {
+        // DBに直接「合格は何人？」「不合格は何人？」と聞いて数字だけをもらう
+        int passCount = userProgressJdbcRepository.countByPassed(true);
+        int failCount = userProgressJdbcRepository.countByPassed(false);
+
+        Map<String, Integer> stats = new java.util.HashMap<>();
+        stats.put("pass", passCount);
+        stats.put("fail", failCount);
+
+        return stats;
+    }
+    
+    /**
+     * チャプターごとの挑戦回数を集計し、挑戦者が多い順に並べて返します。
+     * <p>
+     * SQL側でソート（ORDER BY）済みのデータを取得するため、
+     * Java側では順序を維持したままMapへ変換するのみとしています。
+     * </p>
+     *
+     * @return 挑戦回数が多い順に並んだ、チャプター名と回数のマップ
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getChapterStats() {
+        // 1. DBから「多い順」に並んだ状態でリストを取ってくる
+        List<Map<String, Object>> rawStats = userProgressJdbcRepository.countAttemptsByChapter();
+
+        // 2. SQLの並び順（LinkedHashMap）を壊さずにMapに変換する
+        return rawStats.stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row.get("title"),
+                        row -> ((Number) row.get("attempt_count")).intValue(),
+                        (oldValue, newValue) -> oldValue,
+                        java.util.LinkedHashMap::new // ←ここが順番を守るポイント！
+                ));
     }
 }

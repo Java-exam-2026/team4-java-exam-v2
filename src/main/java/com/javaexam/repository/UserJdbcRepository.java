@@ -1,15 +1,14 @@
 package com.javaexam.repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
-
+import com.javaexam.entity.User;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import com.javaexam.entity.User;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class UserJdbcRepository {
@@ -50,12 +49,6 @@ public class UserJdbcRepository {
         return users.stream().findFirst();
     }
 
-    /**
-     * userの重複チェックメソッド
-     * 
-     * @param username
-     * @return 重複しているかどうか(true=重複あり、false=重複なし)
-     */
     public boolean existsByUsername(String username) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE username = ?",
@@ -63,28 +56,40 @@ public class UserJdbcRepository {
                 username);
         return count != null && count > 0;
     }
-
-    /*
-     * UserをDBにセーブするメソッド
-     * @param user
-     * @return 行の割り当て番号
+    
+    /**
+     * システムに登録されている全ユーザーの総数を取得します。
+     * データベースのusersテーブルに対してCOUNTクエリを実行し、
+     * 登録済みのユーザーが何人いるかを数値（int）で返します。
+     * @return ユーザーの総数。データが存在しない場合は0を返します。
      */
+    public int countUsers() {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users",
+                Integer.class);
+        return count != null ? count : 0;
+    }
 
-    public int save(User user) {
-        
-        if (user.getId() == null || user.getId().isEmpty()) {
-            // Insert new user
+    /**
+     * 新しいユーザー情報をデータベース（usersテーブル）に保存します。
+     * IDが設定されていない場合は、UUID（重複しないランダムな文字列）を自動で発行して割り当てます。
+     * パスワードや表示名などの基本情報に加え、権限はデフォルトで「ROLE_USER」として登録されます。
+     * @param user 保存したいユーザー情報のエンティティ。ID、ユーザー名、パスワード、表示名を含める必要があります。
+     */
+    public void save(User user) {
+        // IDが空なら新しく発行する（簡易版）
+        if (user.getId() == null) {
             user.setId(java.util.UUID.randomUUID().toString());
-            return jdbcTemplate.update(
-                "INSERT INTO users (id, username, password, display_name, role,created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+        }
+
+        jdbcTemplate.update(
+                "INSERT INTO users (id, username, password, display_name, role, created_at, updated_at) " +
+                        "VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
                 user.getId(),
                 user.getUsername(),
                 user.getPassword(),
                 user.getDisplayName(),
-                user.getRole());
-        }
-        throw new IllegalArgumentException("データの型が不正です");
-
+                "ROLE_USER" // デフォルトの権限
+        );
     }
 }
