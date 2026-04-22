@@ -276,7 +276,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "問題の読み込みに失敗しました");
             return "redirect:/admin/questions";
         }
-    }S
+    }
 
     @Log(action = ActionType.EDIT, target = TargetType.QUESTION)
     @PostMapping("/questions/edit/{id}")

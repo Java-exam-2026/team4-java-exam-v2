@@ -8,7 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import com.fasterxml.jackson.databind.ObjectMapper;S
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Repository
 public class AuditLogJdbcRepository {
@@ -39,8 +39,9 @@ public class AuditLogJdbcRepository {
     /**
      * ログをデータベースに保存するメソッド。
      * @param log
+     * @return 保存されたログのID
      */
-    public void save(com.javaexam.entity.AuditLog log) {
+    public String save(com.javaexam.entity.AuditLog log) {
         if (log.getId() == null || log.getId().isEmpty()) {
             log.setId(java.util.UUID.randomUUID().toString());
         }
@@ -64,6 +65,7 @@ public class AuditLogJdbcRepository {
                 log.getChanges_json(),
                 log.getAction_time()
         );
+        return log.getId();
     }
 
     /**
@@ -80,6 +82,16 @@ public class AuditLogJdbcRepository {
     public List<com.javaexam.entity.AuditLog> findByTargetId(String targetId) {
         String sql = "SELECT * FROM audit_logs WHERE target_id = ? ORDER BY action_time DESC";
         return jdbcTemplate.query(sql, new Object[]{targetId}, auditLogRowMapper);
+    }
+
+    /**
+     * 指定されたIDの監査ログのchanges_jsonを更新する
+     * @param auditLogId 監査ログのID
+     * @param changesJson 変更内容のJSON
+     */
+    public void updateChangesJson(String auditLogId, String changesJson) {
+        String sql = "UPDATE audit_logs SET changes_json = ? WHERE id = ?";
+        jdbcTemplate.update(sql, changesJson, auditLogId);
     }
 }
 

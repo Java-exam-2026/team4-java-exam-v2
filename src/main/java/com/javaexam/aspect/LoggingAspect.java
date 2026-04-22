@@ -13,6 +13,7 @@ import com.javaexam.annotation.Log;
 import com.javaexam.entity.AuditLog;
 import com.javaexam.entity.User;
 import com.javaexam.repository.AuditLogJdbcRepository;
+import com.javaexam.service.AuditLogChangeCalculatorRegistry;
 
 
 /**
@@ -24,10 +25,13 @@ import com.javaexam.repository.AuditLogJdbcRepository;
 public class LoggingAspect {
     private final Logger logger;
     private final AuditLogJdbcRepository auditLogRepository;
+    private final AuditLogChangeCalculatorRegistry calculatorRegistry;
 
-    public LoggingAspect(AuditLogJdbcRepository auditLogRepository) {
+    public LoggingAspect(AuditLogJdbcRepository auditLogRepository,
+                         AuditLogChangeCalculatorRegistry calculatorRegistry) {
         this.logger = LoggerFactory.getLogger(LoggingAspect.class);
         this.auditLogRepository = auditLogRepository;
+        this.calculatorRegistry = calculatorRegistry;
     }
 
     @After("@annotation(log)")
@@ -44,17 +48,17 @@ public class LoggingAspect {
             auditLog.setActor_user_display_name(currentUser.getDisplayName());
             auditLog.setTarget_type(log.target());
             auditLog.setAction_type(log.action());
-            auditLog.setAction_status(true); 
+            auditLog.setAction_status(true);
 
             Object[] args = joinPoint.getArgs();
             String targetId = extractTargetId(args, log.target());
             auditLog.setTarget_id(targetId);
 
-            // DBに保存
-            auditLogRepository.save(auditLog);
+            // DBに保存（changes_json はここでは null）
+            String auditLogId = auditLogRepository.save(auditLog);
 
-            logger.info("Audit log saved: action={}, target={}, userId={}",
-                log.action(), log.target(), currentUser.getId());
+            logger.info("Audit log saved: action={}, target={}, userId={}, auditLogId={}",
+                log.action(), log.target(), currentUser.getId(), auditLogId);
         } catch (Exception e) {
             logger.error("Failed to save audit log", e);
         }
