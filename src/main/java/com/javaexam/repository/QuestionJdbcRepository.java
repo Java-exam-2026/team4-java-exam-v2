@@ -134,11 +134,11 @@ public class QuestionJdbcRepository {
      * 問題新規作成時にDBに重複した問題があるかチェックする。
      * @return 重複しているかどうか(true=重複あり、false=重複なし)
      */ 
-    public boolean existsByChapterIdAndQuestionText(String chapterId, String questionText) {
+    public boolean existsByChapterIdAndQuestionText(String ChapterId, String questionText) {
         Integer count = jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM questions WHERE chapter_id = ? AND question_text = ? ",
             Integer.class,
-            chapterId,
+            ChapterId,
             questionText
         );
         return count!= null &&count > 0;

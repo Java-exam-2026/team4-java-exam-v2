@@ -342,42 +342,40 @@ public class AdminService {
      */
     @Transactional
     public void importQuestionsFromCsv(MultipartFile file) throws IOException, CsvValidationException {
-        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
 
-            String[] row;
-            while ((row = reader.readNext()) != null) {
-                if (row.length != 5) {
-                    throw new IllegalArgumentException("データの型が不正です");
-                }
+        String[] row;
+        while ((row = reader.readNext()) != null) {
+            if (row.length != 5) {
+                throw new IllegalArgumentException("データの型が不正です");
+            }
 
-                String chapterCode = row[0];
-                String questionText = row[1];
-                String questionType = row[2];
-                String optionJson = row[3];
-                String correctAnswer = row[4];
+            String chapterCode = row[0];
+            String questionText = row[1];
+            String questionType = row[2];
+            String optionJson = row[3];
+            String correctAnswer = row[4];
 
-                Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
-                        .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
+            Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
+                    .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
 
-                Map<String, String> options = convertOptionJsonToOptions(optionJson);
+            Map<String, String> options = ConvertOptionJsonToOptions(optionJson);
 
-                if (!isDuplicateQuestion(chapter.getId(), questionText)) {
-                    Question question = new Question();
-                    question.setChapter(chapter);
-                    question.setQuestionText(questionText);
-                    question.setQuestionType(QuestionType.valueOf(questionType));
-                    question.setOptions(options);
-                    question.setCorrectAnswer(correctAnswer);
+            if (!isDuplicateQuestion(chapter.getId(), questionText)) {
+                Question question = new Question();
+                question.setChapter(chapter);
+                question.setQuestionText(questionText);
+                question.setQuestionType(QuestionType.valueOf(questionType));
+                question.setOptions(options);
+                question.setCorrectAnswer(correctAnswer);
 
-                    questionJdbcRepository.save(question);
-                }
+                questionJdbcRepository.save(question);
             }
         }
     }
 
     /**
      * USERSをCSVから受け取るメソッド
-     * 
      * @param file ユーザー情報を格納したCSVファイル(file)
      * @throws IOException
      * @throws CsvValidationException
@@ -387,10 +385,12 @@ public class AdminService {
 
     @Transactional
     public void importUsersFromCsv(MultipartFile file) throws IOException, CsvValidationException {
-        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+        CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)); 
+        
+
             String[] row;
             while ((row = reader.readNext()) != null) {
-                if (row.length != 4) {
+                if (row.length != 4 ) {
                     throw new IllegalArgumentException("データの型が不正です");
                 } else {
                     String username = row[0];
@@ -412,9 +412,8 @@ public class AdminService {
                     }
                 }
             }
-
         }
-    }
+
 
     /**
      * JSON文字列で受け取ったオプションをMapに変換するメソッド
@@ -423,13 +422,13 @@ public class AdminService {
      * @return Mapに変換されたオプション(options)
      */
 
-    private Map<String, String> convertOptionJsonToOptions(String optionJson) {
+    private Map<String, String> ConvertOptionJsonToOptions(String optionJson) {
         Map<String, String> options = new HashMap<>();
         try {
             options = objectMapper.readValue(optionJson, new TypeReference<Map<String, String>>() {
             });
         } catch (IOException e) {
-            throw new IllegalArgumentException("オプションJSONのパースに失敗しました: " + optionJson, e);
+            e.printStackTrace();
         }
         return options;
     }

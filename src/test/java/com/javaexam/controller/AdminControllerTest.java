@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
+import com.opencsv.exceptions.CsvValidationException;
 
 /**
  * 管理者画面の CSV インポート処理に関するコントローラテスト。
@@ -123,7 +124,7 @@ class AdminControllerTest {
 
                 mockMvc.perform(multipart("/admin/import/csv/users").file(file).with(csrf()))
                                 .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/admin/dashboard"))
+                                .andExpect(redirectedUrl("/dashboard"))
                                 .andExpect(flash().attribute("message", "CSV取り込みが完了しました"));
 
                 verify(adminService).importUsersFromCsv(any(MultipartFile.class));
@@ -145,7 +146,7 @@ class AdminControllerTest {
 
                 mockMvc.perform(multipart("/admin/import/csv/users").file(file).with(csrf()))
                                 .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/admin/dashboard"))
+                                .andExpect(redirectedUrl("/dashboard"))
                                 .andExpect(flash().attribute("error", "ファイル読み込みに失敗しました"));
         }
 
@@ -165,7 +166,7 @@ class AdminControllerTest {
 
                 mockMvc.perform(multipart("/admin/import/csv/users").file(file).with(csrf()))
                                 .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/admin/dashboard"))
+                                .andExpect(redirectedUrl("/dashboard"))
                                 .andExpect(flash().attribute("error", "CSV取込中にエラーが発生しました"));
         }
 
@@ -185,7 +186,7 @@ class AdminControllerTest {
 
                 mockMvc.perform(multipart("/admin/import/csv/users").file(file).with(csrf()))
                                 .andExpect(status().is3xxRedirection())
-                                .andExpect(redirectedUrl("/admin/dashboard"));
+                                .andExpect(redirectedUrl("/dashboard"));
 
                 verifyNoInteractions(adminService);
         }
