@@ -11,7 +11,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -485,7 +484,6 @@ public class AdminController {
      * @return 問題一覧画面へリダイレクトするビュー名
      */
     @PostMapping("/import/csv/questions")
-    @Transactional
     public String importCsvForQuestions(@RequestParam("file") MultipartFile file,
             RedirectAttributes redirectAttributes) {
         try {
@@ -518,16 +516,6 @@ public class AdminController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
         }
-        return "redirect:/admin/dashboard";// 吉川さんのadmindashboardにリダイレクト先を変える
-    } 
-    
-    @GetMapping("/progress")
-    public String viewAllProgress(Model model) {
-        // 全ユーザーの進捗を取得してモデルに入れる
-        List<AllProgressDto> progressList = adminService.getAllUsersProgress();
-        model.addAttribute("progressList", progressList);
-
-        // admin-progress.html を呼び出す
-        return "admin-progress";
+        return "redirect:/admin/dashboard";
     }
 }
