@@ -1,6 +1,7 @@
 package com.javaexam.service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
@@ -17,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
@@ -54,6 +58,11 @@ public class AdminServiceCsvTest {
     @Test
     void testImportQuestionsFromCsv_whenSuccess() throws Exception {
         MockMultipartFile file = createQuestionsCsvFile();
+        Map<String, String> mockOptions = Map.of(
+                "A", "aaa",
+                "B", "bbb",
+                "C", "ccc",
+                "D", "ddd");
 
         Chapter chapter = new Chapter();
         chapter.setId("test-chapter-id");
@@ -64,6 +73,8 @@ public class AdminServiceCsvTest {
                 .thenReturn(Optional.of(chapter));
         when(questionJdbcRepository.existsByChapterIdAndQuestionText("test-chapter-id", "問題文"))
                 .thenReturn(false);
+        when(objectMapper.readValue(anyString(), any(TypeReference.class)))
+                .thenReturn(mockOptions);
 
         adminService.importQuestionsFromCsv(file);
 
