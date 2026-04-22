@@ -63,4 +63,60 @@ public class UserJdbcRepository {
             newPassword, userId
         );
     }
-}
+
+    /**
+     * 全ユーザーを取得する
+     *
+     * @return 全ユーザーのリスト
+     */
+    public List<User> findAll() {
+        return jdbcTemplate.query(
+            "SELECT * FROM users ORDER BY created_at DESC",
+            userRowMapper);
+    }
+
+    /**
+     * ユーザーを保存する（新規作成・更新）
+     *
+     * @param user 保存するユーザー情報
+     */
+    public void save(User user) {
+        if (user.getId() == null) {
+            // 新規作成
+            jdbcTemplate.update(
+                "INSERT INTO users (id, username, password, display_name, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                java.util.UUID.randomUUID().toString(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getDisplayName(),
+                user.getRole(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+            );
+        } else {
+            // 更新
+            jdbcTemplate.update(
+                "UPDATE users SET username = ?, password = ?, display_name = ?, role = ?, updated_at = ? WHERE id = ?",
+                user.getUsername(),
+                user.getPassword(),
+                user.getDisplayName(),
+                user.getRole(),
+                user.getUpdatedAt(),
+                user.getId()
+            );
+        }
+    }
+
+    /**
+     * 指定したIDのユーザーを削除する
+     *
+     * @param id 削除するユーザーのID
+     * @return 削除件数
+     */
+    public int deleteById(String id) {
+        return jdbcTemplate.update(
+            "DELETE FROM users WHERE id = ?",
+            id);
+    }    
+    }
+
