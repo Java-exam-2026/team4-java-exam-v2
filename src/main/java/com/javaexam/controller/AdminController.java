@@ -64,7 +64,7 @@ public class AdminController {
      * 管理者用ダッシュボードを表示します。
      * ユーザー総数、月間受験数、合格・不合格統計、チャプター別正答率などの
      * 統計情報を画面に渡します。
-     * * @param model 画面にデータを渡すためのモデル
+     * @param model 画面にデータを渡すためのモデル
      * 
      * @return 管理者ダッシュボードのHTMLパス
      */
@@ -107,6 +107,16 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "指定されたデータが見つかりませんでした");
             return "redirect:/admin/progress";
         }
+    }
+
+     @GetMapping("/progress")
+    public String viewAllProgress(Model model) {
+        // 全ユーザーの進捗を取得してモデルに入れる
+        List<AllProgressDto> progressList = adminService.getAllUsersProgress();
+        model.addAttribute("progressList", progressList);
+
+        // admin-progress.html を呼び出す
+        return "admin-progress";
     }
 
     @GetMapping("/questions")
