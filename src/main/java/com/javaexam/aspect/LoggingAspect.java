@@ -80,7 +80,7 @@ public class LoggingAspect {
             logger.info("Audit log saved: action={}, target={}, userId={}, auditLogId={}",
                     log.action(), log.target(), currentUser.getId(), auditLogId);
         } catch (Exception e) {
-            logger.error("Failed to save audit log", e);
+            logger.error("ログの取得に失敗しました。", e);
         }
 
         return result;
