@@ -499,7 +499,7 @@ public class AdminController {
      * @param searchForm
      * @param page
      * @param model
-     * @return
+     * @return 監査ログ表示用のHTMLパス
     */
 
     @GetMapping("/audit-logs")
