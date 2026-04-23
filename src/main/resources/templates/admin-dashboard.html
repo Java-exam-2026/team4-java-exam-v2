@@ -10,7 +10,7 @@
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="/">Java Exam System</a>
+            <a class="navbar-brand" th:href="@{/}">Java Exam System</a>
             <div class="d-flex">
                 <span class="navbar-text me-3" th:text="${#authentication.name}">User</span>
                 <form th:action="@{/logout}" method="post">
@@ -29,10 +29,14 @@
                         <h5>🛠️機能一覧</h5>
                         <h5 class="card-title">全ユーザーの回答状況</h5>
                         <p class="card-text">全てのユーザーの進捗状況とスコアを確認できます。</p>
-                        <a href="/admin/progress" class="btn btn-outline-primary mb-2 d-block">回答状況を見る</a>
+                        <a th:href="@{/admin/users}" class="btn btn-outline-primary mb-2 d-block">ユーザー一覧を見る</a>
                         <h5 class="card-title">全問題と答え</h5>
                         <p class="card-text">全ての問題文と正解を確認できます。</p>
-                        <a href="/admin/questions" class="btn btn-outline-primary d-block">問題と答えを見る</a>
+                        <a th:href="@{/admin/questions}" class="btn btn-outline-primary d-block">問題と答えを見る</a>
+                        <h5 class="card-title">ユーザーの監査ログ</h5>
+                        <p class="card-text">全てのユーザーの監査ログを見れます</p>
+                        <a th:href="@{/admin/audit-logs}" class="btn btn-outline-primary d-block">監査ログを見る</a>
+
                     </div>
                 </div>
             </div>
@@ -70,7 +74,7 @@
                 </div>
             </div>
             <hr>
-            <a href="/" class="btn btn-secondary">一般画面に戻る</a>
+            <a th:href="@{/}" class="btn btn-secondary">一般画面に戻る</a>
         </div>
         <script th:inline="javascript">
             // ThymeleafからJavaのMapデータを取得

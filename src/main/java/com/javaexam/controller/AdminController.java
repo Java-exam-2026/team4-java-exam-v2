@@ -13,19 +13,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.javaexam.annotation.Log;
-import com.javaexam.dto.AuditLogPageInfo;
-import com.javaexam.dto.AuditLogSearchForm;
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
+import com.javaexam.dto.AuditLogPageInfo;
+import com.javaexam.dto.AuditLogSearchForm;
 import com.javaexam.dto.ChapterFormDto;
 import com.javaexam.dto.QuestionFormDto;
 import com.javaexam.dto.UserAnswerDetailDto;
@@ -69,7 +69,7 @@ public class AdminController {
      * 管理者用ダッシュボードを表示します。
      * ユーザー総数、月間受験数、合格・不合格統計、チャプター別正答率などの
      * 統計情報を画面に渡します。
-     * * @param model 画面にデータを渡すためのモデル
+     * @param model 画面にデータを渡すためのモデル
      * @return 管理者ダッシュボードのHTMLパス
      */
     @GetMapping("/dashboard") // これで /admin/dashboard になります

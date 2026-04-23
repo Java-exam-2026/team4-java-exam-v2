@@ -84,5 +84,6 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+
 CREATE INDEX IF NOT EXISTS idx_user_answers_user_chapter ON user_answers(user_id, chapter_id);
 CREATE INDEX IF NOT EXISTS idx_user_answers_question ON user_answers(question_id);
