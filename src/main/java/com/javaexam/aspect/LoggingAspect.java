@@ -23,6 +23,17 @@ import com.javaexam.service.AuditLogChangeCalculatorRegistry;
 /**
  * 監査ログをDBに保存するAspect
  * @Logアノテーションが付与されたメソッドの実行時にログを記録する
+ * 記載内容:
+ * - actor_user_id: 操作を行ったユーザーのID
+ * - actor_username: 操作を行ったユーザーのユーザー名
+ * - actor_display_name: 操作を行ったユーザーの表示名
+ * - target_type: 操作対象のタイプ（例: QUESTION, USER）
+ * - action_type: 操作の種類（例: CREATE, UPDATE, DELETE）
+ * - action_status: 操作の成功/失敗
+ * - target_id: 操作対象のID（例: QuestionのID）
+ * - target_name: 操作対象の名前（例: Questionのテキスト）
+ * - changes_json: 変更内容のJSON（UPDATEの場合のみ）
+ * 変更内容のJSONは、変更前と変更後の値を含む形式で記録する
  */
 @Aspect
 @Component

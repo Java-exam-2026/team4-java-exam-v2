@@ -10,8 +10,20 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.entity.Question;
 
+/**
+ * Question エンティティの変更を計算するクラス
+ * 変更前と変更後の Question オブジェクトを比較し、変更されたフィールドとその値を JSON 形式で返す
+ * 変更がない場合は null を返す
+ * 対象フィールド:
+ * - chapter
+ * - question_text
+ * - question_type
+ * - options
+ * - answer
+ * options は Map<String, String> として JSON に変換して比較する
+ */
 @Component
-public class QuestionChangeService implements AuditLogChangeCalculator {
+public class QuestionChangeCalculator implements AuditLogChangeCalculator {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

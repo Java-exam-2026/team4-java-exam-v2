@@ -5,14 +5,18 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * AuditLogChangeCalculator を管理するクラス
+ * target_type に応じた Calculator を提供する
+ */
 @Component
 public class AuditLogChangeCalculatorRegistry {
 
     private final Map<String, AuditLogChangeCalculator> calculators;
 
     public AuditLogChangeCalculatorRegistry(
-            UserChangeService userChangeCalculator,
-            QuestionChangeService questionChangeCalculator) {
+            UserChangeCalculator userChangeCalculator,
+            QuestionChangeCalculator questionChangeCalculator) {
         
         this.calculators = new HashMap<>();
         this.calculators.put("USER", userChangeCalculator);

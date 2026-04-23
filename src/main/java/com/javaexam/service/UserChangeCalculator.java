@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.entity.User;
 
 @Component
-public class UserChangeService implements AuditLogChangeCalculator {
+public class UserChangeCalculator implements AuditLogChangeCalculator {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
