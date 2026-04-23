@@ -138,6 +138,55 @@
         white-space: pre-wrap;
       }
 
+      .audit-summary {
+        border: 1px solid #e6ebf7;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+      }
+
+      .audit-summary-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #6c7a96;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .audit-summary-value {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #24324b;
+      }
+
+      .changes-json-box {
+        border: 1px solid #dce4f6;
+        border-radius: 12px;
+        background-color: #f8faff;
+        padding: 0.5rem 0.75rem;
+      }
+
+      .changes-json-box summary {
+        cursor: pointer;
+        font-weight: 700;
+        color: #44516c;
+      }
+
+      .changes-json {
+        margin: 0.6rem 0 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: #52617d;
+        font-size: 0.85rem;
+      }
+
+      .pagination-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
       .empty-state {
         border: 1px dashed #cfd9f4;
         border-radius: 16px;
@@ -226,57 +275,99 @@
 
       <section class="card logs-card">
         <div class="card-body">
-          <form th:action="@{/admin/audit-logs}" method="get" class="search-panel">
+          <div class="audit-summary">
+            <div class="audit-summary-label" th:text="${isFiltered ? '検索結果' : '表示中'}">表示中</div>
+            <div class="audit-summary-value">
+              <span th:text="${pageInfo.totalCount}">0</span>件
+              <span
+                th:if="${not isFiltered and pageInfo.totalCount > 0}"
+                class="meta-text"
+                th:text="${' / ' + pageInfo.fromRow + ' - ' + pageInfo.toRow + ' 件目'}"
+              >
+                / 1 - 50 件目
+              </span>
+            </div>
+            <div class="meta-text mt-1" th:if="${not isFiltered}">
+              未検索時は 50 件単位でページ表示します。
+            </div>
+          </div>
+
+          <form
+            th:action="@{/admin/audit-logs}"
+            method="get"
+            class="search-panel"
+            th:object="${searchForm}"
+          >
             <div class="row g-3">
-              <div class="col-12 col-lg-6">
-                <label for="actorUserId" class="filter-group-label">ユーザーID</label>
+              <div class="col-12 col-md-4">
+                <label for="actorUserId" class="filter-group-label">実行ユーザーID</label>
                 <input
                   type="text"
                   id="actorUserId"
-                  name="actorUserId"
-                  th:value="${actorUserId}"
+                  th:field="*{actorUserId}"
                   class="form-control"
                   placeholder="実行したユーザーIDで検索"
                 />
               </div>
 
-              <div class="col-12 col-lg-6">
-                <span class="filter-group-label">操作種別</span>
-                <div class="action-filters">
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="actionCreate"
-                      name="actionTypes"
-                      value="CREATE"
-                      th:checked="${selectedActionTypes != null and #lists.contains(selectedActionTypes, 'CREATE')}"
-                    />
-                    <label class="form-check-label" for="actionCreate">作成</label>
-                  </div>
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="actionUpdate"
-                      name="actionTypes"
-                      value="UPDATE"
-                      th:checked="${selectedActionTypes != null and #lists.contains(selectedActionTypes, 'UPDATE')}"
-                    />
-                    <label class="form-check-label" for="actionUpdate">更新</label>
-                  </div>
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      id="actionDelete"
-                      name="actionTypes"
-                      value="DELETE"
-                      th:checked="${selectedActionTypes != null and #lists.contains(selectedActionTypes, 'DELETE')}"
-                    />
-                    <label class="form-check-label" for="actionDelete">削除</label>
-                  </div>
-                </div>
+              <div class="col-12 col-md-4">
+                <label for="actorUsername" class="filter-group-label">実行ユーザー名</label>
+                <input
+                  type="text"
+                  id="actorUsername"
+                  th:field="*{actorUsername}"
+                  class="form-control"
+                  placeholder="ユーザー名で検索"
+                />
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="actorDisplayName" class="filter-group-label">表示名</label>
+                <input
+                  type="text"
+                  id="actorDisplayName"
+                  th:field="*{actorDisplayName}"
+                  class="form-control"
+                  placeholder="表示名で検索"
+                />
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="targetType" class="filter-group-label">対象種別</label>
+                <select id="targetType" th:field="*{targetType}" class="form-select">
+                  <option value="">すべて</option>
+                  <option th:each="type : ${targetTypes}" th:value="${type}" th:text="${type}"></option>
+                </select>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="targetId" class="filter-group-label">対象ID</label>
+                <input
+                  type="text"
+                  id="targetId"
+                  th:field="*{targetId}"
+                  class="form-control"
+                  placeholder="対象IDで検索"
+                />
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="targetName" class="filter-group-label">対象名</label>
+                <input
+                  type="text"
+                  id="targetName"
+                  th:field="*{targetName}"
+                  class="form-control"
+                  placeholder="対象名で検索"
+                />
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="actionType" class="filter-group-label">操作種別</label>
+                <select id="actionType" th:field="*{actionType}" class="form-select">
+                  <option value="">すべて</option>
+                  <option th:each="type : ${actionTypes}" th:value="${type}" th:text="${type}"></option>
+                </select>
               </div>
 
               <div class="col-12 col-lg-8">
@@ -284,66 +375,136 @@
                 <div class="date-range">
                   <input
                     type="date"
-                    name="startDate"
-                    th:value="${startDate}"
+                    th:field="*{startDate}"
                     class="form-control"
                   />
                   <span>～</span>
                   <input
                     type="date"
-                    name="endDate"
-                    th:value="${endDate}"
+                    th:field="*{endDate}"
                     class="form-control"
                   />
                 </div>
               </div>
 
-              <div class="col-12 col-lg-4 d-flex align-items-end justify-content-lg-end">
+              <div class="col-12 d-flex flex-wrap justify-content-end gap-2">
                 <button type="submit" class="btn btn-primary search-button">検索</button>
+                <a href="/admin/audit-logs" class="btn btn-outline-secondary search-button">条件をクリア</a>
               </div>
             </div>
           </form>
 
-          <div class="table-wrap" th:if="${not #lists.isEmpty(logs)}">
+          <div class="table-wrap" th:if="${not #lists.isEmpty(auditLogs)}">
             <table class="table align-middle logs-table">
               <thead>
                 <tr>
                   <th scope="col">日時</th>
-                  <th scope="col">対象名</th>
-                  <th scope="col">種別</th>
-                  <th scope="col">操作</th>
                   <th scope="col">実行者</th>
-                  <th scope="col">パラメータ</th>
+                  <th scope="col">対象</th>
+                  <th scope="col">操作</th>
+                  <th scope="col">状態</th>
+                  <th scope="col">変更内容</th>
                 </tr>
               </thead>
               <tbody>
-                <tr th:each="log : ${logs}">
-                  <td class="meta-text" th:text="${#temporals.format(log.loggedAt, 'yyyy-MM-dd HH:mm:ss')}">
+                <tr th:each="log : ${auditLogs}">
+                  <td class="meta-text" th:text="${log.created_at != null ? #temporals.format(log.created_at, 'yyyy-MM-dd HH:mm:ss') : '-'}">
                     2026-04-16 10:00:00
                   </td>
                   <td>
-                    <div class="target-name" th:text="${log.resourceName}">
+                    <div class="target-name" th:text="${log.actor_display_name}">
                       山田 太郎
+                    </div>
+                    <div class="meta-text">
+                      <span th:text="${log.actor_username}">tanaka</span>
+                      <span th:if="${log.actor_user_id != null}" th:text="${' / ' + log.actor_user_id}"> / user-id</span>
                     </div>
                   </td>
                   <td>
-                    <span class="plain-meta" th:text="${log.resourceType}">USER</span>
+                    <div class="target-name" th:text="${log.target_name}">
+                      問題タイトル
+                    </div>
+                    <div class="meta-text">
+                      <span class="badge text-bg-light border" th:text="${log.target_type}">QUESTION</span>
+                      <span class="ms-2" th:text="${log.target_id}">target-id</span>
+                    </div>
                   </td>
                   <td>
-                    <span class="plain-meta" th:text="${log.action}">UPDATE</span>
+                    <span class="badge text-bg-primary" th:text="${log.action_type}">UPDATE</span>
                   </td>
-                  <td class="meta-text" th:text="${log.performedBy}">admin</td>
-                  <td class="parameters-cell" th:text="${log.parameters}">
-                    displayName: 山田 太郎 -> 山田 次郎
+                  <td>
+                    <span
+                      class="badge"
+                      th:classappend="${log.action_status} ? ' text-bg-success' : ' text-bg-danger'"
+                      th:text="${log.action_status} ? '成功' : '失敗'"
+                    >
+                      成功
+                    </span>
+                  </td>
+                  <td class="parameters-cell">
+                    <details class="changes-json-box" th:if="${log.changes_json != null and !#strings.isEmpty(log.changes_json)}">
+                      <summary>変更JSONを表示</summary>
+                      <pre class="changes-json" th:text="${log.changes_json}">{"before":"A","after":"B"}</pre>
+                    </details>
+                    <span class="meta-text" th:if="${log.changes_json == null or #strings.isEmpty(log.changes_json)}">
+                      変更なし
+                    </span>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div class="empty-state" th:if="${#lists.isEmpty(logs)}">
+          <div class="empty-state" th:if="${#lists.isEmpty(auditLogs)}">
             条件に一致する監査ログがありません。
           </div>
+
+          <nav
+            class="pagination-shell mt-4"
+            th:if="${not isFiltered and pageInfo.totalPages > 1}"
+            aria-label="監査ログのページネーション"
+          >
+            <div class="meta-text">
+              <span th:text="${pageInfo.fromRow}">1</span> - <span th:text="${pageInfo.toRow}">50</span>
+              件目を表示 / 全 <span th:text="${pageInfo.totalCount}">0</span> 件
+            </div>
+
+            <ul class="pagination mb-0 flex-wrap">
+              <li class="page-item" th:classappend="${pageInfo.currentPage == 1} ? 'disabled' : ''">
+                <a
+                  class="page-link"
+                  th:if="${pageInfo.currentPage > 1}"
+                  th:href="@{/admin/audit-logs(page=${pageInfo.currentPage - 1}, actorUserId=${searchForm.actorUserId}, actorUsername=${searchForm.actorUsername}, actorDisplayName=${searchForm.actorDisplayName}, targetType=${searchForm.targetType}, targetId=${searchForm.targetId}, targetName=${searchForm.targetName}, actionType=${searchForm.actionType}, startDate=${searchForm.startDate}, endDate=${searchForm.endDate})}"
+                >
+                  前へ
+                </a>
+                <span class="page-link" th:if="${pageInfo.currentPage <= 1}">前へ</span>
+              </li>
+              <li
+                class="page-item"
+                th:each="pageNumber : ${pageNumbers}"
+                th:classappend="${pageNumber == pageInfo.currentPage} ? 'active' : ''"
+              >
+                <a
+                  class="page-link"
+                  th:href="@{/admin/audit-logs(page=${pageNumber}, actorUserId=${searchForm.actorUserId}, actorUsername=${searchForm.actorUsername}, actorDisplayName=${searchForm.actorDisplayName}, targetType=${searchForm.targetType}, targetId=${searchForm.targetId}, targetName=${searchForm.targetName}, actionType=${searchForm.actionType}, startDate=${searchForm.startDate}, endDate=${searchForm.endDate})}"
+                  th:text="${pageNumber}"
+                >
+                  1
+                </a>
+              </li>
+              <li class="page-item" th:classappend="${pageInfo.currentPage == pageInfo.totalPages} ? 'disabled' : ''">
+                <a
+                  class="page-link"
+                  th:if="${pageInfo.currentPage < pageInfo.totalPages}"
+                  th:href="@{/admin/audit-logs(page=${pageInfo.currentPage + 1}, actorUserId=${searchForm.actorUserId}, actorUsername=${searchForm.actorUsername}, actorDisplayName=${searchForm.actorDisplayName}, targetType=${searchForm.targetType}, targetId=${searchForm.targetId}, targetName=${searchForm.targetName}, actionType=${searchForm.actionType}, startDate=${searchForm.startDate}, endDate=${searchForm.endDate})}"
+                >
+                  次へ
+                </a>
+                <span class="page-link" th:if="${pageInfo.currentPage >= pageInfo.totalPages}">次へ</span>
+              </li>
+            </ul>
+          </nav>
         </div>
       </section>
     </main>

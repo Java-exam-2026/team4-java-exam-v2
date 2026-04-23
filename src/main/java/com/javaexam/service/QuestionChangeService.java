@@ -1,5 +1,6 @@
 package com.javaexam.service;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -50,10 +51,12 @@ public class QuestionChangeService implements AuditLogChangeCalculator {
         }
 
         // options の変更を確認
-        if (!Objects.equals(beforeQ.getOptionsJson(), afterQ.getOptionsJson())) {
+        String beforeOptions = toJsonString(beforeQ.getOptions());
+        String afterOptions = toJsonString(afterQ.getOptions());
+        if (!Objects.equals(beforeOptions, afterOptions)) {
             changes.put("options", Map.of(
-                "before", beforeQ.getOptionsJson() != null ? beforeQ.getOptionsJson() : "null",
-                "after", afterQ.getOptionsJson() != null ? afterQ.getOptionsJson() : "null"
+                "before", beforeOptions,
+                "after", afterOptions
             ));
         }
 
@@ -74,5 +77,10 @@ public class QuestionChangeService implements AuditLogChangeCalculator {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private String toJsonString(Map<String, String> options) {
+        String json = toJson(options != null ? options : Collections.emptyMap());
+        return json != null ? json : "null";
     }
 }
