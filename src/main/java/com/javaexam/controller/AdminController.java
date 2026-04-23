@@ -493,7 +493,14 @@ public class AdminController {
         return "admin-progress";
     }
 
-    // Audit logs endpoint
+    /**
+     * 監査ログを表示するエンドポイント。
+     * 検索条件（ユーザーID、アクションタイプ、対象タイプ、日付範囲）を受け取り、フィルタリングされたログを表示する。
+     * @param searchForm
+     * @param page
+     * @param model
+     * @return
+    */
 
     @GetMapping("/audit-logs")
     public String viewAuditLogs(@ModelAttribute("searchForm") AuditLogSearchForm searchForm,
@@ -526,6 +533,7 @@ public class AdminController {
         return "admin-audit-logs";
     }
 
+    
     private List<Integer> buildPageNumbers(int currentPage, int totalPages) {
         List<Integer> pages = new ArrayList<>();
         if (totalPages <= 0) {
