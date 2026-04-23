@@ -11,6 +11,7 @@ import com.javaexam.entity.QuestionType;
 import com.javaexam.repository.ChapterJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AdminService;
+import com.javaexam.entity.User;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -473,5 +475,130 @@ public class AdminController {
 
         // admin-progress.html を呼び出す
         return "admin-progress";
+    }
+    // ==================
+    // ユーザー管理
+    // ==================
+
+    /**
+     * ユーザー一覧画面を表示する
+     *
+     * @param model 画面に渡すデータ
+     * @return ユーザー一覧画面
+     */
+    @GetMapping("/users")
+    public String listUsers(Model model) {
+        List<User> users = adminService.getAllUsers();
+        model.addAttribute("users", users);
+        return "admin-users";
+    }
+
+    /**
+     * ユーザー作成フォームを表示する
+     *
+     * @param model 画面に渡すデータ
+     * @return ユーザー作成フォーム画面
+     */
+    @GetMapping("/users/new")
+    public String showCreateUserForm(Model model) {
+        model.addAttribute("user", new User());
+        model.addAttribute("isEdit", false);
+        return "admin-user-form";
+    }
+
+    /**
+     * ユーザーを新規作成する
+     *
+     * @param user フォームから受け取ったユーザー情報
+     * @param redirectAttributes リダイレクト時のメッセージ
+     * @return ユーザー一覧画面にリダイレクト
+     */
+    @PostMapping("/users/new")
+    public String createUser(
+            @ModelAttribute User user,
+            RedirectAttributes redirectAttributes) {
+        try {
+            adminService.createUser(user);
+            redirectAttributes.addFlashAttribute(
+                "message", "ユーザーを作成しました");
+            return "redirect:/admin/users";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(
+                "error", "ユーザーの作成に失敗しました");
+            return "redirect:/admin/users/new";
+        }
+    }
+
+    /**
+     * ユーザー編集フォームを表示する
+     *
+     * @param id 編集するユーザーのID
+     * @param model 画面に渡すデータ
+     * @param redirectAttributes リダイレクト時のメッセージ
+     * @return ユーザー編集フォーム画面
+     */
+    @GetMapping("/users/edit/{id}")
+    public String showEditUserForm(
+            @PathVariable String id,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        try {
+            User user = adminService.getUserById(id);
+            model.addAttribute("user", user);
+            model.addAttribute("isEdit", true);
+            return "admin-user-form";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute(
+                "error", "ユーザーが見つかりませんでした");
+            return "redirect:/admin/users";
+        }
+    }
+
+    /**
+     * ユーザー情報を更新する
+     *
+     * @param id 更新するユーザーのID
+     * @param user フォームから受け取った更新後のユーザー情報
+     * @param redirectAttributes リダイレクト時のメッセージ
+     * @return ユーザー一覧画面にリダイレクト
+     */
+    @PostMapping("/users/edit/{id}")
+    public String updateUser(
+            @PathVariable String id,
+            @ModelAttribute User user,
+            RedirectAttributes redirectAttributes) {
+        try {
+            user.setId(id);
+            adminService.updateUser(user);
+            redirectAttributes.addFlashAttribute(
+                "message", "ユーザーを更新しました");
+            return "redirect:/admin/users";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(
+                "error", "ユーザーの更新に失敗しました");
+            return "redirect:/admin/users/edit/" + id;
+        }
+    }
+
+    /**
+     * ユーザーを削除する
+     *
+     * @param id 削除するユーザーのID
+     * @param redirectAttributes リダイレクト時のメッセージ
+     * @return ユーザー一覧画面にリダイレクト
+     */
+    @PostMapping("/users/delete/{id}")
+    public String deleteUser(
+            @PathVariable String id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            adminService.deleteUser(id);
+            redirectAttributes.addFlashAttribute(
+                "message", "ユーザーを削除しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(
+                "error", "ユーザーの削除に失敗しました");
+        }
+        return "redirect:/admin/users";
     }
 }

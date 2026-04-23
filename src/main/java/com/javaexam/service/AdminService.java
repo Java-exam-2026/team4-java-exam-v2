@@ -6,6 +6,7 @@ import com.javaexam.dto.UserAnswerByDateDto;
 import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
+import com.javaexam.entity.User;
 import com.javaexam.entity.UserAnswer;
 import com.javaexam.entity.UserProgress;
 import com.javaexam.repository.ChapterJdbcRepository;
@@ -15,6 +16,7 @@ import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,17 +31,20 @@ public class AdminService {
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final UserAnswerJdbcRepository userAnswerJdbcRepository;
     private final UserJdbcRepository userJdbcRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
             QuestionJdbcRepository questionJdbcRepository,
             ChapterJdbcRepository chapterJdbcRepository,
             UserAnswerJdbcRepository userAnswerJdbcRepository,
-            UserJdbcRepository userJdbcRepository) {
+            UserJdbcRepository userJdbcRepository,
+            PasswordEncoder passwordEncoder) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.userAnswerJdbcRepository = userAnswerJdbcRepository;
         this.userJdbcRepository = userJdbcRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
@@ -311,7 +316,8 @@ public class AdminService {
      * 実行時の日付から今月の開始日時（1日 00:00）と終了日時（末日 23:59）を算出し、
      * その期間内に行われた進捗データの件数を集計します。
      * </p>
-     * * @return 今月の総挑戦回数
+     * 
+     * @return 今月の総挑戦回数
      */
     @Transactional(readOnly = true)
     public int getMonthlyAttemptCount() {
@@ -353,7 +359,7 @@ public class AdminService {
 
         return stats;
     }
-    
+
     /**
      * チャプターごとの挑戦回数を集計し、挑戦者が多い順に並べて返します。
      * <p>
@@ -376,5 +382,90 @@ public class AdminService {
                         (oldValue, newValue) -> oldValue,
                         java.util.LinkedHashMap::new // ←ここが順番を守るポイント！
                 ));
+    }
+    // ==================
+    // ユーザー管理
+    // ==================
+
+    /**
+     * 全ユーザーを取得する
+     *
+     * @return 全ユーザーのリスト
+     */
+    @Transactional(readOnly = true)
+    public List<User> getAllUsers() {
+        return userJdbcRepository.findAll();
+    }
+
+    /**
+     * 指定したIDのユーザーを取得する
+     *
+     * @param userId 取得するユーザーのID
+     * @return ユーザー情報
+     * @throws IllegalArgumentException ユーザーが見つからない場合
+     */
+    @Transactional(readOnly = true)
+    public User getUserById(String userId) {
+        return userJdbcRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No user found with id: " + userId));
+    }
+
+    /**
+     * ユーザーを新規作成する
+     * パスワードはハッシュ化して保存する
+     *
+     * @param user 作成するユーザー情報
+     */
+    @Transactional
+    public void createUser(User user) {
+        user.setPassword(
+                passwordEncoder.encode(user.getPassword()));
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        userJdbcRepository.save(user);
+    }
+
+    /**
+     * ユーザー情報を更新する
+     * パスワードが入力された場合のみハッシュ化して更新する
+     *
+     * @param user 更新後のユーザー情報
+     * @throws IllegalArgumentException ユーザーが見つからない場合
+     */
+    @Transactional
+    public void updateUser(User user) {
+        User existing = userJdbcRepository.findById(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No user found with id: " + user.getId()));
+
+        existing.setUsername(user.getUsername());
+        existing.setDisplayName(user.getDisplayName());
+        existing.setRole(user.getRole());
+
+        // パスワードが入力されていた場合のみ更新
+        if (user.getPassword() != null
+                && !user.getPassword().isEmpty()) {
+            existing.setPassword(
+                    passwordEncoder.encode(user.getPassword()));
+        }
+
+        existing.setUpdatedAt(LocalDateTime.now());
+        userJdbcRepository.save(existing);
+    }
+
+    /**
+     * ユーザーを削除する
+     *
+     * @param userId 削除するユーザーのID
+     * @throws IllegalArgumentException ユーザーが見つからない場合
+     */
+    @Transactional
+    public void deleteUser(String userId) {
+        int deletedCount = userJdbcRepository.deleteById(userId);
+        if (deletedCount == 0) {
+            throw new IllegalArgumentException(
+                    "No user found with id: " + userId);
+        }
     }
 }
