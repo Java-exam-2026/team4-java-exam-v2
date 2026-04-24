@@ -1,11 +1,29 @@
 package com.javaexam.service;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
 import com.javaexam.dto.UserAnswerByDateDto;
 import com.javaexam.dto.UserAnswerDetailDto;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
+import com.javaexam.entity.QuestionType;
+import com.javaexam.entity.User;
 import com.javaexam.entity.UserAnswer;
 import com.javaexam.entity.UserProgress;
 import com.javaexam.repository.ChapterJdbcRepository;
@@ -13,13 +31,8 @@ import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.repository.UserAnswerJdbcRepository;
 import com.javaexam.repository.UserJdbcRepository;
 import com.javaexam.repository.UserProgressJdbcRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 
 @Service
 public class AdminService {
@@ -29,19 +42,31 @@ public class AdminService {
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final UserAnswerJdbcRepository userAnswerJdbcRepository;
     private final UserJdbcRepository userJdbcRepository;
+    private final ObjectMapper objectMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public AdminService(UserProgressJdbcRepository userProgressJdbcRepository,
             QuestionJdbcRepository questionJdbcRepository,
             ChapterJdbcRepository chapterJdbcRepository,
             UserAnswerJdbcRepository userAnswerJdbcRepository,
-            UserJdbcRepository userJdbcRepository) {
+            UserJdbcRepository userJdbcRepository,
+            ObjectMapper objectMapper,
+            PasswordEncoder passwordEncoder) {
         this.userProgressJdbcRepository = userProgressJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.userAnswerJdbcRepository = userAnswerJdbcRepository;
         this.userJdbcRepository = userJdbcRepository;
+        this.objectMapper = objectMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Retrieves all user progress records for admin review.
+     * Note: Currently loads all records without pagination. For production systems
+     * with large datasets,
+     * consider implementing pagination or filtering.
+     */
     @Transactional(readOnly = true)
     public List<AllProgressDto> getAllUsersProgress() {
         List<UserProgress> allProgress = userProgressJdbcRepository.findAll();
@@ -306,12 +331,139 @@ public class AdminService {
     }
 
     /**
+     * 問題をCSVから受け取るメソッド
+     *
+     * @param file 問題情報を格納したCSVファイル(file)
+     * @throws IOException
+     * @throws CsvValidationException
+     * @throw IllegalArgument
+     * @throw Exception
+     */
+    @Transactional
+    public void importQuestionsFromCsv(MultipartFile file) throws IOException, CsvValidationException {
+        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
+            String[] row;
+            while ((row = reader.readNext()) != null) {
+                if (row.length != 5) {
+                    throw new IllegalArgumentException("データの型が不正です");
+                }
+
+                String chapterCode = row[0];
+                String questionText = row[1];
+                String questionType = row[2];
+                String optionJson = row[3];
+                String correctAnswer = row[4];
+
+                Chapter chapter = chapterJdbcRepository.findByChapterCode(chapterCode)
+                        .orElseThrow(() -> new IllegalArgumentException("Chapterが見つかりません"));
+
+                Map<String, String> options = convertOptionJsonToOptions(optionJson);
+
+                if (!isDuplicateQuestion(chapter.getId(), questionText)) {
+                    Question question = new Question();
+                    question.setChapter(chapter);
+                    question.setQuestionText(questionText);
+                    question.setQuestionType(QuestionType.valueOf(questionType));
+                    question.setOptions(options);
+                    question.setCorrectAnswer(correctAnswer);
+
+                    questionJdbcRepository.save(question);
+                }
+            }
+        }
+    }
+
+    /**
+     * USERSをCSVから受け取るメソッド
+     * 
+     * @param file ユーザー情報を格納したCSVファイル(file)
+     * @throws IOException
+     * @throws CsvValidationException
+     * @throw IllegalArgument
+     * @throw Exception
+     */
+
+    @Transactional
+    public void importUsersFromCsv(MultipartFile file) throws IOException, CsvValidationException {
+        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
+            String[] row;
+            while ((row = reader.readNext()) != null) {
+                if (row.length != 4) {
+                    throw new IllegalArgumentException("データの型が不正です");
+                } else {
+                    String username = row[0];
+                    String password = row[1];
+                    String displayName = row[2];
+                    String role = row[3];
+
+                    if (!((role.equals("ROLE_ADMIN") || (role.equals("ROLE_USER"))))) {
+                        throw new IllegalArgumentException("ロールが不正です");
+                    }
+
+                    if (!isDuplicateUser(username)) {
+                        User user = new User();
+                        user.setUsername(username);
+                        user.setPassword(passwordEncoder.encode(password));
+                        user.setDisplayName(displayName);
+                        user.setRole(role);
+                        userJdbcRepository.save(user);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * JSON文字列で受け取ったオプションをMapに変換するメソッド
+     * 
+     * @param optionJson JSON文字列(optionJson)
+     * @return Mapに変換されたオプション(options)
+     */
+
+    private Map<String, String> convertOptionJsonToOptions(String optionJson) {
+        Map<String, String> options = new HashMap<>();
+        try {
+            options = objectMapper.readValue(optionJson, new TypeReference<Map<String, String>>() {
+            });
+        } catch (IOException e) {
+            throw new IllegalArgumentException("オプションJSONのパースに失敗しました: " + optionJson, e);
+        }
+        return options;
+    }
+
+    /**
+     * 重複判定をリポジトリから受け取り、Controllerに渡すメソッド
+     * 
+     * @param chapterId
+     * @param questionText
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */
+
+    public boolean isDuplicateQuestion(String chapterId, String questionText) {
+        return questionJdbcRepository.existsByChapterIdAndQuestionText(chapterId, questionText);
+    }
+
+    /*
+     * 重複判定をリポジトリから受け取り、Controllerに渡すメソッド
+     * 
+     * @param username
+     * 
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */
+    public boolean isDuplicateUser(String username) {
+        return userJdbcRepository.existsByUsername(username);
+    }
+
+    /*
      * 今月の全ユーザーの試験挑戦回数を取得します。
      * <p>
      * 実行時の日付から今月の開始日時（1日 00:00）と終了日時（末日 23:59）を算出し、
      * その期間内に行われた進捗データの件数を集計します。
      * </p>
-     * * @return 今月の総挑戦回数
+     * 
+     * @return 今月の総挑戦回数
      */
     @Transactional(readOnly = true)
     public int getMonthlyAttemptCount() {
@@ -353,7 +505,7 @@ public class AdminService {
 
         return stats;
     }
-    
+
     /**
      * チャプターごとの挑戦回数を集計し、挑戦者が多い順に並べて返します。
      * <p>

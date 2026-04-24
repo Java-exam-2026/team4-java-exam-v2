@@ -1,17 +1,12 @@
 package com.javaexam.controller;
 
-import com.javaexam.dto.AllProgressDto;
-import com.javaexam.dto.AdminQuestionDto;
-import com.javaexam.dto.ChapterFormDto;
-import com.javaexam.dto.QuestionFormDto;
-import com.javaexam.dto.UserAnswerDetailDto;
-import com.javaexam.entity.Chapter;
-import com.javaexam.entity.Question;
-import com.javaexam.entity.QuestionType;
-import com.javaexam.repository.ChapterJdbcRepository;
-import com.javaexam.repository.QuestionJdbcRepository;
-import com.javaexam.service.AdminService;
-import jakarta.validation.Valid;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +17,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.javaexam.dto.AdminQuestionDto;
+import com.javaexam.dto.AllProgressDto;
+import com.javaexam.dto.ChapterFormDto;
+import com.javaexam.dto.QuestionFormDto;
+import com.javaexam.dto.UserAnswerDetailDto;
+import com.javaexam.entity.Chapter;
+import com.javaexam.entity.Question;
+import com.javaexam.entity.QuestionType;
+import com.javaexam.repository.ChapterJdbcRepository;
+import com.javaexam.repository.QuestionJdbcRepository;
+import com.javaexam.service.AdminService;
+
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin")
@@ -42,19 +48,24 @@ public class AdminController {
     private final AdminService adminService;
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final QuestionJdbcRepository questionJdbcRepository;
+    private final ObjectMapper objectMapper;
 
     public AdminController(AdminService adminService,
             ChapterJdbcRepository chapterJdbcRepository,
-            QuestionJdbcRepository questionJdbcRepository) {
+            QuestionJdbcRepository questionJdbcRepository,
+            ObjectMapper objectMapper) {
         this.adminService = adminService;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
+        this.objectMapper = objectMapper;
     }
+
     /**
      * 管理者用ダッシュボードを表示します。
      * ユーザー総数、月間受験数、合格・不合格統計、チャプター別正答率などの
      * 統計情報を画面に渡します。
-     * * @param model 画面にデータを渡すためのモデル
+     * @param model 画面にデータを渡すためのモデル
+     * 
      * @return 管理者ダッシュボードのHTMLパス
      */
     @GetMapping("/dashboard") // これで /admin/dashboard になります
@@ -64,11 +75,11 @@ public class AdminController {
 
         // 2. ★ここを追加！「今月の受験数」をadminServiceから受け取ってHTMLに渡す
         model.addAttribute("monthlyCount", adminService.getMonthlyAttemptCount());
-        
+
         // --- ★ここを追加！ 合格・不合格の統計データを渡す ---
         // adminService.getPassFailStats() が { "pass": 10, "fail": 5 } のようなMapを返します
         model.addAttribute("passFailStats", adminService.getPassFailStats());
-        
+
         // ★ここを追加！ チャプターごとの正答率データをHTMLに渡す
         // adminServiceに「getChapterStats」というメソッドを作るイメージです
         model.addAttribute("chapterStats", adminService.getChapterStats());
@@ -96,6 +107,16 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "指定されたデータが見つかりませんでした");
             return "redirect:/admin/progress";
         }
+    }
+
+     @GetMapping("/progress")
+    public String viewAllProgress(Model model) {
+        // 全ユーザーの進捗を取得してモデルに入れる
+        List<AllProgressDto> progressList = adminService.getAllUsersProgress();
+        model.addAttribute("progressList", progressList);
+
+        // admin-progress.html を呼び出す
+        return "admin-progress";
     }
 
     @GetMapping("/questions")
@@ -465,13 +486,46 @@ public class AdminController {
         return "redirect:/admin/chapters";
     }
 
-    @GetMapping("/progress")
-    public String viewAllProgress(Model model) {
-        // 全ユーザーの進捗を取得してモデルに入れる
-        List<AllProgressDto> progressList = adminService.getAllUsersProgress();
-        model.addAttribute("progressList", progressList);
+    /**
+     * 問題をCSVから取り込むエンドポイントメソッド
+     * 
+     * @param file               受け取ったCSVファイル
+     * @param redirectAttributes リダイレクト属性
+     * @return 問題一覧画面へリダイレクトするビュー名
+     */
+    @PostMapping("/import/csv/questions")
+    public String importCsvForQuestions(@RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
+        try {
+            adminService.importQuestionsFromCsv(file);
+            redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
+        }
+        return "redirect:/admin/questions";
+    }
 
-        // admin-progress.html を呼び出す
-        return "admin-progress";
+    /**
+     * ユーザーデータをCSVから取り込むエンドポイントメソッド
+     * 
+     * @param file               受け取ったCSVファイル
+     * @param redirectAttributes リダイレクト属性
+     * @return 問題一覧画面へリダイレクトするビュー名
+     */
+    @PostMapping("/import/csv/users")
+    public String importCsvForUsers(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        try {
+            if (!file.isEmpty()) {
+                adminService.importUsersFromCsv(file);
+                redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+            }
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
+        }
+        return "redirect:/admin/dashboard";
     }
 }
