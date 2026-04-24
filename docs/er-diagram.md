@@ -83,6 +83,7 @@ erDiagram
     USERS ||--o{ USER_ANSWERS : answers
     CHAPTERS ||--o{ USER_ANSWERS : in
     QUESTIONS ||--o{ USER_ANSWERS : for
+
 ```
 ## Relationship Details / リレーション詳細
 
@@ -93,6 +94,7 @@ erDiagram
 | CHAPTERS → USER_PROGRESS | 1 : N (One-to-Many) | 章は0個以上の章の進捗を持つ |
 | USERS → USER_ANSWERS | 1 : N (One-to-Many) | ユーザーはは0個以上の解答を持つ |
 | QUESTIONS → USER_ANSWERS | 1 : N (One-to-Many) | 問題は0個以上のUSER_ANSWERを持つ |
+| USER → AUDIT_LOGS | 1 : N (One-to-Many) | ユーザーは0個以上のAUDIT_LOGSを持つ |
 
 ## Constraints / 制約
 
@@ -135,6 +137,8 @@ erDiagram
 | user_answers | (user_id, chapter_id, question_id) | UNIQUE |
 | users / chapters / questions / user_progress / user_answers | id | PK / NOT NULL |
 | 各テーブル | 外部キー（user_id / chapter_id / question_id） | ON DELETE CASCADE |
+| AUDIT_LOGS | `id` | Primary Key, VARCHAR(36) | 主キー |
+
 
 
 ## Notes / 補足
