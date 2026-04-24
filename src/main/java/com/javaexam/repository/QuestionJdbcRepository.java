@@ -1,21 +1,21 @@
 package com.javaexam.repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.entity.Chapter;
 import com.javaexam.entity.Question;
 import com.javaexam.entity.QuestionType;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Repository;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Repository
 public class QuestionJdbcRepository {
@@ -84,7 +84,7 @@ public class QuestionJdbcRepository {
     /**
      * Saves a question (insert or update).
      * @param question the question to save
-     * @return the number of rows affected
+     * @return 行の割り当て番号
      */
     public int save(Question question) {
         try {
@@ -129,4 +129,20 @@ public class QuestionJdbcRepository {
     public int deleteById(String id) {
         return jdbcTemplate.update("DELETE FROM questions WHERE id = ?", id);
     }
+
+    /**
+     * 問題新規作成時にDBに重複した問題があるかチェックする。
+     * @return 重複しているかどうか(true=重複あり、false=重複なし)
+     */ 
+    public boolean existsByChapterIdAndQuestionText(String chapterId, String questionText) {
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM questions WHERE chapter_id = ? AND question_text = ? ",
+            Integer.class,
+            chapterId,
+            questionText
+        );
+        return count!= null &&count > 0;
+    }
 }
+
+

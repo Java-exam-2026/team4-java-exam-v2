@@ -1,11 +1,14 @@
 package com.javaexam.controller;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,6 +21,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -55,20 +60,25 @@ public class AdminController {
     private final ChapterJdbcRepository chapterJdbcRepository;
     private final QuestionJdbcRepository questionJdbcRepository;
     private final AuditLogJdbcRepository auditLogJdbcRepository;
+    private final ObjectMapper objectMapper;
 
     public AdminController(AdminService adminService,
-                           ChapterJdbcRepository chapterJdbcRepository,
-                           QuestionJdbcRepository questionJdbcRepository,
-                           AuditLogJdbcRepository auditLogJdbcRepository) {
+            ChapterJdbcRepository chapterJdbcRepository,
+            QuestionJdbcRepository questionJdbcRepository,
+            AuditLogJdbcRepository auditLogJdbcRepository,
+            ObjectMapper objectMapper) {
         this.adminService = adminService;
         this.chapterJdbcRepository = chapterJdbcRepository;
         this.questionJdbcRepository = questionJdbcRepository;
         this.auditLogJdbcRepository = auditLogJdbcRepository;
+        this.objectMapper = objectMapper;
     }
+
     /**
      * 管理者用ダッシュボードを表示します。
      * ユーザー総数、月間受験数、合格・不合格統計、チャプター別正答率などの
      * 統計情報を画面に渡します。
+     * 
      * @param model 画面にデータを渡すためのモデル
      * @return 管理者ダッシュボードのHTMLパス
      */
@@ -79,11 +89,11 @@ public class AdminController {
 
         // 2. ★ここを追加！「今月の受験数」をadminServiceから受け取ってHTMLに渡す
         model.addAttribute("monthlyCount", adminService.getMonthlyAttemptCount());
-        
+
         // --- ★ここを追加！ 合格・不合格の統計データを渡す ---
         // adminService.getPassFailStats() が { "pass": 10, "fail": 5 } のようなMapを返します
         model.addAttribute("passFailStats", adminService.getPassFailStats());
-        
+
         // ★ここを追加！ チャプターごとの正答率データをHTMLに渡す
         // adminServiceに「getChapterStats」というメソッドを作るイメージです
         model.addAttribute("chapterStats", adminService.getChapterStats());
@@ -111,6 +121,16 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "指定されたデータが見つかりませんでした");
             return "redirect:/admin/progress";
         }
+    }
+
+    @GetMapping("/progress")
+    public String viewAllProgress(Model model) {
+        // 全ユーザーの進捗を取得してモデルに入れる
+        List<AllProgressDto> progressList = adminService.getAllUsersProgress();
+        model.addAttribute("progressList", progressList);
+
+        // admin-progress.html を呼び出す
+        return "admin-progress";
     }
 
     @GetMapping("/questions")
@@ -483,6 +503,49 @@ public class AdminController {
         return "redirect:/admin/chapters";
     }
 
+    /**
+     * 問題をCSVから取り込むエンドポイントメソッド
+     * 
+     * @param file               受け取ったCSVファイル
+     * @param redirectAttributes リダイレクト属性
+     * @return 問題一覧画面へリダイレクトするビュー名
+     */
+    @PostMapping("/import/csv/questions")
+    public String importCsvForQuestions(@RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
+        try {
+            adminService.importQuestionsFromCsv(file);
+            redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
+        }
+        return "redirect:/admin/questions";
+    }
+
+    /**
+     * ユーザーデータをCSVから取り込むエンドポイントメソッド
+     * 
+     * @param file               受け取ったCSVファイル
+     * @param redirectAttributes リダイレクト属性
+     * @return 問題一覧画面へリダイレクトするビュー名
+     */
+    @PostMapping("/import/csv/users")
+    public String importCsvForUsers(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+        try {
+            if (!file.isEmpty()) {
+                adminService.importUsersFromCsv(file);
+                redirectAttributes.addFlashAttribute("message", "CSV取り込みが完了しました");
+            }
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute("error", "ファイル読み込みに失敗しました");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
+        }
+        return "redirect:/admin/dashboard";
+    }
+
     @GetMapping("/progress")
     public String viewAllProgress(Model model) {
         // 全ユーザーの進捗を取得してモデルに入れる
@@ -491,21 +554,21 @@ public class AdminController {
 
         // admin-progress.html を呼び出す
         return "admin-progress";
-    }
 
     /**
      * 監査ログを表示するエンドポイント。
      * 検索条件（ユーザーID、アクションタイプ、対象タイプ、日付範囲）を受け取り、フィルタリングされたログを表示する。
+     * 
      * @param searchForm
      * @param page
      * @param model
      * @return 監査ログ表示用のHTMLパス
-    */
+     */
 
     @GetMapping("/audit-logs")
     public String viewAuditLogs(@ModelAttribute("searchForm") AuditLogSearchForm searchForm,
-                                @RequestParam(name = "page", defaultValue = "1") int page,
-                                Model model) {
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            Model model) {
         searchForm.normalize();
 
         List<AuditLog> auditLogs;
@@ -533,7 +596,63 @@ public class AdminController {
         return "admin-audit-logs";
     }
 
-    
+    private List<Integer> buildPageNumbers(int currentPage, int totalPages) {
+        List<Integer> pages = new ArrayList<>();
+        if (totalPages <= 0) {
+            return pages;
+        }
+
+        int window = 3;
+        int start = Math.max(1, currentPage - window);
+        int end = Math.min(totalPages, currentPage + window);
+
+        for (int i = start; i <= end; i++) {
+            pages.add(i);
+        }
+        return pages;
+    }
+
+    /**
+     * 監査ログを表示するエンドポイント。
+     * 検索条件（ユーザーID、アクションタイプ、対象タイプ、日付範囲）を受け取り、フィルタリングされたログを表示する。
+     * 
+     * @param searchForm
+     * @param page
+     * @param model
+     * @return 監査ログ表示用のHTMLパス
+     */
+
+    @GetMapping("/audit-logs")
+    public String viewAuditLogs(@ModelAttribute("searchForm") AuditLogSearchForm searchForm,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            Model model) {
+        searchForm.normalize();
+
+        List<AuditLog> auditLogs;
+        AuditLogPageInfo pageInfo;
+        boolean filtered = searchForm.hasSearchCondition();
+
+        if (filtered) {
+            auditLogs = auditLogJdbcRepository.search(searchForm);
+            pageInfo = AuditLogPageInfo.forFiltered(auditLogs.size());
+        } else {
+            int pageSize = 50;
+            long totalCount = auditLogJdbcRepository.countAll();
+            int totalPages = Math.max((int) Math.ceil(totalCount / (double) pageSize), 1);
+            int currentPage = Math.min(Math.max(page, 1), totalPages);
+            auditLogs = auditLogJdbcRepository.findPage(currentPage, pageSize);
+            pageInfo = AuditLogPageInfo.forPaged(currentPage, pageSize, totalCount, totalPages);
+            model.addAttribute("pageNumbers", buildPageNumbers(currentPage, totalPages));
+        }
+
+        model.addAttribute("auditLogs", auditLogs);
+        model.addAttribute("pageInfo", pageInfo);
+        model.addAttribute("isFiltered", filtered);
+        model.addAttribute("actionTypes", ActionType.values());
+        model.addAttribute("targetTypes", TargetType.values());
+        return "admin-audit-logs";
+    }
+
     private List<Integer> buildPageNumbers(int currentPage, int totalPages) {
         List<Integer> pages = new ArrayList<>();
         if (totalPages <= 0) {
