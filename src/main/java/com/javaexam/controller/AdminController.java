@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +21,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaexam.annotation.Log;
 import com.javaexam.dto.AdminQuestionDto;
 import com.javaexam.dto.AllProgressDto;
@@ -544,72 +542,6 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "CSV取込中にエラーが発生しました");
         }
         return "redirect:/admin/dashboard";
-    }
-
-    @GetMapping("/progress")
-    public String viewAllProgress(Model model) {
-        // 全ユーザーの進捗を取得してモデルに入れる
-        List<AllProgressDto> progressList = adminService.getAllUsersProgress();
-        model.addAttribute("progressList", progressList);
-
-        // admin-progress.html を呼び出す
-        return "admin-progress";
-
-    /**
-     * 監査ログを表示するエンドポイント。
-     * 検索条件（ユーザーID、アクションタイプ、対象タイプ、日付範囲）を受け取り、フィルタリングされたログを表示する。
-     * 
-     * @param searchForm
-     * @param page
-     * @param model
-     * @return 監査ログ表示用のHTMLパス
-     */
-
-    @GetMapping("/audit-logs")
-    public String viewAuditLogs(@ModelAttribute("searchForm") AuditLogSearchForm searchForm,
-            @RequestParam(name = "page", defaultValue = "1") int page,
-            Model model) {
-        searchForm.normalize();
-
-        List<AuditLog> auditLogs;
-        AuditLogPageInfo pageInfo;
-        boolean filtered = searchForm.hasSearchCondition();
-
-        if (filtered) {
-            auditLogs = auditLogJdbcRepository.search(searchForm);
-            pageInfo = AuditLogPageInfo.forFiltered(auditLogs.size());
-        } else {
-            int pageSize = 50;
-            long totalCount = auditLogJdbcRepository.countAll();
-            int totalPages = Math.max((int) Math.ceil(totalCount / (double) pageSize), 1);
-            int currentPage = Math.min(Math.max(page, 1), totalPages);
-            auditLogs = auditLogJdbcRepository.findPage(currentPage, pageSize);
-            pageInfo = AuditLogPageInfo.forPaged(currentPage, pageSize, totalCount, totalPages);
-            model.addAttribute("pageNumbers", buildPageNumbers(currentPage, totalPages));
-        }
-
-        model.addAttribute("auditLogs", auditLogs);
-        model.addAttribute("pageInfo", pageInfo);
-        model.addAttribute("isFiltered", filtered);
-        model.addAttribute("actionTypes", ActionType.values());
-        model.addAttribute("targetTypes", TargetType.values());
-        return "admin-audit-logs";
-    }
-
-    private List<Integer> buildPageNumbers(int currentPage, int totalPages) {
-        List<Integer> pages = new ArrayList<>();
-        if (totalPages <= 0) {
-            return pages;
-        }
-
-        int window = 3;
-        int start = Math.max(1, currentPage - window);
-        int end = Math.min(totalPages, currentPage + window);
-
-        for (int i = start; i <= end; i++) {
-            pages.add(i);
-        }
-        return pages;
     }
 
     /**

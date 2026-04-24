@@ -1,6 +1,7 @@
 package com.javaexam.repository;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +22,6 @@ public class AuditLogJdbcRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-
     private final RowMapper<AuditLog> auditLogRowMapper = (rs, rowNum) -> {
         AuditLog log = new AuditLog();
         log.setId(rs.getString("id"));
@@ -34,15 +34,19 @@ public class AuditLogJdbcRepository {
         log.setAction_type(ActionType.valueOf(rs.getString("action_type")));
         log.setAction_status(rs.getBoolean("action_status"));
         log.setChanges_json(rs.getString("changes_json"));
-        var createdAt = rs.getTimestamp("created_at");
+        String createdAt = rs.getString("created_at");
         if (createdAt != null) {
-            log.setCreated_at(createdAt.toLocalDateTime());
+            // SQLite stores as TEXT; support both 'yyyy-MM-dd HH:mm:ss' and ISO-8601 'T' format
+            log.setCreated_at(LocalDateTime.parse(
+                createdAt.replace(" ", "T"),
+                DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         }
         return log;
     };
 
     /**
      * ログをデータベースに保存するメソッド。
+     * 
      * @param log
      * @return 保存されたログのID
      */
@@ -56,8 +60,8 @@ public class AuditLogJdbcRepository {
 
         jdbcTemplate.update(
                 "INSERT INTO audit_logs (id, actor_user_id, actor_username, actor_display_name, " +
-                "target_type, target_id, target_name, action_type, action_status, changes_json, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        "target_type, target_id, target_name, action_type, action_status, changes_json, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 log.getId(),
                 log.getActor_user_id(),
                 log.getActor_username(),
@@ -68,8 +72,8 @@ public class AuditLogJdbcRepository {
                 log.getAction_type().name(),
                 log.getAction_status(),
                 log.getChanges_json(),
-                log.getCreated_at()
-        );
+                log.getCreated_at().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
         return log.getId();
     }
 
@@ -111,12 +115,13 @@ public class AuditLogJdbcRepository {
      */
     public List<AuditLog> findByTargetId(String targetId) {
         String sql = "SELECT * FROM audit_logs WHERE target_id = ? ORDER BY created_at DESC";
-        return jdbcTemplate.query(sql, new Object[]{targetId}, auditLogRowMapper);
+        return jdbcTemplate.query(sql, new Object[] { targetId }, auditLogRowMapper);
     }
 
     /**
      * 指定されたIDの監査ログのchanges_jsonを更新する
-     * @param auditLogId 監査ログのID
+     * 
+     * @param auditLogId  監査ログのID
      * @param changesJson 変更内容のJSON
      */
     public void updateChangesJson(String auditLogId, String changesJson) {
@@ -181,6 +186,6 @@ public class AuditLogJdbcRepository {
         return value.trim().toUpperCase();
     }
 
-    private record QuerySpec(String sql, List<Object> args) {}
+    private record QuerySpec(String sql, List<Object> args) {
+    }
 }
-
