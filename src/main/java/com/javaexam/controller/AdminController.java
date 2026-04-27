@@ -478,7 +478,7 @@ public class AdminController {
      * @param redirectAttributes リダイレクト時のメッセージ
      * @return ユーザー一覧画面にリダイレクト
      */
-    @PostMapping("/users/new")
+    @PostMapping("/users")
     public String createUser(
             @ModelAttribute User user,
             RedirectAttributes redirectAttributes) {
