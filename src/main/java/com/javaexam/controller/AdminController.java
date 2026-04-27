@@ -246,12 +246,13 @@ public class AdminController {
 
     @Log(action = ActionType.CREATE, target = TargetType.QUESTION)
     @PostMapping("/questions/new")
-    public String createQuestion(@Valid QuestionFormDto questionForm,
+    public String createQuestion(@ModelAttribute("questionForm") @Valid QuestionFormDto questionForm,
             BindingResult bindingResult,
             Model model,
             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateFormAttributes(model, false);
+            model.addAttribute("questionForm", questionForm);
             return "admin-question-form";
         }
 
@@ -304,12 +305,13 @@ public class AdminController {
     @Log(action = ActionType.UPDATE, target = TargetType.QUESTION)
     @PostMapping("/questions/edit/{id}")
     public String updateQuestion(@PathVariable String id,
-            @Valid QuestionFormDto questionForm,
+            @ModelAttribute("questionForm") @Valid QuestionFormDto questionForm,
             BindingResult bindingResult,
             Model model,
             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             populateFormAttributes(model, true);
+            model.addAttribute("questionForm", questionForm);
             return "admin-question-form";
         }
 

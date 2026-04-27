@@ -1,7 +1,5 @@
 package com.javaexam.repository;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,10 +7,11 @@ import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+
+import com.javaexam.dto.AuditLogSearchForm;
 import com.javaexam.entity.ActionType;
 import com.javaexam.entity.AuditLog;
 import com.javaexam.entity.TargetType;
-import com.javaexam.dto.AuditLogSearchForm;
 
 @Repository
 public class AuditLogJdbcRepository {
@@ -34,13 +33,15 @@ public class AuditLogJdbcRepository {
         log.setAction_type(ActionType.valueOf(rs.getString("action_type")));
         log.setAction_status(rs.getBoolean("action_status"));
         log.setChanges_json(rs.getString("changes_json"));
-        String createdAt = rs.getString("created_at");
-        if (createdAt != null) {
-            // SQLite stores as TEXT; support both 'yyyy-MM-dd HH:mm:ss' and ISO-8601 'T' format
+        log.setCreated_at(rs.getTimestamp("created_at").toLocalDateTime());
+
+        /**
+         * if (createdAt != null) {
+            // "2024-06-01 12:34:56" の形式で保存されているため、スペースを'T'に置換してからパースする
             log.setCreated_at(LocalDateTime.parse(
                 createdAt.replace(" ", "T"),
                 DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        }
+        }*/
         return log;
     };
 
@@ -54,14 +55,11 @@ public class AuditLogJdbcRepository {
         if (log.getId() == null || log.getId().isEmpty()) {
             log.setId(java.util.UUID.randomUUID().toString());
         }
-        if (log.getCreated_at() == null) {
-            log.setCreated_at(LocalDateTime.now());
-        }
 
         jdbcTemplate.update(
                 "INSERT INTO audit_logs (id, actor_user_id, actor_username, actor_display_name, " +
                         "target_type, target_id, target_name, action_type, action_status, changes_json, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
                 log.getId(),
                 log.getActor_user_id(),
                 log.getActor_username(),
@@ -71,8 +69,9 @@ public class AuditLogJdbcRepository {
                 log.getTarget_name(),
                 log.getAction_type().name(),
                 log.getAction_status(),
-                log.getChanges_json(),
-                log.getCreated_at().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                log.getChanges_json()
+                );
+                
 
         return log.getId();
     }

@@ -52,6 +52,7 @@ public class AdminServiceCsvTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+
     /**
      * 問題CSVの取り込み成功時に正しい値であることをテストする。
      */

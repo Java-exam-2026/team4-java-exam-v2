@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.javaexam.annotation.Log;
+import com.javaexam.dto.QuestionFormDto;
 import com.javaexam.entity.ActionType;
 import com.javaexam.entity.AuditLog;
 import com.javaexam.entity.Question;
@@ -19,6 +20,7 @@ import com.javaexam.repository.AuditLogJdbcRepository;
 import com.javaexam.repository.QuestionJdbcRepository;
 import com.javaexam.service.AuditLogChangeCalculator;
 import com.javaexam.service.AuditLogChangeCalculatorRegistry;
+import com.javaexam.security.CustomUserDetails;
 
 /**
  * 監査ログをDBに保存するAspect
@@ -33,6 +35,7 @@ import com.javaexam.service.AuditLogChangeCalculatorRegistry;
  * - target_id: 操作対象のID（例: QuestionのID）
  * - target_name: 操作対象の名前（例: Questionのテキスト）
  * - changes_json: 変更内容のJSON（UPDATEの場合のみ）
+ * - created_at: 操作の日時
  * 変更内容のJSONは、変更前と変更後の値を含む形式で記録する
  */
 @Aspect
@@ -55,11 +58,12 @@ public class LoggingAspect {
     @Around("@annotation(log)")
     public Object logAdminAction(ProceedingJoinPoint joinPoint, Log log) throws Throwable {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = (User) auth.getPrincipal();
+        User currentUser = extractCurrentUser(auth);
 
         Object[] args = joinPoint.getArgs();
         String targetId = extractTargetId(args, log.target());
         Question afterQuestion = extractQuestion(args);
+        QuestionFormDto questionForm = extractQuestionForm(args);
         Object beforeTarget = loadBeforeTarget(log, targetId);
 
         Object result = joinPoint.proceed();
@@ -72,9 +76,10 @@ public class LoggingAspect {
             auditLog.setTarget_type(log.target());
             auditLog.setAction_type(log.action());
             auditLog.setAction_status(true);
-            auditLog.setTarget_id(targetId);
-            auditLog.setTarget_name(extractTargetName(log.target(), afterQuestion));
+            auditLog.setTarget_id(resolveTargetId(log, targetId));
+            auditLog.setTarget_name(resolveTargetName(log, afterQuestion, questionForm, beforeTarget));
             auditLog.setChanges_json(calculateChanges(log, beforeTarget, afterQuestion));
+
 
             String auditLogId = auditLogRepository.save(auditLog);
             logger.info("Audit log saved: action={}, target={}, userId={}, auditLogId={}",
@@ -88,7 +93,7 @@ public class LoggingAspect {
 
     private Object loadBeforeTarget(Log log, String targetId) {
         if (log.target() == TargetType.QUESTION
-                && log.action() == ActionType.UPDATE
+                && (log.action() == ActionType.UPDATE || log.action() == ActionType.DELETE)
                 && targetId != null
                 && !targetId.isBlank()) {
             return questionJdbcRepository.findById(targetId).orElse(null);
@@ -115,15 +120,51 @@ public class LoggingAspect {
             if (question != null) {
                 return question.getId();
             }
+
+            QuestionFormDto questionForm = extractQuestionForm(args);
+            if (questionForm != null && questionForm.getId() != null && !questionForm.getId().isBlank()) {
+                return questionForm.getId();
+            }
+
+            for (Object arg : args) {
+                if (arg instanceof String stringArg && !stringArg.isBlank()) {
+                    return stringArg;
+                }
+            }
         }
         return null;
     }
 
-    private String extractTargetName(TargetType targetType, Question question) {
-        if (targetType == TargetType.QUESTION && question != null) {
+    private String resolveTargetId(Log log, String targetId) {
+        if (targetId != null && !targetId.isBlank()) {
+            return targetId;
+        }
+
+        if (log.target() == TargetType.QUESTION && log.action() == ActionType.CREATE) {
+            return "";
+        }
+
+        return "";
+    }
+
+    private String resolveTargetName(Log log, Question question, QuestionFormDto questionForm, Object beforeTarget) {
+        if (log.target() != TargetType.QUESTION) {
+            return "";
+        }
+
+        if (question != null && question.getQuestionText() != null) {
             return question.getQuestionText();
         }
-        return null;
+
+        if (questionForm != null && questionForm.getQuestionText() != null) {
+            return questionForm.getQuestionText();
+        }
+
+        if (beforeTarget instanceof Question beforeQuestion && beforeQuestion.getQuestionText() != null) {
+            return beforeQuestion.getQuestionText();
+        }
+
+        return "";
     }
 
     private Question extractQuestion(Object[] args) {
@@ -133,5 +174,31 @@ public class LoggingAspect {
             }
         }
         return null;
+    }
+
+    private QuestionFormDto extractQuestionForm(Object[] args) {
+        for (Object arg : args) {
+            if (arg instanceof QuestionFormDto questionForm) {
+                return questionForm;
+            }
+        }
+        return null;
+    }
+
+    private User extractCurrentUser(Authentication auth) {
+        if (auth == null) {
+            throw new IllegalStateException("Authentication not found");
+        }
+
+        Object principal = auth.getPrincipal();
+        if (principal instanceof CustomUserDetails customUserDetails) {
+            return customUserDetails.getUser();
+        }
+
+        if (principal instanceof User user) {
+            return user;
+        }
+
+        throw new IllegalStateException("Unsupported authenticated principal: " + principal);
     }
 }
